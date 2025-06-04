@@ -1,0 +1,417 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600&display=swap');
+
+:root {
+  --primary: #0087FF;
+  --primary-dark: #006BE6;
+  --accent: #FF6B35;
+  --neon-blue: #00D4FF;
+  --neon-purple: #8B5CF6;
+  --neon-pink: #EC4899;
+  --cyber-dark: #0D1117;
+  --cyber-gray: #161B22;
+  --glass-white: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #1A1A1A;
+  background: #ffffff;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ===== GLASSMORPHISM COMPONENTS ===== */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.glass-dark {
+  background: rgba(13, 17, 23, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1), 
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ===== ANIMAZIONI SCROLL AVANZATE ===== */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-from-left {
+  opacity: 0;
+  transform: translateX(-60px);
+  transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-from-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.animate-from-right {
+  opacity: 0;
+  transform: translateX(60px);
+  transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-from-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.animate-scale {
+  opacity: 0;
+  transform: scale(0.7) rotate(5deg);
+  transition: all 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-scale.visible {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.animate-fade {
+  opacity: 0;
+  transition: opacity 1.2s ease-out;
+}
+
+.animate-fade.visible {
+  opacity: 1;
+}
+
+/* ===== HOVER EFFECTS AVANZATI ===== */
+.hover-lift {
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 
+    0 20px 40px -8px rgba(0, 135, 255, 0.2),
+    0 30px 60px -12px rgba(0, 135, 255, 0.1);
+}
+
+.hover-glow {
+  transition: all 0.3s ease-in-out;
+  position: relative;
+}
+
+.hover-glow:hover {
+  box-shadow: 
+    0 0 20px rgba(0, 135, 255, 0.6),
+    0 0 40px rgba(0, 135, 255, 0.3),
+    0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.hover-tilt {
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hover-tilt:hover {
+  transform: perspective(1000px) rotateX(5deg) rotateY(5deg) translateZ(10px);
+}
+
+.hover-gradient {
+  background-size: 200% 200%;
+  transition: all 0.3s ease;
+}
+
+.hover-gradient:hover {
+  background-position: right center;
+}
+
+/* ===== EFFETTI NEON E CYBER ===== */
+.neon-text {
+  color: var(--neon-blue);
+  text-shadow: 
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 15px currentColor,
+    0 0 20px currentColor;
+  animation: neon-pulse 2s ease-in-out infinite alternate;
+}
+
+.cyber-border {
+  position: relative;
+}
+
+.cyber-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    var(--neon-blue), 
+    var(--neon-purple), 
+    var(--neon-pink), 
+    var(--neon-blue)
+  );
+  background-size: 400% 400%;
+  border-radius: inherit;
+  padding: 2px;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: subtract;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* ===== PATTERN AI E TECH ===== */
+.ai-pattern {
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+  background-size: 300px 300px, 200px 200px, 400px 400px;
+  animation: float 8s ease-in-out infinite;
+}
+
+.neural-network {
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(0, 135, 255, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 80% 50%, rgba(255, 107, 53, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 30% 70%, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px, 80px 80px, 120px 120px;
+  animation: data-flow 10s linear infinite;
+}
+
+.circuit-lines {
+  background-image:
+    linear-gradient(90deg, rgba(0, 212, 255, 0.2) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(0, 212, 255, 0.2) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ===== MICRO-INTERAZIONI ===== */
+.click-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.click-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(0, 135, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.click-effect:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.8s;
+}
+
+.shimmer:hover::before {
+  left: 100%;
+}
+
+/* ===== SCROLLBAR MODERNA ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary), var(--neon-blue));
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 135, 255, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--primary-dark), var(--primary));
+  box-shadow: 0 0 15px rgba(0, 135, 255, 0.5);
+}
+
+/* ===== EFFETTI SPECIALI ===== */
+.hologram {
+  animation: hologram 4s ease-in-out infinite;
+  background: linear-gradient(
+    45deg,
+    transparent 30%, 
+    rgba(0, 212, 255, 0.1) 50%, 
+    transparent 70%
+  );
+  background-size: 200% 200%;
+}
+
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitch::before {
+  animation: glitch 2s infinite;
+  color: var(--neon-blue);
+  z-index: -1;
+}
+
+.glitch::after {
+  animation: glitch 2s infinite reverse;
+  color: var(--neon-pink);
+  z-index: -2;
+}
+
+/* ===== PARTICELLE FLOATING ===== */
+.floating-particles {
+  position: relative;
+}
+
+.floating-particles::before,
+.floating-particles::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--neon-blue);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+.floating-particles::before {
+  top: 20%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.floating-particles::after {
+  top: 80%;
+  right: 20%;
+  animation-delay: 3s;
+  background: var(--neon-purple);
+}
+
+/* ===== RESPONSIVE AVANZATO ===== */
+@media (max-width: 768px) {
+  .glass {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-5px) scale(1.01);
+  }
+  
+  .neon-text {
+    text-shadow: 
+      0 0 3px currentColor,
+      0 0 6px currentColor;
+  }
+}
+
+/* ===== ACCESSIBILITÀ ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+  
+  .animate-on-scroll,
+  .animate-from-left,
+  .animate-from-right,
+  .animate-scale,
+  .animate-fade {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ===== UTILITIES CUSTOM ===== */
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--neon-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-accent {
+  background: linear-gradient(135deg, var(--accent), var(--neon-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.border-gradient {
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, var(--primary), var(--neon-blue)) border-box;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: subtract;
+}
