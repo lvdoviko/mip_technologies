@@ -373,3 +373,18 @@ section {
   background: linear-gradient(to bottom, var(--primary), var(--accent));
   animation: blink 0.8s step-end infinite;
 }
+
+/* Animazioni per le card del processo */
+.process-card-left.is-visible,
+.process-card-right.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.process-card-left {
+  transform: translateX(-20px) translateY(10px);
+}
+
+.process-card-right {
+  transform: translateX(20px) translateY(10px);
+}
