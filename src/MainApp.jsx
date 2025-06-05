@@ -11,6 +11,7 @@ import Process from './sections/Process';
 import About from './sections/About';
 import Contact from './sections/Contact';
 import AnimatedBackground from './components/ui/AnimatedBackground';
+import useReducedMotion from './hooks/useReducedMotion'; // Importa il nuovo hook
 import './styles/globals.css';
 
 // Registra i plugin GSAP
@@ -19,6 +20,7 @@ gsap.registerPlugin(ScrollTrigger);
 const MainApp = () => {
   const [scrollY, setScrollY] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const prefersReducedMotion = useReducedMotion(); // Usa il nuovo hook
 
   useEffect(() => {
     const handleScroll = () => {
@@ -65,7 +67,7 @@ const MainApp = () => {
             radial-gradient(circle at 70% 90%, rgba(139, 92, 246, 0.03) 0%, transparent 40%)
           `,
           zIndex: -8,
-          transform: `translateY(${scrollY * 0.05}px)`,
+          transform: prefersReducedMotion ? 'none' : `translateY(${scrollY * 0.05}px)`,
           transition: 'transform 0.2s ease-out',
         }}
       />
@@ -79,7 +81,7 @@ const MainApp = () => {
             linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px)
           `,
           backgroundSize: '80px 80px',
-          transform: `translate(${scrollY * 0.04}px, ${scrollY * 0.05}px)`,
+          transform: prefersReducedMotion ? 'none' : `translate(${scrollY * 0.04}px, ${scrollY * 0.05}px)`,
           transition: 'transform 0.2s ease-out',
           zIndex: -7,
         }}
@@ -98,14 +100,14 @@ const MainApp = () => {
       {/* Main Content */}
       <div className="relative z-10">
         <div style={{ opacity: Math.max(0.8, 1 - scrollY / 1000) }}>
-          <Hero />
+          <Hero prefersReducedMotion={prefersReducedMotion} />
         </div>
         
-        <Services />
-        <Projects />
-        <Process />
-        <About />
-        <Contact />
+        <Services prefersReducedMotion={prefersReducedMotion} />
+        <Projects prefersReducedMotion={prefersReducedMotion} />
+        <Process prefersReducedMotion={prefersReducedMotion} />
+        <About prefersReducedMotion={prefersReducedMotion} />
+        <Contact prefersReducedMotion={prefersReducedMotion} />
         <Footer />
       </div>
     </div>

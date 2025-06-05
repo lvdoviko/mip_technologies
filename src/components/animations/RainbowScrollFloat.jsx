@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './ScrollFloat.css';
@@ -6,10 +6,7 @@ import './ScrollFloat.css';
 gsap.registerPlugin(ScrollTrigger);
 
 /**
- * RainbowScrollFloat - Componente che combina l'effetto di testo arcobaleno con l'animazione ScrollFloat
- * Mantiene la dimensione del testo e l'effetto gradiente mentre aggiunge l'animazione al testo
- * 
- * VERSIONE MIGLIORATA: Elimina i margini extra per una migliore integrazione con altri elementi
+ * RainbowScrollFloat - Versione migliorata con meno bianco nell'effetto arcobaleno
  */
 const RainbowScrollFloat = ({
   children,
@@ -28,19 +25,64 @@ const RainbowScrollFloat = ({
   noMargin = true // Se true, rimuove tutti i margini predefiniti
 }) => {
   const containerRef = useRef(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [containerHeight, setContainerHeight] = useState('auto');
   
+  // Verifica se l'utente preferisce reduced motion
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+  
+  // Dividi il testo in caratteri per l'animazione
   const splitText = useMemo(() => {
     const text = typeof children === 'string' ? children : '';
     return text.split("").map((char, index) => (
-      <span className="char" key={index}>
+      <span className="char" key={index} aria-hidden="true">
         {char === " " ? "\u00A0" : char}
       </span>
     ));
   }, [children]);
   
+  // Misura l'altezza del testo per evitare layout shift
+  useEffect(() => {
+    if (containerRef.current) {
+      // Salva temporaneamente lo stato dei caratteri
+      const chars = containerRef.current.querySelectorAll('.char');
+      const originalStyles = Array.from(chars).map(char => ({
+        opacity: char.style.opacity,
+        transform: char.style.transform
+      }));
+      
+      // Imposta tutti i caratteri visibili per misurare l'altezza corretta
+      chars.forEach(char => {
+        char.style.opacity = '1';
+        char.style.transform = 'none';
+      });
+      
+      // Misura l'altezza
+      const height = containerRef.current.offsetHeight;
+      setContainerHeight(`${height}px`);
+      
+      // Ripristina lo stato originale
+      chars.forEach((char, i) => {
+        if (originalStyles[i]) {
+          char.style.opacity = originalStyles[i].opacity;
+          char.style.transform = originalStyles[i].transform;
+        }
+      });
+    }
+  }, [children]);
+  
+  // Configura l'animazione GSAP
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el || prefersReducedMotion) return;
     
     const scroller =
       scrollContainerRef && scrollContainerRef.current
@@ -49,7 +91,8 @@ const RainbowScrollFloat = ({
     
     const charElements = el.querySelectorAll('.char');
     
-    gsap.fromTo(
+    // Crea l'animazione GSAP
+    const tl = gsap.fromTo(
       charElements,
       {
         willChange: 'opacity, transform',
@@ -76,20 +119,60 @@ const RainbowScrollFloat = ({
         }
       }
     );
-  }, [scrollContainerRef, animationDuration, ease, scrollStart, scrollEnd, stagger]);
+    
+    // Cleanup dell'animazione per evitare memory leak
+    return () => {
+      if (tl.scrollTrigger) {
+        tl.scrollTrigger.kill();
+      }
+      tl.kill();
+    };
+  }, [
+    scrollContainerRef, 
+    animationDuration, 
+    ease, 
+    scrollStart, 
+    scrollEnd, 
+    stagger, 
+    prefersReducedMotion
+  ]);
 
-  // Definisci gli stili per l'effetto arcobaleno
+  // Definisci gli stili per l'effetto arcobaleno con colori più vivaci e meno bianco
   const rainbowStyle = preserveRainbow ? {
     backgroundImage: large 
-      ? `linear-gradient(90deg, #ff0080, #ff8000, #ffff00, #00ff80, #00ffff, #0080ff, #8000ff, #ff0080)`
-      : `linear-gradient(90deg, #ff0080, #7928CA, #0070F3, #00DFD8, #7928CA, #ff0080)`,
+      ? `linear-gradient(
+          90deg, 
+          #ff0080, /* Rosa */
+          #ff00ff, /* Magenta */
+          #8000ff, /* Viola */
+          #0070f3, /* Blu */
+          #00bfff, /* Azzurro */
+          #00ffff, /* Ciano */
+          #00ff80, /* Verde acqua */
+          #ffff00, /* Giallo */
+          #ff8000, /* Arancione */
+          #ff0080  /* Torna al rosa */
+        )`
+      : `linear-gradient(
+          90deg, 
+          #ff0080, /* Rosa */
+          #ff00ff, /* Magenta */
+          #8000ff, /* Viola */
+          #0070F3, /* Blu */
+          #00bfff, /* Azzurro */
+          #00ffff, /* Ciano */
+          #00ff80, /* Verde acqua */
+          #ffff00, /* Giallo */
+          #ff8000, /* Arancione */
+          #ff0080  /* Torna al rosa */
+        )`,
     backgroundSize: '200% 100%',
     backgroundClip: 'text',
     WebkitBackgroundClip: 'text',
     color: 'transparent',
     WebkitTextFillColor: 'transparent',
     display: 'inline-block',
-    animation: 'gradient-animation 8s linear infinite',
+    animation: prefersReducedMotion ? 'none' : 'gradient-animation 8s linear infinite',
     filter: large ? 'brightness(1.1) contrast(1.1)' : 'none',
     textShadow: large ? '0 0 30px rgba(128, 0, 255, 0.15)' : 'none'
   } : {};
@@ -100,6 +183,33 @@ const RainbowScrollFloat = ({
   // Aggiungi classi per rimuovere i margini se richiesto
   const marginClasses = noMargin ? 'm-0 p-0' : '';
   
+  // Versione semplificata se reduced motion è attivo
+  if (prefersReducedMotion) {
+    return (
+      <h2 
+        className={`scroll-float ${fontSizeClass} font-bold ${lineHeight} tracking-tighter ${marginClasses} ${containerClassName}`}
+        style={{ 
+          overflow: 'hidden',
+          marginBottom: noMargin ? '0' : null,
+          paddingBottom: noMargin ? '0' : null,
+        }}
+      >
+        <span 
+          className={`scroll-float-text ${textClassName}`}
+          style={{
+            ...rainbowStyle,
+            lineHeight: '1.1',
+            display: 'inline-block',
+            marginBottom: noMargin ? '-0.2em' : null,
+          }}
+        >
+          {typeof children === 'string' ? children : children}
+        </span>
+        <span className="sr-only">{typeof children === 'string' ? children : ''}</span>
+      </h2>
+    );
+  }
+  
   return (
     <h2 
       ref={containerRef} 
@@ -108,6 +218,7 @@ const RainbowScrollFloat = ({
         overflow: 'hidden',
         marginBottom: noMargin ? '0' : null,
         paddingBottom: noMargin ? '0' : null,
+        height: containerHeight,
       }}
     >
       <span 
@@ -121,6 +232,9 @@ const RainbowScrollFloat = ({
       >
         {splitText}
       </span>
+      
+      {/* Testo accessibile per screen reader */}
+      <span className="sr-only">{typeof children === 'string' ? children : ''}</span>
     </h2>
   );
 };

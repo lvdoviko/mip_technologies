@@ -353,3 +353,125 @@ section {
   opacity: 1;
   transform: translateY(0) translateX(0);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .fade-in-up, .fade-in-left, .fade-in-right {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  .animate-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  .char {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  .animate-blink {
+    animation: none !important;
+  }
+  
+  .animate-pulse {
+    animation: none !important;
+  }
+  
+  .animate-float {
+    animation: none !important;
+  }
+  
+  .animate-gradient {
+    animation: none !important;
+  }
+  
+  .hover-lift:hover {
+    transform: none !important;
+  }
+  
+  .hover-scale:hover {
+    transform: none !important;
+  }
+}
+
+/* Utility class per saltare le animazioni */
+.skip-animations * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Focus styles migliorati per accessibilità */
+:focus-visible {
+  outline: 2px solid #3B82F6 !important;
+  outline-offset: 2px !important;
+}
+
+/* Migliora i controlli interattivi per accessibilità */
+button, 
+a[href],
+input,
+select,
+textarea,
+[role="button"],
+[tabindex]:not([tabindex="-1"]) {
+  transition: outline-color 0.2s ease-in-out;
+}
+
+/* Migliora l'accessibilità per testo su sfondi scuri */
+.text-white {
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Migliora la visibilità del testo su gradienti */
+.text-gradient,
+.text-gradient-rainbow {
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Animazione meno invasiva per il cursore */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.text-gradient-rainbow {
+  background: linear-gradient(
+    90deg, 
+    #0070f3, /* Blu */
+    #00bfff, /* Azzurro */
+    #ffffff, /* Bianco */
+    #f0f8ff, /* Bianco azzurrino */
+    #ff0080, /* Rosa */
+    #ff8000, /* Arancione */
+    #ffff00, /* Giallo */
+    #00ff80, /* Verde acqua */
+    #00ffff, /* Ciano */
+    #0080ff, /* Blu chiaro */
+    #0070f3  /* Torna al blu */
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 600% 100%;
+  animation: gradient-animation 30s linear infinite;
+}

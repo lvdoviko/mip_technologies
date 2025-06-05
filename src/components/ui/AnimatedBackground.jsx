@@ -1,16 +1,36 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-const ImmersiveBackground = () => {
+/**
+ * AnimatedBackground - Versione migliorata con risoluzione memory leak e
+ * supporto per prefers-reduced-motion
+ */
+const AnimatedBackground = () => {
   const canvasRef = useRef(null);
+  const requestRef = useRef(null);
+  const particlesRef = useRef([]);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  
+  // Controlla se l'utente preferisce reduced motion
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
-    let animationFrameId;
     let particles = [];
+    let gridPoints = [];
     
     // Impostazioni delle particelle
-    const particleCount = 100;
+    const particleCount = prefersReducedMotion ? 50 : 100; // Meno particelle se reduced motion è attivo
     const particleColors = [
       'rgba(29, 78, 216, 0.2)',  // blu
       'rgba(107, 114, 128, 0.15)', // grigio
@@ -21,20 +41,27 @@ const ImmersiveBackground = () => {
     
     // Griglia di punti
     const gridSpacing = 70;
-    let gridPoints = [];
     
     // Impostazione delle dimensioni del canvas
     const setCanvasSize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      
+      // Scala il contesto per supportare high DPI
+      ctx.scale(dpr, dpr);
+      
       createGrid();
+      initParticles();
     };
     
     // Crea una griglia di punti
     const createGrid = () => {
       gridPoints = [];
-      const rows = Math.ceil(canvas.height / gridSpacing) + 1;
-      const cols = Math.ceil(canvas.width / gridSpacing) + 1;
+      const rows = Math.ceil(canvas.clientHeight / gridSpacing) + 1;
+      const cols = Math.ceil(canvas.clientWidth / gridSpacing) + 1;
       
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
@@ -53,8 +80,8 @@ const ImmersiveBackground = () => {
     // Classe per le particelle
     class Particle {
       constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
+        this.x = Math.random() * canvas.clientWidth;
+        this.y = Math.random() * canvas.clientHeight;
         this.size = Math.random() * 2 + 0.5;
         this.speedX = Math.random() * 0.5 - 0.25;
         this.speedY = Math.random() * 0.5 - 0.25;
@@ -69,10 +96,10 @@ const ImmersiveBackground = () => {
         this.life--;
         
         // Bordi toroidali
-        if (this.x < 0) this.x = canvas.width;
-        if (this.x > canvas.width) this.x = 0;
-        if (this.y < 0) this.y = canvas.height;
-        if (this.y > canvas.height) this.y = 0;
+        if (this.x < 0) this.x = canvas.clientWidth;
+        if (this.x > canvas.clientWidth) this.x = 0;
+        if (this.y < 0) this.y = canvas.clientHeight;
+        if (this.y > canvas.clientHeight) this.y = 0;
       }
       
       draw() {
@@ -93,18 +120,21 @@ const ImmersiveBackground = () => {
       for (let i = 0; i < particleCount; i++) {
         particles.push(new Particle());
       }
+      particlesRef.current = particles;
     };
     
     // Disegna e aggiorna le particelle
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
       
       // Disegna la griglia di sfondo
       drawGrid();
       
       // Aggiorna e disegna le particelle
       particles.forEach((particle, index) => {
-        particle.update();
+        if (!prefersReducedMotion) {
+          particle.update();
+        }
         particle.draw();
         
         if (particle.isDead()) {
@@ -116,7 +146,7 @@ const ImmersiveBackground = () => {
       // Disegna le connessioni tra particelle
       drawConnections();
       
-      animationFrameId = requestAnimationFrame(animate);
+      requestRef.current = requestAnimationFrame(animate);
     };
     
     // Disegna la griglia di sfondo
@@ -173,17 +203,38 @@ const ImmersiveBackground = () => {
     };
     
     // Inizializzazione
-    window.addEventListener('resize', setCanvasSize);
     setCanvasSize();
-    initParticles();
-    animate();
+    
+    // Se l'utente preferisce reduced motion, disegna una volta sola e non animare
+    if (prefersReducedMotion) {
+      drawGrid();
+      particles.forEach(particle => particle.draw());
+      drawConnections();
+    } else {
+      // Altrimenti, avvia l'animazione
+      requestRef.current = requestAnimationFrame(animate);
+    }
+    
+    // Gestione del resize
+    const handleResize = () => {
+      setCanvasSize();
+    };
+    
+    window.addEventListener('resize', handleResize);
     
     // Pulizia
     return () => {
-      window.removeEventListener('resize', setCanvasSize);
-      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', handleResize);
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+        requestRef.current = null;
+      }
+      // Rilascia esplicitamente le referenze
+      particlesRef.current = [];
+      particles = [];
+      gridPoints = [];
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   return (
     <canvas
@@ -197,6 +248,4 @@ const ImmersiveBackground = () => {
   );
 };
 
-export default function AnimatedBackground() {
-  return <ImmersiveBackground />;
-}
+export default AnimatedBackground;
