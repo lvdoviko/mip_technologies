@@ -388,3 +388,43 @@ section {
 .process-card-right {
   transform: translateX(20px) translateY(10px);
 }
+
+/* Animazioni per le card dei valori */
+.value-card-left,
+.value-card-right,
+.about-animate {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.7s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.value-card-left {
+  transform: translateX(-10px) translateY(10px);
+}
+
+.value-card-right {
+  transform: translateX(10px) translateY(10px);
+}
+
+.value-card-left.is-visible,
+.value-card-right.is-visible,
+.about-animate.is-visible {
+  opacity: 1;
+  transform: translateY(0) translateX(0);
+}
+
+/* Effetto gradiente arcobaleno per il testo */
+.text-gradient-rainbow {
+  background: linear-gradient(90deg, #ff0080, #ff8000, #ffff00, #00ff80, #00ffff, #0080ff, #8000ff, #ff0080);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: gradient 8s linear infinite;
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
