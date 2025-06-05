@@ -33,38 +33,38 @@ const Navigation = () => {
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-black/90 backdrop-blur-sm shadow-minimal border-b border-white/10' 
-        : 'bg-black/20 backdrop-blur-sm'
+        ? 'bg-black/95 backdrop-blur-md shadow-lg border-b border-white/10' 
+        : 'bg-black/30 backdrop-blur-md'
     }`}>
-      <div className="container mx-auto max-w-6xl px-4">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo Section */}
-          <div className="flex items-center gap-1 cursor-pointer">
-            <div className="p-2 hover-minimal transition-all duration-200">
-              <Logo variant="dark" />
+      <div className="container mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          {/* Logo Section - Professional spacing and typography */}
+          <div className="flex items-center gap-4 cursor-pointer group">
+            <div className="transition-transform duration-300 group-hover:scale-105">
+              <Logo variant="dark" size="xl" className="mr-0" />
             </div>
             
-            <div className="hidden sm:flex flex-col justify-center -ml-1">
-              <span className="text-xl font-bold text-white leading-tight">
+            <div className="hidden sm:flex items-baseline gap-1">
+              <span className="text-2xl font-black text-white tracking-tight">
                 MIP
               </span>
-              <span className="text-sm font-bold text-gradient bg-gradient-to-r from-blue-400 to-white bg-clip-text text-transparent -mt-1">
-                TECHNOLOGIES
+              <span className="text-lg font-medium text-gray-400 tracking-wide uppercase">
+                Technologies
               </span>
             </div>
           </div>
           
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-2">
+          {/* Desktop Navigation - Professional spacing */}
+          <div className="hidden lg:flex items-center space-x-1">
             {navItems.map((item) => {
               const isActive = activeSection === item.href.slice(1);
               return (
                 <a
                   key={item.href}
                   href={item.href}
-                  className={`px-4 py-2 rounded-full font-medium transition-all duration-200 ${
+                  className={`px-5 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${
                     isActive 
-                      ? 'text-white bg-transparent border border-white/70' 
+                      ? 'text-white bg-white/10 border border-white/20' 
                       : 'text-gray-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -74,21 +74,21 @@ const Navigation = () => {
             })}
           </div>
           
-          {/* CTA Button Desktop */}
+          {/* CTA Button Desktop - Professional styling */}
           <div className="hidden md:flex items-center">
             <a
-              href="#contatti"
-              className="px-6 py-3 rounded-none font-medium bg-black border border-white text-white hover:bg-white hover:text-black transition-all duration-300"
+              href="#contact"
+              className="px-7 py-3 rounded-lg font-semibold text-sm bg-white text-black hover:bg-gray-100 transform hover:-translate-y-0.5 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
-              Contact Us
+              Get Started
             </a>
           </div>
           
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Better positioning */}
           <div className="lg:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-full text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+              className="p-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
             >
               <svg
                 className="w-6 h-6"
@@ -116,13 +116,13 @@ const Navigation = () => {
           </div>
         </div>
         
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Professional design */}
         <div className={`lg:hidden transition-all duration-300 overflow-hidden ${
           isMobileMenuOpen 
-            ? 'max-h-96 opacity-100 pb-4' 
+            ? 'max-h-96 opacity-100 pb-6' 
             : 'max-h-0 opacity-0'
         }`}>
-          <div className="bg-black rounded-xl shadow-xl border border-white/10 mt-2 overflow-hidden">
+          <div className="bg-black/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 mt-4 overflow-hidden">
             {navItems.map((item) => {
               const isActive = activeSection === item.href.slice(1);
               return (
@@ -130,9 +130,9 @@ const Navigation = () => {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block px-4 py-3 transition-all duration-200 border-b border-white/10 last:border-b-0 ${
+                  className={`block px-6 py-4 text-base font-medium transition-all duration-200 border-b border-white/5 last:border-b-0 ${
                     isActive 
-                      ? 'text-white bg-transparent' 
+                      ? 'text-white bg-white/5' 
                       : 'text-gray-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -141,14 +141,14 @@ const Navigation = () => {
               );
             })}
             
-            {/* Mobile CTA */}
-            <div className="p-4 border-t border-white/10">
+            {/* Mobile CTA - Professional styling */}
+            <div className="p-6 border-t border-white/10">
               <a
-                href="#contatti"
+                href="#contact"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full px-6 py-3 rounded-none font-medium text-center bg-black border border-white text-white hover:bg-white hover:text-black transition-all duration-300"
+                className="block w-full px-6 py-4 rounded-xl font-semibold text-center bg-white text-black hover:bg-gray-100 transition-all duration-300"
               >
-                Contattaci
+                Get Started
               </a>
             </div>
           </div>
