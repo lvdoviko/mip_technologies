@@ -80,7 +80,7 @@ const Navigation = () => {
               href="#contatti"
               className="px-6 py-3 rounded-none font-medium bg-black border border-white text-white hover:bg-white hover:text-black transition-all duration-300"
             >
-              Contattaci
+              Contact Us
             </a>
           </div>
           
