@@ -1,5 +1,7 @@
 // src/MainApp.jsx
 import React, { useEffect, useState } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navigation from './components/layout/Navigation';
 import Footer from './components/layout/Footer';
 import Hero from './sections/Hero';
@@ -10,6 +12,9 @@ import About from './sections/About';
 import Contact from './sections/Contact';
 import AnimatedBackground from './components/ui/AnimatedBackground';
 import './styles/globals.css';
+
+// Registra i plugin GSAP
+gsap.registerPlugin(ScrollTrigger);
 
 const MainApp = () => {
   const [scrollY, setScrollY] = useState(0);

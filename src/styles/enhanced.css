@@ -35,9 +35,29 @@
   --gray-500: #64748B;
   --gray-600: #475569;
   --gray-700: #334155;
-  --gray-800: #1E293B;
+  --gray-800: #1F2937;
   --gray-900: #0F172A;
   --gray-950: #020617;
+}
+
+/* Stili specifici per ScrollFloat */
+.scroll-float {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.scroll-float-text {
+  display: inline-block;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.char {
+  display: inline-block;
+  will-change: transform, opacity;
+  transform-origin: 50% 100%;
 }
 
 /* Stili per sfumature arcobaleno */

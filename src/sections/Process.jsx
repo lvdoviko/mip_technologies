@@ -189,7 +189,7 @@ const Process = () => {
         
         {/* Bottom CTA */}
         <div className="text-center mt-16">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto bg-black border border-white/10 rounded-xl p-8 md:p-12">
             <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
               Ready to Experience This Methodology?
             </h3>
@@ -199,7 +199,7 @@ const Process = () => {
             </p>
             <a 
               href="#contact" 
-              className="inline-flex items-center justify-center px-8 py-4 bg-white text-black rounded-full font-medium hover:bg-gray-100 transition-colors duration-300"
+              className="inline-flex items-center justify-center px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300"
             >
               Begin Your AI Journey
             </a>

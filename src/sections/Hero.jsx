@@ -1,13 +1,22 @@
-// src/sections/Hero.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import RainbowGradientText from '../components/ui/RainbowGradientText';
+import ScrollFloat from '../components/animations/ScrollFloat';
+import RainbowScrollFloat from '../components/animations/RainbowScrollFloat';
 
-// Component for typing cursor
+// Component for typing cursor with better vertical alignment
 const TypewriterCursor = ({ blinking = true }) => {
   return (
     <span 
-      className={`inline-block w-0.5 h-8 md:h-12 lg:h-16 bg-white ml-1 align-middle ${blinking ? 'animate-blink' : ''}`}
-      style={{ animationDuration: '800ms', animationIterationCount: 'infinite' }}
+      className={`inline-block w-0.5 h-8 md:h-12 lg:h-16 bg-white ml-1 ${blinking ? 'animate-blink' : ''}`}
+      style={{ 
+        animationDuration: '800ms', 
+        animationIterationCount: 'infinite',
+        verticalAlign: 'middle',
+        transform: 'translateY(0%)', // Rimuoviamo lo spostamento verticale
+        position: 'relative',
+        top: '0.05em', // Valore leggermente positivo per abbassare il cursore
+        display: 'inline-block'
+      }}
     />
   );
 };
@@ -171,7 +180,7 @@ const Hero = () => {
           Enterprise AI Solutions
         </div>
         
-        {/* Main Heading */}
+        {/* Main Heading - utilizzando il RainbowScrollFloat ma senza margine in basso */}
         <div 
           className="mb-12"
           style={{ 
@@ -180,14 +189,36 @@ const Hero = () => {
             opacity: Math.max(0, 1 - scrollY / 700),
           }}
         >
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 text-white tracking-tighter">
-            Unleash the Power of
-            <br />
-            <RainbowGradientText large={true} className="py-2 tracking-tighter">
-              {typedText}
-            </RainbowGradientText>
-            <TypewriterCursor />
-          </h1>
+          {/* Il contenitore principale con le classi di spaziatura */}
+          <div className="space-y-0"> {/* space-y-0 per rimuovere lo spazio verticale tra elementi */}
+            {/* ScrollFloat senza margine in basso (mb-0 invece di mb-6) */}
+            <RainbowScrollFloat
+              fontSize="text-5xl md:text-7xl lg:text-8xl"
+              containerClassName="tracking-tighter mb-0"
+              animationDuration={1}
+              ease="back.inOut(2)"
+              scrollStart="center bottom+=50%"
+              scrollEnd="bottom bottom-=40%"
+              stagger={0.03}
+              large={true}
+              preserveRainbow={false}
+              lineHeight="leading-none"
+              noMargin={true}
+            >
+              Unleash the Power of
+            </RainbowScrollFloat>
+            
+            {/* Contenitore del testo arcobaleno con cursore allineato */}
+            <div className="tracking-tighter mt-0 flex items-center justify-center">
+              <div className="inline-flex items-center"> 
+                <RainbowGradientText large={true} className="tracking-tighter text-5xl md:text-7xl lg:text-8xl">
+                  {typedText}
+                </RainbowGradientText>
+                {/* Cursore con allineamento verticale regolato finemente */}
+                <TypewriterCursor />
+              </div>
+            </div>
+          </div>
         </div>
         
         {/* Subtitle */}
@@ -212,42 +243,39 @@ const Hero = () => {
         
         {/* CTA Buttons */}
         <div
-          className="flex flex-col sm:flex-row gap-5 justify-center items-center"
-          style={{ 
-            transform: `translateY(${-scrollY * 0.05}px)`,
-            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-            opacity: Math.max(0, 1 - scrollY / 800),
-          }}
-        >
-          <a 
-            href="#solutions" 
-            className="
-              inline-flex items-center justify-center
-              px-8 py-4 rounded-full font-medium text-lg
-              bg-white text-gray-900 hover:bg-gray-100
-              transform hover:-translate-y-1 hover:shadow-lg
-              transition-all duration-300
-              shadow-xl shadow-white/5
-            "
-          >
-            Explore Our Solutions
-          </a>
-          
-          <a 
-            href="#contact" 
-            className="
-              inline-flex items-center justify-center
-              px-8 py-4 rounded-full font-medium text-lg
-              bg-transparent text-white hover:text-white
-              border border-white/20 hover:border-white/40
-              transform hover:-translate-y-1 hover:shadow-lg
-              transition-all duration-300
-              shadow-xl shadow-white/5
-            "
-          >
-            Start Your AI Journey
-          </a>
-        </div>
+  className="flex flex-col sm:flex-row gap-5 justify-center items-center"
+  style={{ 
+    transform: `translateY(${-scrollY * 0.05}px)`,
+    transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+    opacity: Math.max(0, 1 - scrollY / 800),
+  }}
+>
+  <a 
+    href="#solutions" 
+    className="
+      inline-flex items-center justify-center
+      px-6 py-3 rounded-none font-medium
+      bg-black text-white hover:bg-white hover:text-black
+      transition-all duration-300
+      border border-white text-center
+    "
+  >
+    Explore Our Solutions
+  </a>
+  
+  <a 
+    href="#contact" 
+    className="
+      inline-flex items-center justify-center
+      px-6 py-3 rounded-none font-medium
+      bg-transparent text-white
+      border border-white/50 hover:border-white hover:bg-black/30
+      transition-all duration-300 text-center
+    "
+  >
+    Start Your AI Journey
+  </a>
+</div>
         
         {/* Scroll Indicator */}
         <div 

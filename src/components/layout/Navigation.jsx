@@ -78,7 +78,7 @@ const Navigation = () => {
           <div className="hidden md:flex items-center">
             <a
               href="#contatti"
-              className="px-5 py-2.5 rounded-full font-medium bg-white hover:bg-gray-100 text-black shadow-lg shadow-white/10 transform hover:-translate-y-0.5 transition-all duration-300"
+              className="px-6 py-3 rounded-none font-medium bg-black border border-white text-white hover:bg-white hover:text-black transition-all duration-300"
             >
               Contattaci
             </a>
@@ -146,7 +146,7 @@ const Navigation = () => {
               <a
                 href="#contatti"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full px-4 py-3 rounded-full font-medium text-center bg-white hover:bg-gray-100 text-black transition-all duration-200"
+                className="block w-full px-6 py-3 rounded-none font-medium text-center bg-black border border-white text-white hover:bg-white hover:text-black transition-all duration-300"
               >
                 Contattaci
               </a>

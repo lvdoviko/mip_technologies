@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('./enhanced.css');
 
 :root {
   --primary: #0070F3;
@@ -307,66 +308,6 @@ section {
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
-/* ===== SCROLLBAR ELEGANTE ===== */
-::-webkit-scrollbar {
-  width: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: #111111;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* ===== ACCESSIBILITÀ ===== */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  
-  html {
-    scroll-behavior: auto;
-  }
-  
-  .animate-on-scroll,
-  .animate-from-left,
-  .animate-from-right,
-  .animate-fade,
-  .animate-scale {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* ===== MEDIA QUERIES ===== */
-@media (max-width: 640px) {
-  .container {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-}
-
-@media (min-width: 1536px) {
-  .container.max-w-6xl {
-    max-width: 72rem;
-  }
-  
-  .container.max-w-7xl {
-    max-width: 80rem;
-  }
-}
-
 /* Cursore Typewriter animato */
 .typewriter-cursor {
   display: inline-block;
@@ -411,20 +352,4 @@ section {
 .about-animate.is-visible {
   opacity: 1;
   transform: translateY(0) translateX(0);
-}
-
-/* Effetto gradiente arcobaleno per il testo */
-.text-gradient-rainbow {
-  background: linear-gradient(90deg, #ff0080, #ff8000, #ffff00, #00ff80, #00ffff, #0080ff, #8000ff, #ff0080);
-  background-size: 200% auto;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: gradient 8s linear infinite;
-}
-
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
 }

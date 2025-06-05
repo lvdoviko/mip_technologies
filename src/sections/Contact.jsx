@@ -1,7 +1,7 @@
-// src/sections/Contact.jsx
 import React from 'react';
 import { contactInfo } from '../data/contactInfo';
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
+import ScrollFloat from '../components/animations/ScrollFloat';
 
 // Internal ContactForm component to avoid import issues
 const ContactForm = () => {
@@ -137,7 +137,17 @@ const Contact = () => {
     <section id="contact" className="py-20 bg-black">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="text-center mb-16 animate-on-scroll">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Ready to Transform Your Business?</h2>
+          <ScrollFloat
+            containerClassName="text-4xl md:text-5xl font-bold mb-6 text-white"
+            animationDuration={1}
+            ease="back.inOut(2)"
+            scrollStart="top bottom+=30%"
+            scrollEnd="center center"
+            stagger={0.03}
+          >
+            Ready to Transform Your Business?
+          </ScrollFloat>
+          
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             Join industry leaders who trust MIP Technologies to deliver{' '}
             <span className="text-white font-semibold">breakthrough AI solutions</span>.{' '}

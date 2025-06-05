@@ -57,7 +57,7 @@ const Projects = () => {
         
         {/* CTA Section */}
         <div className="text-center mt-16 animate-on-scroll">
-          <div className="bg-gray-800 rounded-xl p-8 md:p-12 max-w-4xl mx-auto">
+          <div className="bg-black rounded-xl p-8 md:p-12 max-w-4xl mx-auto border border-white/10">
             <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
               Ready to Write Your Success Story?
             </h3>
@@ -68,13 +68,13 @@ const Projects = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
                 href="#contact" 
-                className="px-8 py-4 bg-white text-gray-900 rounded-full font-medium hover:bg-gray-100 transition-colors duration-300"
+                className="px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300"
               >
                 Start Your Transformation
               </a>
               <a 
                 href="#methodology" 
-                className="px-8 py-4 bg-transparent text-white border border-white/30 rounded-full font-medium hover:border-white/50 transition-colors duration-300"
+                className="px-6 py-3 bg-transparent border border-white/50 text-white rounded-none font-medium hover:border-white hover:bg-black/30 transition-all duration-300"
               >
                 Explore Our Methodology
               </a>

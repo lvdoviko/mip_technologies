@@ -1,29 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-// Temporary import of rainbow text component
-const RainbowGradientText = ({ children, className = '', large = false }) => {
-  return (
-    <span 
-      className={`font-bold ${className}`}
-      style={{
-        backgroundImage: large 
-          ? `linear-gradient(90deg, #ff0080, #ff8000, #ffff00, #00ff80, #00ffff, #0080ff, #8000ff, #ff0080)`
-          : `linear-gradient(90deg, #ff0080, #7928CA, #0070F3, #00DFD8, #7928CA, #ff0080)`,
-        backgroundSize: '200% 100%',
-        backgroundClip: 'text',
-        WebkitBackgroundClip: 'text',
-        color: 'transparent',
-        WebkitTextFillColor: 'transparent',
-        display: 'inline-block',
-        animation: 'gradient-animation 8s linear infinite',
-        filter: large ? 'brightness(1.1) contrast(1.1)' : 'none',
-        textShadow: large ? '0 0 30px rgba(128, 0, 255, 0.15)' : 'none'
-      }}
-    >
-      {children}
-    </span>
-  );
-};
+import RainbowGradientText from '../components/ui/RainbowGradientText';
+import ScrollFloat from '../components/animations/ScrollFloat';
+import RainbowScrollFloat from '../components/animations/RainbowScrollFloat';
 
 // Enhanced services data
 const servicesData = [
@@ -213,14 +191,32 @@ const Services = () => {
             Enterprise AI Solutions
           </div>
           
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight tracking-tight">
-            Transformative AI
-            <RainbowGradientText large={true} className="block mt-2">
-              That Delivers Results
-            </RainbowGradientText>
-          </h2>
+          {/* Contenitore per i titoli con spaziatura ridotta */}
+          <div className="space-y-0"> {/* space-y-0 rimuove lo spazio verticale predefinito */}
+            {/* Utilizziamo RainbowScrollFloat senza margine in basso */}
+            <RainbowScrollFloat
+              fontSize="text-4xl md:text-5xl"
+              containerClassName="font-bold leading-tight tracking-tight mb-0" // mb-0 rimuove il margine in basso
+              animationDuration={1}
+              ease="back.inOut(2)"
+              scrollStart="center bottom+=50%"
+              scrollEnd="bottom bottom-=40%"
+              stagger={0.03}
+              preserveRainbow={false}
+            >
+              Transformative AI
+            </RainbowScrollFloat>
+            
+            {/* Il sottotitolo arcobaleno senza margine superiore */}
+            <div className="mt-0">
+              <RainbowGradientText large={true} className="block text-4xl md:text-5xl font-bold">
+                That Delivers Results
+              </RainbowGradientText>
+            </div>
+          </div>
           
-          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+          {/* Una distanza prima del testo descrittivo */}
+          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed mt-4">
             Harness the power of{' '}
             <span className="text-white font-semibold">cutting-edge artificial intelligence</span>{' '}
             to drive unprecedented growth, efficiency, and competitive advantage in your market.
@@ -242,67 +238,63 @@ const Services = () => {
         
         {/* CTA Section */}
         <div className="text-center">
-          <div 
-            className="
-              max-w-4xl mx-auto rounded-xl p-10
-              backdrop-blur-sm border border-white/10 bg-white/5
-              relative overflow-hidden
-            "
-          >
-            {/* Background light effect */}
-            <div
-              className="absolute inset-0 pointer-events-none opacity-20"
-              style={{
-                background: `
-                  radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
-                  radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 70%)
-                `
-              }}
-            />
-            
-            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white relative z-10">
-              Ready to Lead Your Industry with AI?
-            </h3>
-            
-            <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto relative z-10">
-              Join visionary companies already leveraging our AI solutions to{' '}
-              <span className="text-white font-semibold">dominate their markets</span>.{' '}
-              Schedule your strategic consultation today.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-5 justify-center relative z-10">
-              <a 
-                href="#contact" 
-                className="
-                  inline-flex items-center justify-center
-                  px-8 py-4 rounded-full font-medium text-base
-                  bg-white hover:bg-gray-100
-                  text-black
-                  transition-all duration-300
-                  shadow-lg shadow-white/10
-                  transform hover:-translate-y-0.5
-                "
-              >
-                Schedule Strategic Consultation
-              </a>
-              
-              <a
-                href="#case-studies" 
-                className="
-                  inline-flex items-center justify-center
-                  px-8 py-4 rounded-full font-medium text-base
-                  bg-transparent text-white hover:text-white
-                  border border-white/20 hover:border-white/40
-                  transition-all duration-300
-                  shadow-lg shadow-white/5
-                  transform hover:-translate-y-0.5
-                "
-              >
-                View Success Stories
-              </a>
-            </div>
-          </div>
-        </div>
+  <div 
+    className="
+      max-w-4xl mx-auto rounded-none p-10
+      backdrop-blur-sm border border-white/10 bg-black/30
+      relative overflow-hidden
+    "
+  >
+    {/* Background light effect */}
+    <div
+      className="absolute inset-0 pointer-events-none opacity-20"
+      style={{
+        background: `
+          radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
+          radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 70%)
+        `
+      }}
+    />
+    
+    <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white relative z-10">
+      Ready to Lead Your Industry with AI?
+    </h3>
+    
+    <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto relative z-10">
+      Join visionary companies already leveraging our AI solutions to{' '}
+      <span className="text-white font-semibold">dominate their markets</span>.{' '}
+      Schedule your strategic consultation today.
+    </p>
+    
+    <div className="flex flex-col sm:flex-row gap-5 justify-center relative z-10">
+  <a 
+    href="#contact" 
+    className="
+      inline-flex items-center justify-center
+      px-6 py-3 rounded-none font-medium
+      bg-black text-white hover:bg-white hover:text-black
+      transition-all duration-300
+      border border-white text-center
+    "
+  >
+    Schedule Strategic Consultation
+  </a>
+  
+  <a
+    href="#case-studies" 
+    className="
+      inline-flex items-center justify-center
+      px-6 py-3 rounded-none font-medium
+      bg-transparent text-white
+      border border-white/50 hover:border-white hover:bg-black/30
+      transition-all duration-300 text-center
+    "
+  >
+    View Success Stories
+  </a>
+</div>
+  </div>
+</div>
       </div>
     </section>
   );
