@@ -9,12 +9,12 @@ const Process = () => {
   const sectionRef = useRef(null);
   const cardsRef = useRef([]);
 
-  // Gestione dello scroll
+  // Scroll handling
   useEffect(() => {
     const handleScroll = () => {
       setOffset(window.scrollY);
       
-      // Determina quale card è nella vista
+      // Determine which card is in view
       if (sectionRef.current) {
         const sectionTop = sectionRef.current.getBoundingClientRect().top;
         const viewportHeight = window.innerHeight;
@@ -25,7 +25,7 @@ const Process = () => {
               const cardRect = card.getBoundingClientRect();
               const cardCenter = cardRect.top + cardRect.height / 2;
               
-              // Se il centro della card è vicino al centro della viewport
+              // If card center is near viewport center
               if (cardCenter > viewportHeight * 0.3 && cardCenter < viewportHeight * 0.7) {
                 setActiveStep(index);
               }
@@ -39,7 +39,7 @@ const Process = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
-  // Verifica dell'intersezione per animazione
+  // Intersection check for animation
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -61,11 +61,11 @@ const Process = () => {
 
   return (
     <section 
-      id="processo" 
+      id="methodology" 
       className="py-20 bg-black relative overflow-hidden"
       ref={sectionRef}
     >
-      {/* Griglia di sfondo */}
+      {/* Background grid */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-10"
         style={{
@@ -81,14 +81,16 @@ const Process = () => {
       
       <div className="container mx-auto max-w-7xl px-4 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Il Nostro Processo</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Our Proven Methodology</h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Un approccio metodico e strutturato per garantire il successo di ogni progetto
+            A systematic, results-driven approach that has delivered{' '}
+            <span className="text-white font-semibold">transformational outcomes</span>{' '}
+            for Fortune 500 companies worldwide
           </p>
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 relative">
-          {/* Linea temporale orizzontale */}
+          {/* Horizontal timeline */}
           <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-px bg-white/10 transform -translate-y-1/2 z-0"></div>
           
           {steps.map((step, index) => (
@@ -183,6 +185,25 @@ const Process = () => {
               )}
             </div>
           ))}
+        </div>
+        
+        {/* Bottom CTA */}
+        <div className="text-center mt-16">
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
+              Ready to Experience This Methodology?
+            </h3>
+            <p className="text-gray-400 mb-8">
+              Our systematic approach has delivered measurable results for companies across every major industry. 
+              Let's discuss how we can apply this proven methodology to accelerate your AI transformation.
+            </p>
+            <a 
+              href="#contact" 
+              className="inline-flex items-center justify-center px-8 py-4 bg-white text-black rounded-full font-medium hover:bg-gray-100 transition-colors duration-300"
+            >
+              Begin Your AI Journey
+            </a>
+          </div>
         </div>
       </div>
     </section>

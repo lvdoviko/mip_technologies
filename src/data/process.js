@@ -2,38 +2,38 @@
 export const steps = [
   {
     number: "01",
-    title: "Analisi e Consulenza",
-    description: "Analizziamo le tue esigenze e definiamo la strategia AI più adatta al tuo business",
+    title: "Strategic Discovery & Assessment",
+    description: "Deep-dive analysis of your business objectives, data landscape, and competitive positioning to identify high-impact AI opportunities",
     icon: "◐"
   },
   {
     number: "02",
-    title: "Progettazione",
-    description: "Progettiamo l'architettura della soluzione e definiamo i modelli AI necessari",
+    title: "AI Architecture & Blueprint",
+    description: "Design enterprise-grade AI architecture with scalable models, ensuring seamless integration with your existing technology ecosystem",
     icon: "◈"
   },
   {
     number: "03",
-    title: "Sviluppo",
-    description: "Sviluppiamo la soluzione con tecnologie all'avanguardia e best practices",
+    title: "Agile Development & Integration",
+    description: "Rapid prototyping and iterative development using cutting-edge technologies, with continuous stakeholder feedback and validation",
     icon: "◆"
   },
   {
     number: "04",
-    title: "Training & Testing",
-    description: "Addestriamo i modelli AI e testiamo la soluzione per garantire performance ottimali",
+    title: "Model Training & Optimization",
+    description: "Advanced machine learning training with proprietary datasets, rigorous testing, and performance optimization for maximum accuracy",
     icon: "◉"
   },
   {
     number: "05",
-    title: "Deploy & Monitoring",
-    description: "Implementiamo la soluzione e monitoriamo costantemente le performance",
+    title: "Enterprise Deployment & Monitoring",
+    description: "Seamless production deployment with comprehensive monitoring, performance analytics, and real-time optimization capabilities",
     icon: "●"
   },
   {
     number: "06",
-    title: "Supporto Continuo",
-    description: "Forniamo supporto tecnico e aggiornamenti per mantenere la soluzione sempre efficiente",
+    title: "Continuous Innovation & Growth",
+    description: "Ongoing model refinement, feature enhancement, and strategic consultation to ensure sustained competitive advantage",
     icon: "◎"
   }
 ];

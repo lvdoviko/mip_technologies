@@ -1,8 +1,8 @@
 // src/data/navItems.js
 export const navItems = [
-  { href: '#servizi', label: 'Servizi' },
-  { href: '#progetti', label: 'Progetti' },
-  { href: '#processo', label: 'Processo' },
-  { href: '#chi-siamo', label: 'Chi Siamo' },
-  { href: '#contatti', label: 'Contatti' }
+  { href: '#solutions', label: 'Solutions' },
+  { href: '#case-studies', label: 'Case Studies' },
+  { href: '#methodology', label: 'Methodology' },
+  { href: '#company', label: 'Company' },
+  { href: '#contact', label: 'Get Started' }
 ];

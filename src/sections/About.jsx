@@ -8,12 +8,12 @@ const About = () => {
   const cardsRef = useRef([]);
   const sectionRef = useRef(null);
 
-  // Gestione dello scroll e parallasse
+  // Scroll handling and parallax
   useEffect(() => {
     const handleScroll = () => {
       setOffset(window.scrollY);
       
-      // Attiva card in base allo scroll
+      // Activate cards based on scroll
       if (sectionRef.current) {
         const sectionTop = sectionRef.current.getBoundingClientRect().top;
         const viewportHeight = window.innerHeight;
@@ -37,7 +37,7 @@ const About = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
-  // Animazione all'entrata
+  // Animation on entry
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -62,11 +62,11 @@ const About = () => {
 
   return (
     <section 
-      id="chi-siamo" 
+      id="company" 
       className="py-24 bg-black relative overflow-hidden"
       ref={sectionRef}
     >
-      {/* Griglia di sfondo */}
+      {/* Background grid */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-10"
         style={{
@@ -80,7 +80,7 @@ const About = () => {
         }}
       />
       
-      {/* Sfumature colorate sottili */}
+      {/* Subtle colored gradients */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-5"
         style={{
@@ -100,33 +100,34 @@ const About = () => {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-black border border-white/20 text-white px-4 py-2 rounded-none text-sm font-medium mb-8">
               <div className="w-2 h-2 bg-white"></div>
-              Chi Siamo
+              Our Mission
             </div>
             
             {/* Main Heading */}
             <div className="space-y-6">
               <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white">
-                Innovazione
-                <span className="text-gradient-rainbow block mt-2">AI-Powered</span>
+                Pioneering the
+                <span className="text-gradient-rainbow block mt-2">AI Revolution</span>
               </h2>
               
               {/* Enhanced Description */}
               <div className="space-y-6">
                 <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
-                  <span className="text-white font-semibold">MIP Technologies</span> è una società innovativa specializzata nello sviluppo e implementazione di{' '}
-                  <span className="text-white font-semibold">soluzioni di intelligenza artificiale</span>.
+                  <span className="text-white font-semibold">MIP Technologies</span> is the catalyst for enterprise{' '}
+                  <span className="text-white font-semibold">AI transformation</span>. We don't just build technology—we architect the future of business intelligence.
                 </p>
                 
                 <p className="text-gray-400 leading-relaxed">
-                  Il nostro team di esperti combina competenze tecniche avanzate con una profonda comprensione delle esigenze aziendali, creando soluzioni che{' '}
-                  <span className="text-white font-semibold">trasformano il futuro</span>.
+                  Our team of AI visionaries and engineering experts partners with industry leaders to{' '}
+                  <span className="text-white font-semibold">unlock unprecedented value</span> through intelligent automation, predictive analytics, and transformative AI solutions.
                 </p>
                 
                 <div className="bg-black border border-white/20 rounded-none p-6 transition-all duration-300 hover:border-white/50">
                   <p className="text-gray-300 leading-relaxed italic">
-                    "Crediamo che l'AI non sia solo una tecnologia, ma uno{' '}
-                    <span className="text-white font-semibold">strumento per trasformare</span>{' '}
-                    il modo in cui le aziende operano, crescono e innovano."
+                    "We believe AI is not just a tool—it's the{' '}
+                    <span className="text-white font-semibold">strategic advantage</span>{' '}
+                    that separates industry leaders from followers. Our mission is to make that advantage accessible to visionary organizations ready to{' '}
+                    <span className="text-white font-semibold">shape their industry's future</span>."
                   </p>
                 </div>
               </div>
@@ -135,17 +136,17 @@ const About = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-8 about-animate opacity-0 transform translate-y-10 transition-all duration-700" style={{ transitionDelay: '200ms' }}>
               <a 
-                href="#contatti" 
+                href="#contact" 
                 className="px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300 text-center"
               >
-                Scopri di più
+                Partner With Us
               </a>
               
               <a 
-                href="#servizi" 
+                href="#solutions" 
                 className="px-6 py-3 bg-transparent border border-white/50 text-white rounded-none font-medium hover:border-white hover:bg-black/30 transition-all duration-300 text-center"
               >
-                I Nostri Servizi
+                Explore Solutions
               </a>
             </div>
           </div>

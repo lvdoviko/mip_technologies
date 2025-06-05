@@ -2,22 +2,22 @@
 export const contactInfo = [
   {
     title: "Email",
-    details: ["info@miptechnologies.com", "business@miptechnologies.com"],
-    icon: "mail" // Riferimento a icona Lucide
+    details: ["hello@miptechnologies.com", "partnerships@miptechnologies.com"],
+    icon: "mail"
   },
   {
-    title: "Telefono",
-    details: ["+39 02 1234 5678", "+39 345 678 9012"],
-    icon: "phone" // Riferimento a icona Lucide
+    title: "Phone",
+    details: ["+1 (555) 123-4567", "+1 (555) 987-6543"],
+    icon: "phone"
   },
   {
-    title: "Ufficio",
-    details: ["Via Innovation 123", "20121 Milano, Italia"],
-    icon: "map-pin" // Riferimento a icona Lucide
+    title: "Headquarters",
+    details: ["1000 Innovation Drive", "San Francisco, CA 94105"],
+    icon: "map-pin"
   },
   {
-    title: "Orari",
-    details: ["Lun - Ven: 9:00 - 18:00", "Sabato: Su appuntamento"],
-    icon: "clock" // Riferimento a icona Lucide
+    title: "Business Hours",
+    details: ["Mon - Fri: 9:00 AM - 6:00 PM PST", "24/7 Emergency Support Available"],
+    icon: "clock"
   }
 ];

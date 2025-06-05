@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-// Importo temporaneo del componente per il testo arcobaleno
+// Temporary import of rainbow text component
 const RainbowGradientText = ({ children, className = '', large = false }) => {
   return (
     <span 
@@ -25,7 +25,7 @@ const RainbowGradientText = ({ children, className = '', large = false }) => {
   );
 };
 
-// Dati di esempio dei servizi
+// Enhanced services data
 const servicesData = [
   {
     icon: (
@@ -34,9 +34,9 @@ const servicesData = [
         <path d="M16.2398 7.76001L14.1198 14.12L7.75977 16.24L9.87977 9.88001L16.2398 7.76001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: "Implementazione AI su Webapp",
-    description: "Integriamo modelli di intelligenza artificiale avanzati nelle tue applicazioni web esistenti, potenziando le funzionalità e migliorando l'esperienza utente.",
-    features: ["Machine Learning Integration", "API AI Custom", "Ottimizzazione Performance", "Scalabilità Garantita"],
+    title: "AI-Powered Business Transformation",
+    description: "Revolutionize your operations with enterprise-grade AI integration. We transform legacy systems into intelligent powerhouses that drive exponential growth and operational excellence.",
+    features: ["Advanced ML Pipeline Integration", "Real-time Decision Intelligence", "Automated Process Optimization", "Enterprise-Scale Performance"],
     color: "#0070F3"
   },
   {
@@ -47,9 +47,9 @@ const servicesData = [
         <path d="M12 22.08V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: "Sviluppo Webapp con AI",
-    description: "Creiamo applicazioni web complete con intelligenza artificiale integrata fin dalla progettazione, per soluzioni innovative e all'avanguardia.",
-    features: ["Design AI-First", "UX Intelligente", "Backend Scalabile", "Frontend Responsive"],
+    title: "Next-Generation Intelligent Applications",
+    description: "Build industry-defining applications with AI at their core. From intelligent user interfaces to predictive backends, we create solutions that anticipate and exceed user expectations.",
+    features: ["Cognitive Application Architecture", "Predictive User Experience", "Self-Optimizing Systems", "Intelligent Automation Framework"],
     color: "#7928CA"
   },
   {
@@ -60,14 +60,14 @@ const servicesData = [
         <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: "Modelli AI Personalizzati",
-    description: "Sviluppiamo e addestriamo modelli di intelligenza artificiale su misura per le specifiche esigenze del tuo business e settore.",
-    features: ["Training Personalizzato", "Dataset Ottimizzati", "Modelli Proprietari", "Manutenzione Continua"],
+    title: "Proprietary AI Model Development",
+    description: "Develop your competitive edge with custom AI models that understand your unique business domain. Transform your data into proprietary intelligence that drives market leadership.",
+    features: ["Domain-Specific Model Training", "Proprietary Algorithm Development", "IP-Protected AI Assets", "Continuous Learning Architecture"],
     color: "#FF0080"
   }
 ];
 
-// Card Componente
+// Card Component
 const ServiceCard = ({ service, index, onMouseEnter, isActive }) => {
   const { icon, title, description, features, color } = service;
   
@@ -87,7 +87,7 @@ const ServiceCard = ({ service, index, onMouseEnter, isActive }) => {
         transitionDelay: `${index * 50}ms`,
       }}
     >
-      {/* Blob di luce di sfondo */}
+      {/* Background light blob */}
       <div 
         className="absolute -inset-0.5 opacity-0 transition-opacity duration-500 z-0 pointer-events-none"
         style={{
@@ -168,7 +168,7 @@ const Services = () => {
     };
   }, []);
   
-  // Aggiungi gli stili CSS per l'animazione del gradiente
+  // Add CSS styles for gradient animation
   useEffect(() => {
     const styleElement = document.createElement('style');
     styleElement.textContent = `
@@ -186,11 +186,11 @@ const Services = () => {
 
   return (
     <section 
-      id="servizi" 
+      id="solutions" 
       className="py-24 relative"
       ref={sectionRef}
     >
-      {/* Effetto spotlight che segue il mouse */}
+      {/* Spotlight effect following mouse */}
       <div 
         className="absolute pointer-events-none opacity-30"
         style={{
@@ -210,20 +210,20 @@ const Services = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium mb-6 border border-white/10">
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            I Nostri Servizi
+            Enterprise AI Solutions
           </div>
           
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight tracking-tight">
-            Soluzioni
+            Transformative AI
             <RainbowGradientText large={true} className="block mt-2">
-              AI Complete
+              That Delivers Results
             </RainbowGradientText>
           </h2>
           
           <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-            Trasformiamo il tuo business con{' '}
-            <span className="text-white font-semibold">intelligenza artificiale avanzata</span>.
-            Ogni soluzione è progettata per massimizzare l'efficienza e l'innovazione.
+            Harness the power of{' '}
+            <span className="text-white font-semibold">cutting-edge artificial intelligence</span>{' '}
+            to drive unprecedented growth, efficiency, and competitive advantage in your market.
           </p>
         </div>
         
@@ -249,7 +249,7 @@ const Services = () => {
               relative overflow-hidden
             "
           >
-            {/* Effetto luce di sfondo */}
+            {/* Background light effect */}
             <div
               className="absolute inset-0 pointer-events-none opacity-20"
               style={{
@@ -261,17 +261,18 @@ const Services = () => {
             />
             
             <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white relative z-10">
-              Pronto a trasformare il tuo business con l'AI?
+              Ready to Lead Your Industry with AI?
             </h3>
             
             <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto relative z-10">
-              Scopri come le nostre soluzioni possono rivoluzionare la tua azienda. 
-              <span className="text-white font-semibold"> Consulenza gratuita</span> disponibile.
+              Join visionary companies already leveraging our AI solutions to{' '}
+              <span className="text-white font-semibold">dominate their markets</span>.{' '}
+              Schedule your strategic consultation today.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-5 justify-center relative z-10">
               <a 
-                href="#contatti" 
+                href="#contact" 
                 className="
                   inline-flex items-center justify-center
                   px-8 py-4 rounded-full font-medium text-base
@@ -282,11 +283,11 @@ const Services = () => {
                   transform hover:-translate-y-0.5
                 "
               >
-                Richiedi Consulenza Gratuita
+                Schedule Strategic Consultation
               </a>
               
               <a
-                href="#progetti" 
+                href="#case-studies" 
                 className="
                   inline-flex items-center justify-center
                   px-8 py-4 rounded-full font-medium text-base
@@ -297,7 +298,7 @@ const Services = () => {
                   transform hover:-translate-y-0.5
                 "
               >
-                Vedi i Nostri Progetti
+                View Success Stories
               </a>
             </div>
           </div>

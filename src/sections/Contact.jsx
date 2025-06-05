@@ -3,7 +3,7 @@ import React from 'react';
 import { contactInfo } from '../data/contactInfo';
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
 
-// Componente ContactForm interno per evitare problemi di importazione
+// Internal ContactForm component to avoid import issues
 const ContactForm = () => {
   const [formData, setFormData] = React.useState({
     name: '',
@@ -14,7 +14,7 @@ const ContactForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Grazie per il tuo messaggio! Ti contatteremo presto.');
+    alert('Thank you for your inquiry! Our AI strategy team will contact you within 24 hours to discuss your transformation goals.');
     setFormData({ name: '', email: '', company: '', message: '' });
   };
 
@@ -30,7 +30,7 @@ const ContactForm = () => {
       <div className="grid md:grid-cols-2 gap-6">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
-            Nome *
+            Full Name *
           </label>
           <input
             type="text"
@@ -40,12 +40,12 @@ const ContactForm = () => {
             value={formData.name}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
-            placeholder="Il tuo nome"
+            placeholder="Your full name"
           />
         </div>
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
-            Email *
+            Business Email *
           </label>
           <input
             type="email"
@@ -55,29 +55,30 @@ const ContactForm = () => {
             value={formData.email}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
-            placeholder="La tua email"
+            placeholder="your.email@company.com"
           />
         </div>
       </div>
       
       <div>
         <label htmlFor="company" className="block text-sm font-medium text-white mb-2">
-          Azienda
+          Company / Organization *
         </label>
         <input
           type="text"
           id="company"
           name="company"
+          required
           value={formData.company}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
-          placeholder="Nome della tua azienda"
+          placeholder="Your company name"
         />
       </div>
       
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
-          Messaggio *
+          Project Details & AI Goals *
         </label>
         <textarea
           id="message"
@@ -87,7 +88,7 @@ const ContactForm = () => {
           value={formData.message}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all resize-none"
-          placeholder="Descrivi il tuo progetto o le tue esigenze..."
+          placeholder="Describe your AI transformation goals, current challenges, and how we can help accelerate your business growth..."
         />
       </div>
       
@@ -95,13 +96,13 @@ const ContactForm = () => {
         type="submit"
         className="w-full bg-black text-white py-4 px-6 rounded-none font-medium border border-white hover:bg-white hover:text-black transition-colors duration-300"
       >
-        Invia Messaggio
+        Start Your AI Transformation
       </button>
     </form>
   );
 };
 
-// Icone per i componenti corrispondenti ai tipi di contatto
+// Icons for corresponding contact types
 const iconComponents = {
   mail: Mail,
   phone: Phone,
@@ -133,19 +134,25 @@ const Contact = () => {
   useScrollAnimation();
   
   return (
-    <section id="contatti" className="py-20 bg-black">
+    <section id="contact" className="py-20 bg-black">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="text-center mb-16 animate-on-scroll">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Iniziamo Insieme</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Ready to Transform Your Business?</h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Hai un progetto in mente? Contattaci per una consulenza gratuita e scopri come l'AI può trasformare il tuo business
+            Join industry leaders who trust MIP Technologies to deliver{' '}
+            <span className="text-white font-semibold">breakthrough AI solutions</span>.{' '}
+            Let's discuss how we can accelerate your competitive advantage.
           </p>
         </div>
         
         <div className="grid lg:grid-cols-2 gap-16">
           <div className="space-y-8 animate-on-scroll">
             <div>
-              <h3 className="text-2xl font-bold mb-6 text-white">Informazioni di Contatto</h3>
+              <h3 className="text-2xl font-bold mb-6 text-white">Let's Build the Future Together</h3>
+              <p className="text-gray-400 mb-8 leading-relaxed">
+                Our AI strategists are ready to explore your transformation opportunities. 
+                From initial consultation to full-scale implementation, we're your partners in innovation.
+              </p>
             </div>
             
             {contactInfo.map((info, index) => {
@@ -169,10 +176,23 @@ const Contact = () => {
                 </div>
               );
             })}
+            
+            <div className="bg-black border border-white/20 rounded-none p-6 mt-8">
+              <h4 className="font-semibold text-white mb-2">Why Choose MIP Technologies?</h4>
+              <ul className="text-gray-400 space-y-2">
+                <li>• Proven track record with Fortune 500 companies</li>
+                <li>• Average ROI improvement of 300%+ within 12 months</li>
+                <li>• End-to-end AI implementation expertise</li>
+                <li>• 24/7 enterprise support and monitoring</li>
+              </ul>
+            </div>
           </div>
           
           <div className="animate-on-scroll" style={{ animationDelay: '100ms' }}>
-            <ContactForm />
+            <div className="bg-black border border-white/20 rounded-none p-8">
+              <h3 className="text-xl font-bold mb-6 text-white">Get Your Free AI Strategy Session</h3>
+              <ContactForm />
+            </div>
           </div>
         </div>
       </div>

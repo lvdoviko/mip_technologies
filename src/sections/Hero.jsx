@@ -1,7 +1,8 @@
 // src/sections/Hero.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import RainbowGradientText from '../components/ui/RainbowGradientText';
-// Componente per il cursore di digitazione
+
+// Component for typing cursor
 const TypewriterCursor = ({ blinking = true }) => {
   return (
     <span 
@@ -22,14 +23,14 @@ const Hero = () => {
   const particlesContainerRef = useRef(null);
   
   const phrases = [
-    'Intelligenza Artificiale',
-    'Machine Learning',
-    'Soluzioni AI',
-    'Deep Learning',
-    'Innovation'
+    'AI-Powered Growth',
+    'Intelligent Automation',
+    'Data-Driven Insights',
+    'Business Transformation',
+    'Competitive Advantage'
   ];
   
-  // Effetto di digitazione
+  // Typing effect
   useEffect(() => {
     const currentPhrase = phrases[currentPhraseIndex];
     
@@ -39,7 +40,6 @@ const Hero = () => {
         setTypingSpeed(80);
         
         if (typedText === currentPhrase) {
-          // Pausa alla fine della frase
           setTypingSpeed(2000);
           setIsDeleting(true);
         }
@@ -57,7 +57,7 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, [typedText, isDeleting, currentPhraseIndex, phrases, typingSpeed]);
   
-  // Effetto parallasse allo scroll
+  // Parallax effect on scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
@@ -67,7 +67,7 @@ const Hero = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
-  // Effetto particelle 3D che seguono il mouse
+  // 3D particles effect following mouse
   useEffect(() => {
     if (!particlesContainerRef.current) return;
     
@@ -80,7 +80,6 @@ const Hero = () => {
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       
-      // Calcola la distanza dal centro
       const moveX = (clientX - centerX) / 50;
       const moveY = (clientY - centerY) / 50;
       
@@ -105,14 +104,13 @@ const Hero = () => {
         background: 'linear-gradient(135deg, #0c0c0c 0%, #121212 50%, #141414 100%)'
       }}
     >
-      {/* Particelle 3D interattive */}
+      {/* Interactive 3D particles */}
       <div 
         ref={particlesContainerRef}
         className="absolute inset-0 pointer-events-none overflow-hidden"
         style={{ perspective: '1000px' }}
       >
         {[...Array(20)].map((_, i) => {
-          // Particelle sparse con diverse profondità
           const size = Math.random() * 6 + 2;
           const depth = Math.random() * 2.5 + 0.5;
           const opacity = Math.random() * 0.12 + 0.03;
@@ -144,7 +142,7 @@ const Hero = () => {
         })}
       </div>
       
-      {/* Griglia tecnica in sottofondo */}
+      {/* Technical grid background */}
       <div 
         className="absolute inset-0 pointer-events-none z-0"
         style={{
@@ -170,7 +168,7 @@ const Hero = () => {
           }}
         >
           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-          Tecnologie AI Avanzate
+          Enterprise AI Solutions
         </div>
         
         {/* Main Heading */}
@@ -183,7 +181,7 @@ const Hero = () => {
           }}
         >
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 text-white tracking-tighter">
-            Il Futuro è
+            Unleash the Power of
             <br />
             <RainbowGradientText large={true} className="py-2 tracking-tighter">
               {typedText}
@@ -202,11 +200,13 @@ const Hero = () => {
           }}
         >
           <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-            Trasformiamo le tue idee in{' '}
-            <span className="text-white font-semibold">soluzioni innovative</span>.
+            Transform your business with{' '}
+            <span className="text-white font-semibold">cutting-edge AI solutions</span> that drive{' '}
+            <span className="text-white font-semibold">measurable growth</span> and{' '}
+            <span className="text-white font-semibold">competitive advantage</span>.
             <br className="hidden md:block" />
-            Implementiamo e sviluppiamo modelli di intelligenza artificiale{' '}
-            <span className="text-white font-semibold">su misura</span> per il tuo business.
+            From strategy to implementation, we deliver AI that{' '}
+            <span className="text-white font-semibold">powers your success</span>.
           </p>
         </div>
         
@@ -220,7 +220,7 @@ const Hero = () => {
           }}
         >
           <a 
-            href="#servizi" 
+            href="#solutions" 
             className="
               inline-flex items-center justify-center
               px-8 py-4 rounded-full font-medium text-lg
@@ -230,11 +230,11 @@ const Hero = () => {
               shadow-xl shadow-white/5
             "
           >
-            Scopri i Nostri Servizi
+            Explore Our Solutions
           </a>
           
           <a 
-            href="#contatti" 
+            href="#contact" 
             className="
               inline-flex items-center justify-center
               px-8 py-4 rounded-full font-medium text-lg
@@ -245,22 +245,22 @@ const Hero = () => {
               shadow-xl shadow-white/5
             "
           >
-            Richiedi Consulenza
+            Start Your AI Journey
           </a>
         </div>
         
         {/* Scroll Indicator */}
-<div 
-  className="absolute -bottom-24 left-1/2 transform -translate-x-1/2"
-  style={{ 
-    opacity: Math.max(0, 1 - scrollY / 250),
-    transition: 'opacity 0.3s ease-out',
-  }}
->
-  <div className="w-8 h-14 border-2 border-white/30 rounded-full flex justify-center">
-    <div className="w-1 h-4 bg-white/40 rounded-full mt-2 animate-bounce-subtle"></div>
-  </div>
-</div>
+        <div 
+          className="absolute -bottom-24 left-1/2 transform -translate-x-1/2"
+          style={{ 
+            opacity: Math.max(0, 1 - scrollY / 250),
+            transition: 'opacity 0.3s ease-out',
+          }}
+        >
+          <div className="w-8 h-14 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-4 bg-white/40 rounded-full mt-2 animate-bounce-subtle"></div>
+          </div>
+        </div>
       </div>
     </section>
   );

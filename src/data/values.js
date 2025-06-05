@@ -2,22 +2,22 @@
 export const values = [
   {
     icon: "◆",
-    title: "Innovazione",
-    description: "Utilizziamo le tecnologie più avanzate per creare soluzioni all'avanguardia"
+    title: "Breakthrough Innovation",
+    description: "We pioneer next-generation AI solutions that redefine industry standards and unlock unprecedented business value"
   },
   {
     icon: "◉",
-    title: "Partnership",
-    description: "Lavoriamo a stretto contatto con i clienti per raggiungere obiettivi comuni"
+    title: "Strategic Partnership",
+    description: "We become your trusted AI transformation partner, aligning our success with your long-term business objectives"
   },
   {
     icon: "●",
-    title: "Efficienza",
-    description: "Ottimizziamo ogni processo per garantire risultati rapidi e di qualità"
+    title: "Operational Excellence",
+    description: "We deliver measurable results through precision engineering, rigorous testing, and continuous optimization"
   },
   {
     icon: "◎",
-    title: "Sicurezza",
-    description: "Implementiamo i più alti standard di sicurezza per proteggere i tuoi dati"
+    title: "Enterprise Security",
+    description: "We implement military-grade security protocols and compliance frameworks to protect your most valuable data assets"
   }
 ];

@@ -1,45 +1,45 @@
 // src/data/projects.js
 export const projects = [
   {
-    title: "E-commerce AI Personalizzato",
-    description: "Sistema di raccomandazioni intelligenti che ha aumentato le conversioni del 45%",
+    title: "AI-Driven Revenue Engine",
+    description: "Intelligent recommendation system that generated $2.3M additional revenue and increased conversion rates by 187% for enterprise e-commerce platform",
     tech: ["React", "TensorFlow", "Python", "AWS"],
     category: "E-commerce",
     image: "◐"
   },
   {
-    title: "Chatbot Multilingua",
-    description: "Assistente virtuale avanzato con comprensione del linguaggio naturale",
+    title: "Multilingual Intelligence Platform",
+    description: "Advanced conversational AI reducing customer service costs by 68% while achieving 94% customer satisfaction across 12 languages",
     tech: ["NLP", "Node.js", "OpenAI", "React"],
-    category: "Customer Service",
+    category: "Customer Experience",
     image: "◉"
   },
   {
-    title: "Analisi Predittiva Finanziaria",
-    description: "Modello di machine learning per previsioni di mercato con precisione del 87%",
+    title: "Predictive Analytics Engine",
+    description: "Machine learning platform delivering 91% accuracy in market predictions, enabling $50M in strategic investments for fintech leader",
     tech: ["Python", "Scikit-learn", "Vue.js", "PostgreSQL"],
-    category: "Fintech",
+    category: "Financial Services",
     image: "◈"
   },
   {
-    title: "Riconoscimento Immagini Medicali",
-    description: "Sistema AI per la diagnosi precoce con supporto radiologico",
+    title: "Medical Diagnostic Assistant",
+    description: "AI-powered diagnostic support system improving early detection rates by 34% and reducing radiologist workload by 45%",
     tech: ["TensorFlow", "Computer Vision", "React", "Docker"],
     category: "Healthcare",
     image: "◎"
   },
   {
-    title: "Ottimizzazione Supply Chain",
-    description: "AI per la gestione intelligente della catena di fornitura e logistica",
+    title: "Supply Chain Optimization",
+    description: "Intelligent logistics platform reducing operational costs by 28% and improving delivery times by 40% for global manufacturer",
     tech: ["PyTorch", "Angular", "MongoDB", "Kubernetes"],
-    category: "Logistics",
+    category: "Operations",
     image: "◇"
   },
   {
-    title: "Smart Content Generator",
-    description: "Generatore automatico di contenuti marketing basato su AI generativa",
+    title: "Content Intelligence Suite",
+    description: "AI-powered content generation platform increasing marketing efficiency by 300% and engagement rates by 156%",
     tech: ["GPT-4", "React", "Express.js", "Redis"],
-    category: "Marketing",
+    category: "Marketing Technology",
     image: "◆"
   }
 ];
