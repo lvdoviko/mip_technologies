@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 
 /**
- * DecryptedText - Versione robusta che gestisce lo scrolling veloce e previene frammenti
+ * DecryptedText - Versione corretta che risolve i frammenti scrambled persistenti
  */
 export default function DecryptedText({
   text,
@@ -21,22 +21,20 @@ export default function DecryptedText({
   ...props
 }) {
   const [displayText, setDisplayText] = useState(text)
-  const [isAnimating, setIsAnimating] = useState(false)
-  const [revealedIndices, setRevealedIndices] = useState(new Set())
+  const [isHovering, setIsHovering] = useState(false)
   const [hasViewAnimated, setHasViewAnimated] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [isManuallySkipped, setIsManuallySkipped] = useState(false)
   
   const containerRef = useRef(null)
-  const animationRef = useRef({
-    timer: null,
-    completionTimer: null,
+  const animationStateRef = useRef({
     isRunning: false,
-    shouldComplete: false,
-    startTime: null
+    intervalId: null,
+    timeoutId: null,
+    revealedIndices: new Set(),
+    currentIteration: 0,
+    shouldStop: false
   })
-  const observerRef = useRef(null)
-  const isMountedRef = useRef(true)
 
   // Verifica se l'utente preferisce reduced motion
   useEffect(() => {
@@ -49,268 +47,240 @@ export default function DecryptedText({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Funzione robusta per la pulizia
-  const cleanupAnimation = useCallback(() => {
-    const anim = animationRef.current;
-    if (anim.timer) {
-      clearInterval(anim.timer);
-      anim.timer = null;
+  // Funzione di pulizia totale
+  const stopAnimation = useCallback(() => {
+    const state = animationStateRef.current;
+    
+    if (state.intervalId) {
+      clearInterval(state.intervalId);
+      state.intervalId = null;
     }
-    if (anim.completionTimer) {
-      clearTimeout(anim.completionTimer);
-      anim.completionTimer = null;
+    
+    if (state.timeoutId) {
+      clearTimeout(state.timeoutId);
+      state.timeoutId = null;
     }
-    anim.isRunning = false;
-    anim.shouldComplete = false;
-    anim.startTime = null;
+    
+    state.isRunning = false;
+    state.shouldStop = true;
+    state.currentIteration = 0;
+    state.revealedIndices = new Set();
   }, []);
 
-  // Funzione che garantisce il completamento
-  const forceCompletion = useCallback(() => {
-    if (!isMountedRef.current) return;
-    
-    cleanupAnimation();
+  // Funzione di completamento garantito
+  const completeAnimation = useCallback(() => {
+    stopAnimation();
     setDisplayText(text);
-    setIsAnimating(false);
-    setRevealedIndices(new Set([...Array(text.length).keys()]));
-  }, [text, cleanupAnimation]);
+  }, [text, stopAnimation]);
 
-  // Funzione per avviare l'animazione in modo sicuro
-  const startAnimation = useCallback(() => {
-    if (!isMountedRef.current || prefersReducedMotion || isManuallySkipped) {
-      forceCompletion();
+  // Funzione principale di animazione
+  const startDecryption = useCallback(() => {
+    if (prefersReducedMotion || isManuallySkipped) {
+      completeAnimation();
       return;
     }
 
-    // Previeni animazioni multiple simultanee
-    if (animationRef.current.isRunning) {
-      return;
-    }
-
-    cleanupAnimation();
+    // Ferma qualsiasi animazione in corso
+    stopAnimation();
     
-    const anim = animationRef.current;
-    anim.isRunning = true;
-    anim.startTime = Date.now();
-    anim.shouldComplete = false;
+    const state = animationStateRef.current;
+    state.isRunning = true;
+    state.shouldStop = false;
+    state.revealedIndices = new Set();
+    state.currentIteration = 0;
 
-    setIsAnimating(true);
-    setRevealedIndices(new Set());
-
-    // Calcola timing più conservativo
-    const safeSpeed = Math.max(speed, 20); // Velocità minima 20ms
-    const maxDuration = Math.min(duration, 3000); // Durata massima 3s
-    const estimatedTime = sequential 
-      ? text.length * safeSpeed
-      : maxIterations * safeSpeed;
+    // Calcola parametri sicuri
+    const safeSpeed = Math.max(speed, 30);
+    const maxTime = Math.min(duration, 4000);
     
-    const completionTime = Math.min(estimatedTime * 1.2, maxDuration); // 20% buffer
-
     // Timer di sicurezza per completamento garantito
-    anim.completionTimer = setTimeout(() => {
-      if (isMountedRef.current && anim.isRunning) {
-        anim.shouldComplete = true;
-        forceCompletion();
-      }
-    }, completionTime);
+    state.timeoutId = setTimeout(() => {
+      completeAnimation();
+    }, maxTime);
 
-    let currentIteration = 0;
-
-    anim.timer = setInterval(() => {
-      if (!isMountedRef.current || anim.shouldComplete) {
-        forceCompletion();
+    const runAnimation = () => {
+      const state = animationStateRef.current;
+      
+      if (state.shouldStop || !state.isRunning) {
+        completeAnimation();
         return;
       }
 
-      setRevealedIndices((prevRevealed) => {
-        if (sequential) {
-          if (prevRevealed.size < text.length) {
-            const nextIndex = getNextIndex(prevRevealed);
-            const newRevealed = new Set(prevRevealed);
-            newRevealed.add(nextIndex);
-            
-            if (isMountedRef.current) {
-              setDisplayText(shuffleText(text, newRevealed));
-            }
-            
-            // Completamento sequenziale
-            if (newRevealed.size === text.length) {
-              setTimeout(() => forceCompletion(), 0);
-            }
-            
-            return newRevealed;
-          } else {
-            setTimeout(() => forceCompletion(), 0);
-            return prevRevealed;
+      if (sequential) {
+        // Modalità sequenziale
+        if (state.revealedIndices.size < text.length) {
+          const nextIndex = getNextIndex(state.revealedIndices);
+          state.revealedIndices.add(nextIndex);
+          
+          const newText = generateDisplayText(text, state.revealedIndices);
+          setDisplayText(newText);
+          
+          if (state.revealedIndices.size >= text.length) {
+            completeAnimation();
+            return;
           }
         } else {
-          // Modalità random
-          if (isMountedRef.current) {
-            setDisplayText(shuffleText(text, prevRevealed));
-          }
-          currentIteration++;
-          
-          if (currentIteration >= maxIterations) {
-            setTimeout(() => forceCompletion(), 0);
-          }
-          
-          return prevRevealed;
+          completeAnimation();
+          return;
         }
-      });
-    }, safeSpeed);
+      } else {
+        // Modalità random
+        const newText = generateDisplayText(text, state.revealedIndices);
+        setDisplayText(newText);
+        
+        state.currentIteration++;
+        if (state.currentIteration >= maxIterations) {
+          completeAnimation();
+          return;
+        }
+      }
+    };
 
-  }, [text, speed, maxIterations, sequential, duration, prefersReducedMotion, isManuallySkipped, forceCompletion, cleanupAnimation]);
+    // Avvia l'animazione
+    state.intervalId = setInterval(runAnimation, safeSpeed);
+    
+  }, [text, speed, maxIterations, sequential, duration, prefersReducedMotion, isManuallySkipped, completeAnimation, stopAnimation]);
 
   const getNextIndex = (revealedSet) => {
-    const textLength = text.length
+    const textLength = text.length;
+    
     switch (revealDirection) {
       case 'start':
-        return revealedSet.size
+        return revealedSet.size;
       case 'end':
-        return textLength - 1 - revealedSet.size
+        return textLength - 1 - revealedSet.size;
       case 'center': {
-        const middle = Math.floor(textLength / 2)
-        const offset = Math.floor(revealedSet.size / 2)
-        const nextIndex =
-          revealedSet.size % 2 === 0
-            ? middle + offset
-            : middle - offset - 1
+        const middle = Math.floor(textLength / 2);
+        const offset = Math.floor(revealedSet.size / 2);
+        const nextIndex = revealedSet.size % 2 === 0
+          ? middle + offset
+          : middle - offset - 1;
 
         if (nextIndex >= 0 && nextIndex < textLength && !revealedSet.has(nextIndex)) {
-          return nextIndex
+          return nextIndex;
         }
+        
         for (let i = 0; i < textLength; i++) {
-          if (!revealedSet.has(i)) return i
+          if (!revealedSet.has(i)) return i;
         }
-        return 0
+        return 0;
       }
       default:
-        return revealedSet.size
+        return revealedSet.size;
     }
-  }
+  };
 
-  const shuffleText = (originalText, currentRevealed) => {
+  const generateDisplayText = (originalText, revealedIndices) => {
     if (useOriginalCharsOnly) {
-      const positions = originalText.split('').map((char, i) => ({
-        char,
-        isSpace: char === ' ',
-        index: i,
-        isRevealed: currentRevealed.has(i),
-      }))
-
-      const nonSpaceChars = positions
-        .filter((p) => !p.isSpace && !p.isRevealed)
-        .map((p) => p.char)
-
-      for (let i = nonSpaceChars.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[nonSpaceChars[i], nonSpaceChars[j]] = [nonSpaceChars[j], nonSpaceChars[i]]
+      const chars = originalText.split('');
+      const nonSpacePositions = chars
+        .map((char, i) => ({ char, index: i, isSpace: char === ' ' }))
+        .filter(item => !item.isSpace && !revealedIndices.has(item.index));
+      
+      const availableChars = nonSpacePositions.map(item => item.char);
+      
+      // Shuffle disponibili
+      for (let i = availableChars.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [availableChars[i], availableChars[j]] = [availableChars[j], availableChars[i]];
       }
-
-      let charIndex = 0
-      return positions
-        .map((p) => {
-          if (p.isSpace) return ' '
-          if (p.isRevealed) return originalText[p.index]
-          return nonSpaceChars[charIndex++] || p.char
-        })
-        .join('')
+      
+      let charIndex = 0;
+      return chars.map((char, i) => {
+        if (char === ' ') return ' ';
+        if (revealedIndices.has(i)) return originalText[i];
+        return availableChars[charIndex++] || char;
+      }).join('');
+      
     } else {
       return originalText
         .split('')
         .map((char, i) => {
-          if (char === ' ') return ' '
-          if (currentRevealed.has(i)) return originalText[i]
-          return characters[Math.floor(Math.random() * characters.length)]
+          if (char === ' ') return ' ';
+          if (revealedIndices.has(i)) return originalText[i];
+          return characters[Math.floor(Math.random() * characters.length)];
         })
-        .join('')
+        .join('');
     }
-  }
+  };
 
   // Gestione hover
   const handleMouseEnter = useCallback(() => {
     if (animateOn === 'hover') {
-      startAnimation();
+      setIsHovering(true);
+      startDecryption();
     }
-  }, [animateOn, startAnimation]);
+  }, [animateOn, startDecryption]);
 
   const handleMouseLeave = useCallback(() => {
     if (animateOn === 'hover') {
-      cleanupAnimation();
-      setIsAnimating(false);
+      setIsHovering(false);
+      stopAnimation();
       setDisplayText(text);
-      setRevealedIndices(new Set());
     }
-  }, [animateOn, text, cleanupAnimation]);
+  }, [animateOn, text, stopAnimation]);
 
   // Gestione skip
   const handleSkip = useCallback(() => {
     setIsManuallySkipped(true);
-    forceCompletion();
-  }, [forceCompletion]);
+    completeAnimation();
+  }, [completeAnimation]);
 
-  // Intersection Observer robusto
+  // Intersection Observer per animazione su vista
   useEffect(() => {
-    if (animateOn !== 'view' || hasViewAnimated || prefersReducedMotion) return;
+    if (animateOn !== 'view' || hasViewAnimated || prefersReducedMotion || isManuallySkipped) {
+      return;
+    }
 
     const observerCallback = (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && !hasViewAnimated && isMountedRef.current) {
+        if (entry.isIntersecting && !hasViewAnimated) {
           setHasViewAnimated(true);
-          // Debounce per evitare trigger multipli
-          setTimeout(() => {
-            if (isMountedRef.current && !hasViewAnimated) {
-              startAnimation();
-            }
-          }, 100);
+          startDecryption();
         }
       });
     };
 
     const observerOptions = {
       root: null,
-      rootMargin: '20px', // Margine per trigger anticipato
-      threshold: 0.2, // Soglia più alta per maggiore stabilità
+      rootMargin: '50px',
+      threshold: 0.3,
     };
 
-    observerRef.current = new IntersectionObserver(observerCallback, observerOptions);
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
     const currentRef = containerRef.current;
     
     if (currentRef) {
-      observerRef.current.observe(currentRef);
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (observerRef.current && currentRef) {
-        observerRef.current.unobserve(currentRef);
+      if (observer && currentRef) {
+        observer.unobserve(currentRef);
       }
     };
-  }, [animateOn, hasViewAnimated, prefersReducedMotion, startAnimation]);
+  }, [animateOn, hasViewAnimated, prefersReducedMotion, isManuallySkipped, startDecryption]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      isMountedRef.current = false;
-      cleanupAnimation();
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
+      stopAnimation();
     };
-  }, [cleanupAnimation]);
+  }, [stopAnimation]);
 
   // Reset quando il testo cambia
   useEffect(() => {
-    setRevealedIndices(new Set());
+    stopAnimation();
     setHasViewAnimated(false);
     setIsManuallySkipped(false);
     setDisplayText(text);
-    cleanupAnimation();
-    setIsAnimating(false);
-  }, [text, cleanupAnimation]);
+  }, [text, stopAnimation]);
 
   const hoverProps = animateOn === 'hover' && !prefersReducedMotion && !isManuallySkipped
     ? { onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave }
     : {};
+
+  const isAnimating = animationStateRef.current.isRunning;
 
   return (
     <motion.span
@@ -335,6 +305,7 @@ export default function DecryptedText({
 
       <span aria-hidden="true">
         {displayText.split('').map((char, index) => {
+          const revealedIndices = animationStateRef.current.revealedIndices;
           const isRevealed = revealedIndices.has(index) || !isAnimating || prefersReducedMotion || isManuallySkipped;
 
           return (
