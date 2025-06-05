@@ -1,113 +1,312 @@
-// src/sections/Services.jsx
-import React from 'react';
-import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
-import { services } from '../data/services';
+import React, { useState, useRef, useEffect } from 'react';
+
+// Importo temporaneo del componente per il testo arcobaleno
+const RainbowGradientText = ({ children, className = '', large = false }) => {
+  return (
+    <span 
+      className={`font-bold ${className}`}
+      style={{
+        backgroundImage: large 
+          ? `linear-gradient(90deg, #ff0080, #ff8000, #ffff00, #00ff80, #00ffff, #0080ff, #8000ff, #ff0080)`
+          : `linear-gradient(90deg, #ff0080, #7928CA, #0070F3, #00DFD8, #7928CA, #ff0080)`,
+        backgroundSize: '200% 100%',
+        backgroundClip: 'text',
+        WebkitBackgroundClip: 'text',
+        color: 'transparent',
+        WebkitTextFillColor: 'transparent',
+        display: 'inline-block',
+        animation: 'gradient-animation 8s linear infinite',
+        filter: large ? 'brightness(1.1) contrast(1.1)' : 'none',
+        textShadow: large ? '0 0 30px rgba(128, 0, 255, 0.15)' : 'none'
+      }}
+    >
+      {children}
+    </span>
+  );
+};
+
+// Dati di esempio dei servizi
+const servicesData = [
+  {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M16.2398 7.76001L14.1198 14.12L7.75977 16.24L9.87977 9.88001L16.2398 7.76001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: "Implementazione AI su Webapp",
+    description: "Integriamo modelli di intelligenza artificiale avanzati nelle tue applicazioni web esistenti, potenziando le funzionalità e migliorando l'esperienza utente.",
+    features: ["Machine Learning Integration", "API AI Custom", "Ottimizzazione Performance", "Scalabilità Garantita"],
+    color: "#0070F3"
+  },
+  {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 16V8.00002C20.9996 7.6493 20.9071 7.30483 20.7315 7.00119C20.556 6.69754 20.3037 6.44539 20 6.27002L13 2.27002C12.696 2.09449 12.3511 2.00208 12 2.00208C11.6489 2.00208 11.304 2.09449 11 2.27002L4 6.27002C3.69626 6.44539 3.44398 6.69754 3.26846 7.00119C3.09294 7.30483 3.00036 7.6493 3 8.00002V16C3.00036 16.3508 3.09294 16.6952 3.26846 16.9989C3.44398 17.3025 3.69626 17.5547 4 17.73L11 21.73C11.304 21.9056 11.6489 21.998 12 21.998C12.3511 21.998 12.696 21.9056 13 21.73L20 17.73C20.3037 17.5547 20.556 17.3025 20.7315 16.9989C20.9071 16.6952 20.9996 16.3508 21 16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M3.27002 6.96L12 12.01L20.73 6.96" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M12 22.08V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: "Sviluppo Webapp con AI",
+    description: "Creiamo applicazioni web complete con intelligenza artificiale integrata fin dalla progettazione, per soluzioni innovative e all'avanguardia.",
+    features: ["Design AI-First", "UX Intelligente", "Backend Scalabile", "Frontend Responsive"],
+    color: "#7928CA"
+  },
+  {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: "Modelli AI Personalizzati",
+    description: "Sviluppiamo e addestriamo modelli di intelligenza artificiale su misura per le specifiche esigenze del tuo business e settore.",
+    features: ["Training Personalizzato", "Dataset Ottimizzati", "Modelli Proprietari", "Manutenzione Continua"],
+    color: "#FF0080"
+  }
+];
+
+// Card Componente
+const ServiceCard = ({ service, index, onMouseEnter, isActive }) => {
+  const { icon, title, description, features, color } = service;
+  
+  return (
+    <div 
+      className={`
+        relative overflow-hidden rounded-xl p-8 
+        backdrop-blur-sm border border-white/10
+        transition-all duration-500
+        ${isActive 
+          ? 'bg-white/5 border-white/20 shadow-xl shadow-white/5 transform -translate-y-2' 
+          : 'bg-black/30 hover:bg-white/5 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:-translate-y-1'
+        }
+      `}
+      onMouseEnter={() => onMouseEnter(index)}
+      style={{ 
+        transitionDelay: `${index * 50}ms`,
+      }}
+    >
+      {/* Blob di luce di sfondo */}
+      <div 
+        className="absolute -inset-0.5 opacity-0 transition-opacity duration-500 z-0 pointer-events-none"
+        style={{
+          opacity: isActive ? 0.05 : 0,
+          background: `radial-gradient(circle at center, ${color}, transparent 70%)`,
+        }}
+      />
+      
+      {/* Card Content */}
+      <div className="relative z-10">
+        {/* Icon Section */}
+        <div 
+          className="w-12 h-12 rounded-lg flex items-center justify-center mb-6 transition-all duration-300"
+          style={{ 
+            backgroundColor: `${color}10`,
+            color: color,
+            boxShadow: isActive ? `0 0 20px ${color}20` : 'none'
+          }}
+        >
+          {icon}
+        </div>
+        
+        {/* Content */}
+        <div className="space-y-4">
+          {/* Title */}
+          <h3 className="text-xl font-bold text-white">
+            {title}
+          </h3>
+          
+          {/* Description */}
+          <p className="text-gray-400 leading-relaxed">
+            {description}
+          </p>
+          
+          {/* Features */}
+          <div className="space-y-2 pt-2">
+            {features.map((feature, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-3"
+              >
+                <div 
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: color }}
+                ></div>
+                <span className="text-gray-300 text-sm">
+                  {feature}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Services = () => {
-  useScrollAnimation();
+  const [activeCard, setActiveCard] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const sectionRef = useRef(null);
+  
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!sectionRef.current) return;
+      
+      const rect = sectionRef.current.getBoundingClientRect();
+      setMousePosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+  
+  // Aggiungi gli stili CSS per l'animazione del gradiente
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      @keyframes gradient-animation {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   return (
-    <section id="servizi" className="py-24">
+    <section 
+      id="servizi" 
+      className="py-24 relative"
+      ref={sectionRef}
+    >
+      {/* Effetto spotlight che segue il mouse */}
+      <div 
+        className="absolute pointer-events-none opacity-30"
+        style={{
+          left: `${mousePosition.x}px`,
+          top: `${mousePosition.y}px`,
+          width: '600px',
+          height: '600px',
+          transform: 'translate(-50%, -50%)',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+          transition: 'left 0.3s ease-out, top 0.3s ease-out',
+          display: activeCard !== null ? 'block' : 'none'
+        }}
+      />
+      
       <div className="container mx-auto max-w-6xl px-4">
         {/* Header Section */}
-        <div className="text-center mb-16 animate-on-scroll">
-          <div className="inline-flex items-center gap-2 bg-gray-800 text-gray-100 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-gray-700">
-            <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium mb-6 border border-white/10">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
             I Nostri Servizi
           </div>
           
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-100">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight tracking-tight">
             Soluzioni
-            <span className="text-gradient-rainbow block">AI Complete</span>
+            <RainbowGradientText large={true} className="block mt-2">
+              AI Complete
+            </RainbowGradientText>
           </h2>
           
-          <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
             Trasformiamo il tuo business con{' '}
-            <span className="text-gray-100 font-semibold">intelligenza artificiale avanzata</span>.
+            <span className="text-white font-semibold">intelligenza artificiale avanzata</span>.
             Ogni soluzione è progettata per massimizzare l'efficienza e l'innovazione.
           </p>
         </div>
         
         {/* Services Grid */}
         <div className="grid lg:grid-cols-3 gap-8 mb-16">
-          {services.map((service, index) => (
-            <Card
+          {servicesData.map((service, index) => (
+            <ServiceCard
               key={index}
-              className="animate-on-scroll"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Service Icon */}
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-primary-100 rounded-card flex items-center justify-center text-primary-600 text-2xl mb-4">
-                  {service.icon}
-                </div>
-              </div>
-              
-              {/* Service Content */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold text-gray-900">
-                  {service.title}
-                </h3>
-                
-                <p className="text-gray-600 leading-relaxed">
-                  {service.description}
-                </p>
-                
-                {/* Features List */}
-                <div className="space-y-2 pt-4">
-                  {service.features.map((feature, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
-                      <span className="text-gray-700 text-sm">
-                        {feature}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
+              service={service}
+              index={index}
+              onMouseEnter={setActiveCard}
+              isActive={activeCard === index}
+            />
           ))}
         </div>
         
         {/* CTA Section */}
-        <div className="text-center animate-on-scroll" style={{ animationDelay: '400ms' }}>
-          <Card className="max-w-4xl mx-auto bg-gray-800 border-gray-700">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-gray-100">
+        <div className="text-center">
+          <div 
+            className="
+              max-w-4xl mx-auto rounded-xl p-10
+              backdrop-blur-sm border border-white/10 bg-white/5
+              relative overflow-hidden
+            "
+          >
+            {/* Effetto luce di sfondo */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-20"
+              style={{
+                background: `
+                  radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
+                  radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 70%)
+                `
+              }}
+            />
+            
+            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white relative z-10">
               Pronto a trasformare il tuo business con l'AI?
             </h3>
             
-            <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto relative z-10">
               Scopri come le nostre soluzioni possono rivoluzionare la tua azienda. 
-              <span className="text-gray-100 font-semibold"> Consulenza gratuita</span> disponibile.
+              <span className="text-white font-semibold"> Consulenza gratuita</span> disponibile.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
+            <div className="flex flex-col sm:flex-row gap-5 justify-center relative z-10">
+              <a 
                 href="#contatti" 
-                variant="primary" 
-                size="lg"
+                className="
+                  inline-flex items-center justify-center
+                  px-8 py-4 rounded-full font-medium text-base
+                  bg-white hover:bg-gray-100
+                  text-black
+                  transition-all duration-300
+                  shadow-lg shadow-white/10
+                  transform hover:-translate-y-0.5
+                "
               >
                 Richiedi Consulenza Gratuita
-              </Button>
+              </a>
               
-              <Button 
+              <a
                 href="#progetti" 
-                variant="outline" 
-                size="lg"
+                className="
+                  inline-flex items-center justify-center
+                  px-8 py-4 rounded-full font-medium text-base
+                  bg-transparent text-white hover:text-white
+                  border border-white/20 hover:border-white/40
+                  transition-all duration-300
+                  shadow-lg shadow-white/5
+                  transform hover:-translate-y-0.5
+                "
               >
                 Vedi i Nostri Progetti
-              </Button>
+              </a>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </section>
   );
 };
 
-export default Services;
+export default function ModernizedServices() {
+  return <Services />;
+}

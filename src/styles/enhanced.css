@@ -1,0 +1,272 @@
+/* src/styles/enhanced.css */
+
+/* Stili globali avanzati */
+:root {
+  /* Palette principale */
+  --primary-50: #F0F9FF;
+  --primary-100: #E0F2FE;
+  --primary-200: #BAE6FD;
+  --primary-300: #7DD3FC;
+  --primary-400: #38BDF8;
+  --primary-500: #0EA5E9;
+  --primary-600: #0284C7;
+  --primary-700: #0369A1;
+  --primary-800: #075985;
+  --primary-900: #0C4A6E;
+
+  /* Palette di accento */
+  --accent-50: #FDF2F8;
+  --accent-100: #FCE7F3;
+  --accent-200: #FBCFE8;
+  --accent-300: #F9A8D4;
+  --accent-400: #F472B6;
+  --accent-500: #EC4899;
+  --accent-600: #DB2777;
+  --accent-700: #BE185D;
+  --accent-800: #9D174D;
+  --accent-900: #831843;
+
+  /* Palette di grigi */
+  --gray-50: #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
+  --gray-950: #020617;
+}
+
+/* Stili per sfumature arcobaleno */
+.text-gradient-rainbow {
+  background: linear-gradient(to right, 
+    #FF5E5E, 
+    #FFB86C, 
+    #FDFD96, 
+    #90EE90, 
+    #87CEFA, 
+    #9370DB,
+    #EE82EE
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 600% 100%;
+  animation: rainbow-text-animation 30s linear infinite; /* Estremamente rallentato a 30s */
+}
+
+@keyframes rainbow-text-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+
+/* Typewriter cursor animato */
+.typewriter-cursor {
+  display: inline-block;
+  animation: blink-caret 0.75s step-end infinite;
+}
+
+@keyframes blink-caret {
+  from, to { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Effetto hover per cards */
+.hover-card-effect {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.hover-card-effect:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Animazioni avanzate per scroll */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-in-left {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fade-in-right {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Effetti di bordo luminoso */
+.border-glow {
+  position: relative;
+}
+
+.border-glow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    var(--primary-500), 
+    var(--accent-500), 
+    var(--primary-500), 
+    var(--accent-500)
+  );
+  border-radius: 14px;
+  z-index: -1;
+  background-size: 400% 400%;
+  animation: border-glow-animation 3s ease infinite;
+}
+
+@keyframes border-glow-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Effetto di ondulazione al click */
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  opacity: 0;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Effetto di scroll morbido per le sezioni */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar personalizzata */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    var(--primary-600),
+    var(--accent-600)
+  );
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    var(--primary-500),
+    var(--accent-500)
+  );
+}
+
+/* Media query per prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .fade-in-up, .fade-in-left, .fade-in-right {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Effetto testo neon */
+.neon-text {
+  color: #fff;
+  text-shadow: 
+    0 0 5px rgba(255, 255, 255, 0.8),
+    0 0 10px rgba(255, 255, 255, 0.5),
+    0 0 15px var(--primary-400),
+    0 0 20px var(--primary-500),
+    0 0 25px var(--primary-600);
+}
+
+/* Effetto sfocatura per aree in background */
+.blur-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Highlight per elementi attivi nella navigazione */
+.nav-highlight {
+  position: relative;
+}
+
+.nav-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(to right, var(--primary-500), var(--accent-500));
+  transition: width 0.3s ease;
+}
+
+.nav-highlight:hover::after,
+.nav-highlight.active::after {
+  width: 100%;
+}

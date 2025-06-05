@@ -1,12 +1,25 @@
 // src/sections/Hero.jsx
-import React, { useState, useEffect } from 'react';
-import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import Button from '../components/ui/Button';
+import React, { useState, useEffect, useRef } from 'react';
+import RainbowGradientText from '../components/ui/RainbowGradientText';
+// Componente per il cursore di digitazione
+const TypewriterCursor = ({ blinking = true }) => {
+  return (
+    <span 
+      className={`inline-block w-0.5 h-8 md:h-12 lg:h-16 bg-white ml-1 align-middle ${blinking ? 'animate-blink' : ''}`}
+      style={{ animationDuration: '800ms', animationIterationCount: 'infinite' }}
+    />
+  );
+};
 
 const Hero = () => {
-  useScrollAnimation();
-  const [offset, setOffset] = useState(0);
   const [typedText, setTypedText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [typingSpeed, setTypingSpeed] = useState(80);
+  const [scrollY, setScrollY] = useState(0);
+  
+  const heroRef = useRef(null);
+  const particlesContainerRef = useRef(null);
   
   const phrases = [
     'Intelligenza Artificiale',
@@ -15,134 +28,239 @@ const Hero = () => {
     'Deep Learning',
     'Innovation'
   ];
-  const [currentPhrase, setCurrentPhrase] = useState(0);
-
+  
+  // Effetto di digitazione
   useEffect(() => {
-    const handleScroll = () => {
-      setOffset(window.pageYOffset);
-    };
-
-    window.addEventListener('scroll', handleScroll);
+    const currentPhrase = phrases[currentPhraseIndex];
     
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  // Typewriter effect minimal
-  useEffect(() => {
-    let currentIndex = 0;
-    let currentChar = 0;
-    let isDeleting = false;
-    
-    const typeWriter = () => {
-      const currentText = phrases[currentIndex];
-      
+    const timer = setTimeout(() => {
       if (!isDeleting) {
-        setTypedText(currentText.substring(0, currentChar + 1));
-        currentChar++;
+        setTypedText(currentPhrase.substring(0, typedText.length + 1));
+        setTypingSpeed(80);
         
-        if (currentChar === currentText.length) {
-          setTimeout(() => { isDeleting = true; }, 2000);
+        if (typedText === currentPhrase) {
+          // Pausa alla fine della frase
+          setTypingSpeed(2000);
+          setIsDeleting(true);
         }
       } else {
-        setTypedText(currentText.substring(0, currentChar - 1));
-        currentChar--;
+        setTypedText(currentPhrase.substring(0, typedText.length - 1));
+        setTypingSpeed(40);
         
-        if (currentChar === 0) {
-          isDeleting = false;
-          currentIndex = (currentIndex + 1) % phrases.length;
-          setCurrentPhrase(currentIndex);
+        if (typedText === '') {
+          setIsDeleting(false);
+          setCurrentPhraseIndex((currentPhraseIndex + 1) % phrases.length);
         }
       }
+    }, typingSpeed);
+    
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, currentPhraseIndex, phrases, typingSpeed]);
+  
+  // Effetto parallasse allo scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
     };
-
-    const timer = setInterval(typeWriter, isDeleting ? 50 : 120);
-    return () => clearInterval(timer);
-  }, [currentPhrase]);
-
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  // Effetto particelle 3D che seguono il mouse
+  useEffect(() => {
+    if (!particlesContainerRef.current) return;
+    
+    const container = particlesContainerRef.current;
+    const particles = Array.from(container.children);
+    
+    const handleMouseMove = (e) => {
+      const { clientX, clientY } = e;
+      const rect = container.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      // Calcola la distanza dal centro
+      const moveX = (clientX - centerX) / 50;
+      const moveY = (clientY - centerY) / 50;
+      
+      particles.forEach((particle, index) => {
+        const depth = parseFloat(particle.getAttribute('data-depth') || 1);
+        const offsetX = moveX * depth;
+        const offsetY = moveY * depth;
+        
+        particle.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+      });
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+  
   return (
-    <section className="min-h-screen flex items-center justify-center pt-20 relative overflow-hidden">
+    <section 
+      ref={heroRef}
+      className="min-h-screen flex items-center justify-center pt-20 relative overflow-hidden"
+      style={{ 
+        background: 'linear-gradient(135deg, #0c0c0c 0%, #121212 50%, #141414 100%)'
+      }}
+    >
+      {/* Particelle 3D interattive */}
+      <div 
+        ref={particlesContainerRef}
+        className="absolute inset-0 pointer-events-none overflow-hidden"
+        style={{ perspective: '1000px' }}
+      >
+        {[...Array(20)].map((_, i) => {
+          // Particelle sparse con diverse profondità
+          const size = Math.random() * 6 + 2;
+          const depth = Math.random() * 2.5 + 0.5;
+          const opacity = Math.random() * 0.12 + 0.03;
+          const left = Math.random() * 100;
+          const top = Math.random() * 100;
+          
+          return (
+            <div
+              key={i}
+              data-depth={depth}
+              className="absolute rounded-full"
+              style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                left: `${left}%`,
+                top: `${top}%`,
+                backgroundColor: i % 3 === 0 ? 'rgba(79, 70, 229, 0.8)' : 
+                               i % 3 === 1 ? 'rgba(59, 130, 246, 0.7)' : 
+                               'rgba(236, 72, 153, 0.6)',
+                boxShadow: `0 0 ${size * 2}px rgba(${i % 3 === 0 ? '79, 70, 229' : 
+                                                     i % 3 === 1 ? '59, 130, 246' : 
+                                                     '236, 72, 153'}, ${opacity})`,
+                opacity: opacity * 2,
+                transform: `translateZ(${depth * 100}px)`,
+                transition: 'transform 0.2s ease-out',
+              }}
+            />
+          );
+        })}
+      </div>
+      
+      {/* Griglia tecnica in sottofondo */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '80px 80px',
+          transform: `translate(${scrollY * 0.05}px, ${scrollY * 0.05}px)`,
+          transition: 'transform 0.2s ease-out',
+        }}
+      />
+      
       {/* Content Container */}
       <div className="container mx-auto max-w-6xl px-4 text-center relative z-10">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 bg-gray-800 text-gray-100 px-4 py-2 rounded-full text-sm font-medium mb-8 animate-fade-in border border-gray-700">
-          <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse-subtle"></div>
+        <div 
+          className="inline-flex items-center gap-2 bg-gray-800/80 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium mb-8 border border-gray-700/50 shadow-xl"
+          style={{ 
+            transform: `translateY(${-scrollY * 0.1}px)`,
+            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+            opacity: Math.max(0, 1 - scrollY / 500),
+          }}
+        >
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
           Tecnologie AI Avanzate
         </div>
         
         {/* Main Heading */}
-        <div className="mb-8 animate-slide-up">
-          <h1 
-            className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 text-gray-100"
-            style={{ 
-              transform: `translateY(${-offset * 0.1}px)`,
-              transition: 'transform 0.1s ease-out',
-            }}
-          >
+        <div 
+          className="mb-12"
+          style={{ 
+            transform: `translateY(${-scrollY * 0.15}px)`,
+            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+            opacity: Math.max(0, 1 - scrollY / 700),
+          }}
+        >
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 text-white tracking-tighter">
             Il Futuro è
             <br />
-            <span className="text-gradient-rainbow">
+            <RainbowGradientText large={true} className="py-2 tracking-tighter">
               {typedText}
-              <span className="inline-block w-1 h-12 md:h-16 lg:h-20 bg-gradient-to-r from-pink-500 to-violet-500 ml-2 align-middle typewriter-cursor"></span>
-            </span>
+            </RainbowGradientText>
+            <TypewriterCursor />
           </h1>
         </div>
         
         {/* Subtitle */}
         <div 
-          className="animate-slide-up mb-12"
+          className="mb-12"
           style={{ 
-            animationDelay: '0.2s',
-            transform: `translateY(${-offset * 0.05}px)`,
-            transition: 'transform 0.1s ease-out',
+            transform: `translateY(${-scrollY * 0.1}px)`,
+            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+            opacity: Math.max(0, 1 - scrollY / 600),
           }}
         >
-          <p className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
             Trasformiamo le tue idee in{' '}
-            <span className="text-gray-100 font-semibold">soluzioni innovative</span>.
+            <span className="text-white font-semibold">soluzioni innovative</span>.
             <br className="hidden md:block" />
             Implementiamo e sviluppiamo modelli di intelligenza artificiale{' '}
-            <span className="text-gray-100 font-semibold">su misura</span> per il tuo business.
+            <span className="text-white font-semibold">su misura</span> per il tuo business.
           </p>
         </div>
         
         {/* CTA Buttons */}
         <div
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up"
+          className="flex flex-col sm:flex-row gap-5 justify-center items-center"
           style={{ 
-            animationDelay: '0.4s',
+            transform: `translateY(${-scrollY * 0.05}px)`,
+            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+            opacity: Math.max(0, 1 - scrollY / 800),
           }}
         >
-          <Button 
+          <a 
             href="#servizi" 
-            variant="primary" 
-            size="lg"
+            className="
+              inline-flex items-center justify-center
+              px-8 py-4 rounded-full font-medium text-lg
+              bg-white text-gray-900 hover:bg-gray-100
+              transform hover:-translate-y-1 hover:shadow-lg
+              transition-all duration-300
+              shadow-xl shadow-white/5
+            "
           >
             Scopri i Nostri Servizi
-          </Button>
+          </a>
           
-          <Button 
+          <a 
             href="#contatti" 
-            variant="outline" 
-            size="lg"
+            className="
+              inline-flex items-center justify-center
+              px-8 py-4 rounded-full font-medium text-lg
+              bg-transparent text-white hover:text-white
+              border border-white/20 hover:border-white/40
+              transform hover:-translate-y-1 hover:shadow-lg
+              transition-all duration-300
+              shadow-xl shadow-white/5
+            "
           >
             Richiedi Consulenza
-          </Button>
+          </a>
         </div>
         
         {/* Scroll Indicator */}
-        <div 
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-          style={{ 
-            opacity: Math.max(0, 1 - offset / 300),
-            transition: 'opacity 0.3s ease-out',
-          }}
-        >
-          <div className="w-6 h-10 border-2 border-gray-300 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-gray-400 rounded-full mt-2 animate-pulse-subtle"></div>
-          </div>
-        </div>
+<div 
+  className="absolute -bottom-24 left-1/2 transform -translate-x-1/2"
+  style={{ 
+    opacity: Math.max(0, 1 - scrollY / 250),
+    transition: 'opacity 0.3s ease-out',
+  }}
+>
+  <div className="w-8 h-14 border-2 border-white/30 rounded-full flex justify-center">
+    <div className="w-1 h-4 bg-white/40 rounded-full mt-2 animate-bounce-subtle"></div>
+  </div>
+</div>
       </div>
     </section>
   );
