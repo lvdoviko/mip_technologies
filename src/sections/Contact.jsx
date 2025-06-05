@@ -1,40 +1,53 @@
 // src/sections/Contact.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { contactInfo } from '../data/contactInfo';
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
 import DescriptedText from '../components/ui/DescriptedText';
 
 // Internal ContactForm component to avoid import issues
 const ContactForm = () => {
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     company: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
-    // Crea l'URL mailto con i dati del form
-    const subject = `New contact from ${formData.name}`;
-    const body = `
-Name: ${formData.name}
-Email: ${formData.email}
-Company: ${formData.company || 'Not specified'}
-
-Message:
-${formData.message}
-    `;
-    
-    // Apri il client email dell'utente con i dati precompilati
-    window.location.href = `mailto:infomiptechnologies@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    // Mostra un messaggio di conferma
-    alert('Thanks for reaching out! We\'ll get back to you within 1-2 business days to discuss your project.');
-    
-    // Resetta il form
-    setFormData({ name: '', email: '', company: '', message: '' });
+    try {
+      // Invia il form a Formspree
+      // Sostituisci "YOUR_FORMSPREE_ID" con il tuo ID Formspree
+      const response = await fetch('https://formspree.io/f/mqabajwv', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+          message: formData.message,
+          _subject: `New Contact from ${formData.name}` // Personalizza l'oggetto dell'email
+        })
+      });
+      
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', company: '', message: '' });
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -60,6 +73,7 @@ ${formData.message}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
             placeholder="Your name"
+            disabled={isSubmitting}
           />
         </div>
         <div>
@@ -75,6 +89,7 @@ ${formData.message}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
             placeholder="your@email.com"
+            disabled={isSubmitting}
           />
         </div>
       </div>
@@ -91,6 +106,7 @@ ${formData.message}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
           placeholder="Your company name"
+          disabled={isSubmitting}
         />
       </div>
       
@@ -107,15 +123,33 @@ ${formData.message}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all resize-none"
           placeholder="What kind of AI features or web application are you looking to build? Tell us about your goals and any specific requirements..."
+          disabled={isSubmitting}
         />
       </div>
       
       <button
         type="submit"
-        className="w-full bg-black text-white py-4 px-6 rounded-none font-medium border border-white hover:bg-white hover:text-black transition-colors duration-300"
+        disabled={isSubmitting}
+        className={`w-full py-4 px-6 rounded-none font-medium border transition-colors duration-300 ${
+          isSubmitting 
+            ? 'bg-gray-800 text-gray-400 border-gray-600 cursor-not-allowed' 
+            : 'bg-black text-white border-white hover:bg-white hover:text-black'
+        }`}
       >
-        Send Message
+        {isSubmitting ? 'Sending...' : 'Send Message'}
       </button>
+      
+      {submitStatus === 'success' && (
+        <div className="mt-4 p-4 bg-green-900/20 border border-green-500/50 text-green-400 rounded-none">
+          Thank you for your message! We'll get back to you within 1-2 business days.
+        </div>
+      )}
+      
+      {submitStatus === 'error' && (
+        <div className="mt-4 p-4 bg-red-900/20 border border-red-500/50 text-red-400 rounded-none">
+          There was an error sending your message. Please try again or contact us directly at infomiptechnologies@gmail.com
+        </div>
+      )}
     </form>
   );
 };
