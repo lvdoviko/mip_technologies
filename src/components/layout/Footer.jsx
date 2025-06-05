@@ -80,7 +80,7 @@ const Footer = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 <div>
-                  <p className="text-white font-medium text-base">hello@miptechnologies.com</p>
+                  <p className="text-white font-medium text-base">infomiptechnologies@gmail.com</p>
                   <p className="text-gray-400 text-sm">General inquiries</p>
                 </div>
               </div>
@@ -91,8 +91,8 @@ const Footer = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <div>
-                  <p className="text-white font-medium text-base">San Francisco, CA</p>
-                  <p className="text-gray-400 text-sm">United States</p>
+                  <p className="text-white font-medium text-base">London, UK</p>
+                  <p className="text-gray-400 text-sm">United Kingdom</p>
                 </div>
               </div>
             </div>

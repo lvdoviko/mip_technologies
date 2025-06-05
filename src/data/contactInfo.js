@@ -2,7 +2,7 @@
 export const contactInfo = [
   {
     title: "Email",
-    details: ["miptechnologies@gmail.com"],
+    details: ["infomiptechnologies@gmail.com"],
     icon: "mail"
   },
   {

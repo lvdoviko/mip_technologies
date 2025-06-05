@@ -2,6 +2,7 @@
 import React from 'react';
 import { contactInfo } from '../data/contactInfo';
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
+import DescriptedText from '../components/ui/DescriptedText';
 
 // Internal ContactForm component to avoid import issues
 const ContactForm = () => {
@@ -14,7 +15,25 @@ const ContactForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Crea l'URL mailto con i dati del form
+    const subject = `New contact from ${formData.name}`;
+    const body = `
+Name: ${formData.name}
+Email: ${formData.email}
+Company: ${formData.company || 'Not specified'}
+
+Message:
+${formData.message}
+    `;
+    
+    // Apri il client email dell'utente con i dati precompilati
+    window.location.href = `mailto:infomiptechnologies@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // Mostra un messaggio di conferma
     alert('Thanks for reaching out! We\'ll get back to you within 1-2 business days to discuss your project.');
+    
+    // Resetta il form
     setFormData({ name: '', email: '', company: '', message: '' });
   };
 
@@ -138,7 +157,15 @@ const Contact = () => {
         <div className="text-center mb-16 animate-on-scroll">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Let's Build Something Great</h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Have an idea for an AI-powered web application? Want to add intelligent features to your existing site?{' '}
+            <DescriptedText
+              text="Have an idea for an AI-powered web application? Want to add intelligent features to your existing site?"
+              className="text-gray-400"
+              encryptedClassName="text-gray-600"
+              animateOn="view"
+              sequential={true}
+              speed={20}
+              maxIterations={15}
+            />{' '}
             <span className="text-white font-semibold">Let's talk about what we can create together</span>.
           </p>
         </div>
@@ -148,7 +175,15 @@ const Contact = () => {
             <div>
               <h3 className="text-2xl font-bold mb-6 text-white">Ready to Start Your Project?</h3>
               <p className="text-gray-400 mb-8 leading-relaxed">
-                We love working with businesses who want to explore what's possible with AI. Whether you have a clear vision or just an interesting problem to solve, we're here to help make it happen.
+                <DescriptedText
+                  text="We love working with businesses who want to explore what's possible with AI. Whether you have a clear vision or just an interesting problem to solve, we're here to help make it happen."
+                  className="text-gray-400"
+                  encryptedClassName="text-gray-600"
+                  animateOn="view"
+                  sequential={true}
+                  speed={20}
+                  maxIterations={15}
+                />
               </p>
             </div>
             
@@ -177,10 +212,10 @@ const Contact = () => {
             <div className="bg-black border border-white/20 rounded-none p-6 mt-8">
               <h4 className="font-semibold text-white mb-2">What We Bring to Your Project</h4>
               <ul className="text-gray-400 space-y-2">
-                <li>• Fresh perspective on AI integration</li>
-                <li>• Modern development practices and clean code</li>
-                <li>• Direct communication throughout the project</li>
-                <li>• Focus on practical, user-friendly solutions</li>
+                <li>• <DescriptedText text="Fresh perspective on AI integration" className="text-gray-400" animateOn="view" sequential={true} speed={15} /></li>
+                <li>• <DescriptedText text="Modern development practices and clean code" className="text-gray-400" animateOn="view" sequential={true} speed={15} /></li>
+                <li>• <DescriptedText text="Direct communication throughout the project" className="text-gray-400" animateOn="view" sequential={true} speed={15} /></li>
+                <li>• <DescriptedText text="Focus on practical, user-friendly solutions" className="text-gray-400" animateOn="view" sequential={true} speed={15} /></li>
               </ul>
             </div>
           </div>
