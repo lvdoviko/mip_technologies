@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { steps } from '../data/process';
+import ScrollFloat from '../components/animations/ScrollFloat'; 
 
 const Process = () => {
   const [activeStep, setActiveStep] = useState(null);
@@ -81,7 +82,15 @@ const Process = () => {
       
       <div className="container mx-auto max-w-7xl px-4 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Our Proven Methodology</h2>
+          <ScrollFloat
+            containerClassName="mb-6"
+            textClassName="text-4xl md:text-5xl font-bold text-white"
+            scrollStart="top bottom"
+            scrollEnd="center center"
+          >
+            Our Proven Methodology
+          </ScrollFloat>
+          
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             A systematic, results-driven approach that has delivered{' '}
             <span className="text-white font-semibold">transformational outcomes</span>{' '}
