@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import ProjectCard from '../components/ui/ProjectCard';
 import { projects } from '../data/projects';
+import ScrollFloat from '../components/animations/ScrollFloat'; // Percorso corretto al componente ScrollFloat esistente
 
 const Projects = () => {
   useScrollAnimation();
@@ -15,6 +16,28 @@ const Projects = () => {
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Assicuriamoci che l'animazione funzioni correttamente
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const delay = entry.target.getAttribute('data-delay') || 0;
+            setTimeout(() => {
+              entry.target.classList.add('visible');
+            }, delay * 100);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -100px 0px' }
+    );
+    
+    const animateElements = document.querySelectorAll('.animate-on-scroll');
+    animateElements.forEach(el => observer.observe(el));
+    
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -36,8 +59,16 @@ const Projects = () => {
       />
       
       <div className="container mx-auto max-w-7xl px-4 relative z-10">
-        <div className="text-center mb-16 animate-on-scroll">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Proven Success Stories</h2>
+        <div className="text-center mb-16">
+          <ScrollFloat
+            containerClassName="mb-6"
+            textClassName="text-4xl md:text-5xl font-bold"
+            scrollStart="top bottom"
+            scrollEnd="center center"
+          >
+            Proven Success Stories
+          </ScrollFloat>
+          
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Discover how industry leaders achieved{' '}
             <span className="text-gray-900 font-semibold">transformational results</span>{' '}
