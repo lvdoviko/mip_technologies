@@ -2,22 +2,22 @@
 export const values = [
   {
     icon: "◆",
-    title: "Breakthrough Innovation",
-    description: "We pioneer next-generation AI solutions that redefine industry standards and unlock unprecedented business value"
+    title: "Innovation Focus",
+    description: "We stay on the cutting edge of AI technology to build solutions that are modern, efficient, and future-ready"
   },
   {
     icon: "◉",
-    title: "Strategic Partnership",
-    description: "We become your trusted AI transformation partner, aligning our success with your long-term business objectives"
+    title: "Personal Approach",
+    description: "As a focused team, we provide direct communication and personalized attention to every project and client"
   },
   {
     icon: "●",
-    title: "Operational Excellence",
-    description: "We deliver measurable results through precision engineering, rigorous testing, and continuous optimization"
+    title: "Quality Delivery",
+    description: "We take pride in writing clean, well-tested code and delivering solutions that work reliably in real-world conditions"
   },
   {
     icon: "◎",
-    title: "Enterprise Security",
-    description: "We implement military-grade security protocols and compliance frameworks to protect your most valuable data assets"
+    title: "Transparent Process",
+    description: "We believe in clear communication, honest timelines, and keeping you informed throughout the development process"
   }
 ];

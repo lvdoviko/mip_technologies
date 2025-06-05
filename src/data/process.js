@@ -2,38 +2,38 @@
 export const steps = [
   {
     number: "01",
-    title: "Strategic Discovery & Assessment",
-    description: "Deep-dive analysis of your business objectives, data landscape, and competitive positioning to identify high-impact AI opportunities",
+    title: "Discovery & Planning",
+    description: "We start by understanding your business goals, current setup, and specific AI needs to create a clear project roadmap",
     icon: "◐"
   },
   {
     number: "02",
-    title: "AI Architecture & Blueprint",
-    description: "Design enterprise-grade AI architecture with scalable models, ensuring seamless integration with your existing technology ecosystem",
+    title: "Design & Architecture",
+    description: "Plan the technical architecture and user experience, ensuring the AI solution integrates smoothly with your existing systems",
     icon: "◈"
   },
   {
     number: "03",
-    title: "Agile Development & Integration",
-    description: "Rapid prototyping and iterative development using cutting-edge technologies, with continuous stakeholder feedback and validation",
+    title: "Development & Integration",
+    description: "Build and integrate the AI features using modern development practices, with regular updates and feedback sessions",
     icon: "◆"
   },
   {
     number: "04",
-    title: "Model Training & Optimization",
-    description: "Advanced machine learning training with proprietary datasets, rigorous testing, and performance optimization for maximum accuracy",
+    title: "Testing & Refinement",
+    description: "Thoroughly test the AI functionality, gather user feedback, and refine the system to ensure it works reliably",
     icon: "◉"
   },
   {
     number: "05",
-    title: "Enterprise Deployment & Monitoring",
-    description: "Seamless production deployment with comprehensive monitoring, performance analytics, and real-time optimization capabilities",
+    title: "Launch & Deployment",
+    description: "Deploy the solution to your environment with proper monitoring and ensure everything runs smoothly from day one",
     icon: "●"
   },
   {
     number: "06",
-    title: "Continuous Innovation & Growth",
-    description: "Ongoing model refinement, feature enhancement, and strategic consultation to ensure sustained competitive advantage",
+    title: "Support & Improvement",
+    description: "Provide ongoing support, monitor performance, and continuously improve the AI capabilities based on real usage data",
     icon: "◎"
   }
 ];

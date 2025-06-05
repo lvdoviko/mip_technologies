@@ -1,7 +1,6 @@
+// src/sections/About.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { values } from '../data/values';
-import ScrollFloat from '../components/animations/ScrollFloat';
-import RainbowScrollFloat from '../components/animations/RainbowScrollFloat';
 
 const About = () => {
   const [activeCard, setActiveCard] = useState(null);
@@ -101,51 +100,37 @@ const About = () => {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-black border border-white/20 text-white px-4 py-2 rounded-none text-sm font-medium mb-8">
               <div className="w-2 h-2 bg-white"></div>
-              Our Mission
+              Who We Are
             </div>
             
-            {/* Main Heading - Reduced spacing between title and subtitle */}
-            <div className="space-y-0"> {/* Rimuove lo spazio verticale tra gli elementi */}
-              <RainbowScrollFloat
-                fontSize="text-4xl md:text-5xl"
-                containerClassName="font-bold leading-tight text-white mb-0" // mb-0 rimuove il margine inferiore
-                animationDuration={1}
-                ease="back.inOut(2)"
-                scrollStart="top bottom+=30%"
-                scrollEnd="center center"
-                stagger={0.03}
-                lineHeight="leading-none" // Riduce ulteriormente l'altezza della linea
-                noMargin={true} // Rimuove tutti i margini predefiniti
-                preserveRainbow={false}
-              >
-                Pioneering the
-              </RainbowScrollFloat>
+            {/* Main Heading */}
+            <div className="space-y-6">
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white">
+                Building Smarter
+                <span className="text-gradient-rainbow block mt-2">Web Solutions</span>
+              </h2>
               
-              {/* Testo arcobaleno senza margine superiore */}
-              <div className="text-gradient-rainbow block mt-0 text-4xl md:text-5xl font-bold leading-tight">
-                AI Revolution
-              </div>
-            </div>
-            
-            {/* Enhanced Description */}
-            <div className="space-y-6 mt-6"> {/* Aggiungi margine superiore per separare dalla sezione titolo */}
-              <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
-                <span className="text-white font-semibold">MIP Technologies</span> is the catalyst for enterprise{' '}
-                <span className="text-white font-semibold">AI transformation</span>. We don't just build technology—we architect the future of business intelligence.
-              </p>
-              
-              <p className="text-gray-400 leading-relaxed">
-                Our team of AI visionaries and engineering experts partners with industry leaders to{' '}
-                <span className="text-white font-semibold">unlock unprecedented value</span> through intelligent automation, predictive analytics, and transformative AI solutions.
-              </p>
-              
-              <div className="bg-black border border-white/20 rounded-none p-6 transition-all duration-300 hover:border-white/50">
-                <p className="text-gray-300 leading-relaxed italic">
-                  "We believe AI is not just a tool—it's the{' '}
-                  <span className="text-white font-semibold">strategic advantage</span>{' '}
-                  that separates industry leaders from followers. Our mission is to make that advantage accessible to visionary organizations ready to{' '}
-                  <span className="text-white font-semibold">shape their industry's future</span>."
+              {/* Enhanced Description */}
+              <div className="space-y-6">
+                <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
+                  <span className="text-white font-semibold">MIP Technologies</span> is a passionate team of developers who believe{' '}
+                  <span className="text-white font-semibold">artificial intelligence</span>{' '}
+                  should be accessible and practical for all businesses.
                 </p>
+                
+                <p className="text-gray-400 leading-relaxed">
+                  We're focused on creating{' '}
+                  <span className="text-white font-semibold">intelligent web applications</span>{' '}
+                  that solve real problems. Our approach combines modern development practices with cutting-edge AI to build solutions that are both powerful and user-friendly.
+                </p>
+                
+                <div className="bg-black border border-white/20 rounded-none p-6 transition-all duration-300 hover:border-white/50">
+                  <p className="text-gray-300 leading-relaxed italic">
+                    "We believe great AI solutions should feel natural and helpful, not overwhelming. Our goal is to{' '}
+                    <span className="text-white font-semibold">make intelligent technology</span>{' '}
+                    work seamlessly in your business, enhancing what you do rather than complicating it."
+                  </p>
+                </div>
               </div>
             </div>
             
@@ -155,14 +140,14 @@ const About = () => {
                 href="#contact" 
                 className="px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300 text-center"
               >
-                Partner With Us
+                Work With Us
               </a>
               
               <a 
                 href="#solutions" 
                 className="px-6 py-3 bg-transparent border border-white/50 text-white rounded-none font-medium hover:border-white hover:bg-black/30 transition-all duration-300 text-center"
               >
-                Explore Solutions
+                See Our Work
               </a>
             </div>
           </div>

@@ -1,9 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
-import RainbowGradientText from '../components/ui/RainbowGradientText';
-import ScrollFloat from '../components/animations/ScrollFloat';
-import RainbowScrollFloat from '../components/animations/RainbowScrollFloat';
 
-// Enhanced services data
+// Temporary import of rainbow text component
+const RainbowGradientText = ({ children, className = '', large = false }) => {
+  return (
+    <span 
+      className={`font-bold ${className}`}
+      style={{
+        backgroundImage: large 
+          ? `linear-gradient(90deg, #ff0080, #ff8000, #ffff00, #00ff80, #00ffff, #0080ff, #8000ff, #ff0080)`
+          : `linear-gradient(90deg, #ff0080, #7928CA, #0070F3, #00DFD8, #7928CA, #ff0080)`,
+        backgroundSize: '200% 100%',
+        backgroundClip: 'text',
+        WebkitBackgroundClip: 'text',
+        color: 'transparent',
+        WebkitTextFillColor: 'transparent',
+        display: 'inline-block',
+        animation: 'gradient-animation 8s linear infinite',
+        filter: large ? 'brightness(1.1) contrast(1.1)' : 'none',
+        textShadow: large ? '0 0 30px rgba(128, 0, 255, 0.15)' : 'none'
+      }}
+    >
+      {children}
+    </span>
+  );
+};
+
+// Realistic services data
 const servicesData = [
   {
     icon: (
@@ -12,9 +34,9 @@ const servicesData = [
         <path d="M16.2398 7.76001L14.1198 14.12L7.75977 16.24L9.87977 9.88001L16.2398 7.76001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: "AI-Powered Business Transformation",
-    description: "Revolutionize your operations with enterprise-grade AI integration. We transform legacy systems into intelligent powerhouses that drive exponential growth and operational excellence.",
-    features: ["Advanced ML Pipeline Integration", "Real-time Decision Intelligence", "Automated Process Optimization", "Enterprise-Scale Performance"],
+    title: "AI Integration for Web Applications",
+    description: "Add intelligent features to your existing web applications. We help you integrate AI capabilities that enhance user experience and automate key processes without rebuilding everything.",
+    features: ["Smart Feature Integration", "API Development", "Performance Optimization", "Scalable Architecture"],
     color: "#0070F3"
   },
   {
@@ -25,9 +47,9 @@ const servicesData = [
         <path d="M12 22.08V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: "Next-Generation Intelligent Applications",
-    description: "Build industry-defining applications with AI at their core. From intelligent user interfaces to predictive backends, we create solutions that anticipate and exceed user expectations.",
-    features: ["Cognitive Application Architecture", "Predictive User Experience", "Self-Optimizing Systems", "Intelligent Automation Framework"],
+    title: "AI-First Web Application Development",
+    description: "Build modern web applications designed with AI at their core. From intelligent interfaces to automated workflows, we create applications that work smarter from day one.",
+    features: ["AI-Driven Design", "Intelligent User Experience", "Modern Tech Stack", "Responsive Design"],
     color: "#7928CA"
   },
   {
@@ -38,9 +60,9 @@ const servicesData = [
         <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: "Proprietary AI Model Development",
-    description: "Develop your competitive edge with custom AI models that understand your unique business domain. Transform your data into proprietary intelligence that drives market leadership.",
-    features: ["Domain-Specific Model Training", "Proprietary Algorithm Development", "IP-Protected AI Assets", "Continuous Learning Architecture"],
+    title: "Custom AI Solutions",
+    description: "Develop AI models and solutions tailored to your specific business needs. We work with your data and requirements to create intelligent systems that solve your unique challenges.",
+    features: ["Custom Model Development", "Data Analysis & Training", "Business-Specific Solutions", "Ongoing Support"],
     color: "#FF0080"
   }
 ];
@@ -188,38 +210,20 @@ const Services = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium mb-6 border border-white/10">
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            Enterprise AI Solutions
+            What We Do
           </div>
           
-          {/* Contenitore per i titoli con spaziatura ridotta */}
-          <div className="space-y-0"> {/* space-y-0 rimuove lo spazio verticale predefinito */}
-            {/* Utilizziamo RainbowScrollFloat senza margine in basso */}
-            <RainbowScrollFloat
-              fontSize="text-4xl md:text-5xl"
-              containerClassName="font-bold leading-tight tracking-tight mb-0" // mb-0 rimuove il margine in basso
-              animationDuration={1}
-              ease="back.inOut(2)"
-              scrollStart="center bottom+=50%"
-              scrollEnd="bottom bottom-=40%"
-              stagger={0.03}
-              preserveRainbow={false}
-            >
-              Transformative AI
-            </RainbowScrollFloat>
-            
-            {/* Il sottotitolo arcobaleno senza margine superiore */}
-            <div className="mt-0">
-              <RainbowGradientText large={true} className="block text-4xl md:text-5xl font-bold">
-                That Delivers Results
-              </RainbowGradientText>
-            </div>
-          </div>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight tracking-tight">
+            AI Solutions
+            <RainbowGradientText large={true} className="block mt-2">
+              That Actually Work
+            </RainbowGradientText>
+          </h2>
           
-          {/* Una distanza prima del testo descrittivo */}
-          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed mt-4">
-            Harness the power of{' '}
-            <span className="text-white font-semibold">cutting-edge artificial intelligence</span>{' '}
-            to drive unprecedented growth, efficiency, and competitive advantage in your market.
+          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+            We build{' '}
+            <span className="text-white font-semibold">practical AI solutions</span>{' '}
+            that integrate smoothly with your business and deliver real value to your users.
           </p>
         </div>
         
@@ -238,63 +242,67 @@ const Services = () => {
         
         {/* CTA Section */}
         <div className="text-center">
-  <div 
-    className="
-      max-w-4xl mx-auto rounded-none p-10
-      backdrop-blur-sm border border-white/10 bg-black/30
-      relative overflow-hidden
-    "
-  >
-    {/* Background light effect */}
-    <div
-      className="absolute inset-0 pointer-events-none opacity-20"
-      style={{
-        background: `
-          radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
-          radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 70%)
-        `
-      }}
-    />
-    
-    <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white relative z-10">
-      Ready to Lead Your Industry with AI?
-    </h3>
-    
-    <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto relative z-10">
-      Join visionary companies already leveraging our AI solutions to{' '}
-      <span className="text-white font-semibold">dominate their markets</span>.{' '}
-      Schedule your strategic consultation today.
-    </p>
-    
-    <div className="flex flex-col sm:flex-row gap-5 justify-center relative z-10">
-  <a 
-    href="#contact" 
-    className="
-      inline-flex items-center justify-center
-      px-6 py-3 rounded-none font-medium
-      bg-black text-white hover:bg-white hover:text-black
-      transition-all duration-300
-      border border-white text-center
-    "
-  >
-    Schedule Strategic Consultation
-  </a>
-  
-  <a
-    href="#case-studies" 
-    className="
-      inline-flex items-center justify-center
-      px-6 py-3 rounded-none font-medium
-      bg-transparent text-white
-      border border-white/50 hover:border-white hover:bg-black/30
-      transition-all duration-300 text-center
-    "
-  >
-    View Success Stories
-  </a>
-</div>
-  </div>
-</div>
+          <div 
+            className="
+              max-w-4xl mx-auto rounded-xl p-10
+              backdrop-blur-sm border border-white/10 bg-white/5
+              relative overflow-hidden
+            "
+          >
+            {/* Background light effect */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-20"
+              style={{
+                background: `
+                  radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
+                  radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 70%)
+                `
+              }}
+            />
+            
+            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white relative z-10">
+              Ready to Add AI to Your Project?
+            </h3>
+            
+            <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto relative z-10">
+              Whether you want to enhance an existing application or build something completely new,{' '}
+              <span className="text-white font-semibold">let's explore what's possible</span>{' '}
+              with your specific needs and goals.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-5 justify-center relative z-10">
+              <a 
+                href="#contact" 
+                className="
+                  inline-flex items-center justify-center
+                  px-8 py-4 rounded-full font-medium text-base
+                  bg-white hover:bg-gray-100
+                  text-black
+                  transition-all duration-300
+                  shadow-lg shadow-white/10
+                  transform hover:-translate-y-0.5
+                "
+              >
+                Discuss Your Project
+              </a>
+              
+              <a
+                href="#case-studies" 
+                className="
+                  inline-flex items-center justify-center
+                  px-8 py-4 rounded-full font-medium text-base
+                  bg-transparent text-white hover:text-white
+                  border border-white/20 hover:border-white/40
+                  transition-all duration-300
+                  shadow-lg shadow-white/5
+                  transform hover:-translate-y-0.5
+                "
+              >
+                See Our Projects
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
+// src/sections/Contact.jsx
 import React from 'react';
 import { contactInfo } from '../data/contactInfo';
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
-import ScrollFloat from '../components/animations/ScrollFloat';
 
 // Internal ContactForm component to avoid import issues
 const ContactForm = () => {
@@ -14,7 +14,7 @@ const ContactForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Thank you for your inquiry! Our AI strategy team will contact you within 24 hours to discuss your transformation goals.');
+    alert('Thanks for reaching out! We\'ll get back to you within 1-2 business days to discuss your project.');
     setFormData({ name: '', email: '', company: '', message: '' });
   };
 
@@ -30,7 +30,7 @@ const ContactForm = () => {
       <div className="grid md:grid-cols-2 gap-6">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
-            Full Name *
+            Your Name *
           </label>
           <input
             type="text"
@@ -40,12 +40,12 @@ const ContactForm = () => {
             value={formData.name}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
-            placeholder="Your full name"
+            placeholder="Your name"
           />
         </div>
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
-            Business Email *
+            Email Address *
           </label>
           <input
             type="email"
@@ -55,20 +55,19 @@ const ContactForm = () => {
             value={formData.email}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
-            placeholder="your.email@company.com"
+            placeholder="your@email.com"
           />
         </div>
       </div>
       
       <div>
         <label htmlFor="company" className="block text-sm font-medium text-white mb-2">
-          Company / Organization *
+          Company (Optional)
         </label>
         <input
           type="text"
           id="company"
           name="company"
-          required
           value={formData.company}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
@@ -78,7 +77,7 @@ const ContactForm = () => {
       
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
-          Project Details & AI Goals *
+          Tell Us About Your Project *
         </label>
         <textarea
           id="message"
@@ -88,7 +87,7 @@ const ContactForm = () => {
           value={formData.message}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all resize-none"
-          placeholder="Describe your AI transformation goals, current challenges, and how we can help accelerate your business growth..."
+          placeholder="What kind of AI features or web application are you looking to build? Tell us about your goals and any specific requirements..."
         />
       </div>
       
@@ -96,7 +95,7 @@ const ContactForm = () => {
         type="submit"
         className="w-full bg-black text-white py-4 px-6 rounded-none font-medium border border-white hover:bg-white hover:text-black transition-colors duration-300"
       >
-        Start Your AI Transformation
+        Send Message
       </button>
     </form>
   );
@@ -137,31 +136,19 @@ const Contact = () => {
     <section id="contact" className="py-20 bg-black">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="text-center mb-16 animate-on-scroll">
-          <ScrollFloat
-            containerClassName="text-4xl md:text-5xl font-bold mb-6 text-white"
-            animationDuration={1}
-            ease="back.inOut(2)"
-            scrollStart="top bottom+=30%"
-            scrollEnd="center center"
-            stagger={0.03}
-          >
-            Ready to Transform Your Business?
-          </ScrollFloat>
-          
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Let's Build Something Great</h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Join industry leaders who trust MIP Technologies to deliver{' '}
-            <span className="text-white font-semibold">breakthrough AI solutions</span>.{' '}
-            Let's discuss how we can accelerate your competitive advantage.
+            Have an idea for an AI-powered web application? Want to add intelligent features to your existing site?{' '}
+            <span className="text-white font-semibold">Let's talk about what we can create together</span>.
           </p>
         </div>
         
         <div className="grid lg:grid-cols-2 gap-16">
           <div className="space-y-8 animate-on-scroll">
             <div>
-              <h3 className="text-2xl font-bold mb-6 text-white">Let's Build the Future Together</h3>
+              <h3 className="text-2xl font-bold mb-6 text-white">Ready to Start Your Project?</h3>
               <p className="text-gray-400 mb-8 leading-relaxed">
-                Our AI strategists are ready to explore your transformation opportunities. 
-                From initial consultation to full-scale implementation, we're your partners in innovation.
+                We love working with businesses who want to explore what's possible with AI. Whether you have a clear vision or just an interesting problem to solve, we're here to help make it happen.
               </p>
             </div>
             
@@ -188,19 +175,19 @@ const Contact = () => {
             })}
             
             <div className="bg-black border border-white/20 rounded-none p-6 mt-8">
-              <h4 className="font-semibold text-white mb-2">Why Choose MIP Technologies?</h4>
+              <h4 className="font-semibold text-white mb-2">What We Bring to Your Project</h4>
               <ul className="text-gray-400 space-y-2">
-                <li>• Proven track record with Fortune 500 companies</li>
-                <li>• Average ROI improvement of 300%+ within 12 months</li>
-                <li>• End-to-end AI implementation expertise</li>
-                <li>• 24/7 enterprise support and monitoring</li>
+                <li>• Fresh perspective on AI integration</li>
+                <li>• Modern development practices and clean code</li>
+                <li>• Direct communication throughout the project</li>
+                <li>• Focus on practical, user-friendly solutions</li>
               </ul>
             </div>
           </div>
           
           <div className="animate-on-scroll" style={{ animationDelay: '100ms' }}>
             <div className="bg-black border border-white/20 rounded-none p-8">
-              <h3 className="text-xl font-bold mb-6 text-white">Get Your Free AI Strategy Session</h3>
+              <h3 className="text-xl font-bold mb-6 text-white">Tell Us About Your Project</h3>
               <ContactForm />
             </div>
           </div>

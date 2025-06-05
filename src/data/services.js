@@ -2,20 +2,20 @@
 export const services = [
   {
     icon: "⚡",
-    title: "AI-Powered Transformation",
-    description: "Supercharge your existing applications with cutting-edge AI capabilities. We seamlessly integrate intelligent automation that drives measurable ROI and competitive advantage.",
-    features: ["Advanced ML Integration", "Custom AI APIs", "Performance Optimization", "Enterprise-Grade Scalability"]
+    title: "AI Integration for Web Applications",
+    description: "Add intelligent features to your existing web applications. We help you integrate AI capabilities that enhance user experience and automate key processes.",
+    features: ["Smart Feature Integration", "API Development", "Performance Optimization", "Scalable Architecture"]
   },
   {
     icon: "◉",
-    title: "Intelligent Application Development",
-    description: "Build the future with AI-first applications designed to revolutionize your industry. From concept to deployment, we create solutions that set new standards.",
-    features: ["AI-First Architecture", "Intelligent User Experience", "Cloud-Native Infrastructure", "Adaptive Interface Design"]
+    title: "AI-First Web Application Development",
+    description: "Build modern web applications designed with AI at their core. From intelligent interfaces to automated workflows, we create applications that work smarter.",
+    features: ["AI-Driven Design", "Intelligent User Experience", "Modern Tech Stack", "Responsive Design"]
   },
   {
     icon: "●",
-    title: "Custom AI Model Development",
-    description: "Unlock unprecedented insights with proprietary AI models tailored to your unique business challenges. Turn your data into your most valuable competitive asset.",
-    features: ["Proprietary Model Training", "Domain-Specific Optimization", "Intellectual Property Protection", "Continuous Learning Systems"]
+    title: "Custom AI Solutions",
+    description: "Develop AI models and solutions tailored to your specific business needs. We work with your data and requirements to create intelligent systems that solve real problems.",
+    features: ["Custom Model Development", "Data Analysis & Training", "Business-Specific Solutions", "Ongoing Support"]
   }
 ];
