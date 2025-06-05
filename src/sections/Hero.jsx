@@ -1,13 +1,23 @@
-// src/sections/Hero.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import RainbowGradientText from '../components/ui/RainbowGradientText';
+import ScrollFloat from '../components/animations/ScrollFloat';
+import RainbowScrollFloat from '../components/animations/RainbowScrollFloat';
+import DescriptedText from '../components/ui/DescriptedText';
 
-// Component for typing cursor
+// Component for typing cursor with better vertical alignment
 const TypewriterCursor = ({ blinking = true }) => {
   return (
     <span 
-      className={`inline-block w-0.5 h-8 md:h-12 lg:h-16 bg-white ml-1 align-middle ${blinking ? 'animate-blink' : ''}`}
-      style={{ animationDuration: '800ms', animationIterationCount: 'infinite' }}
+      className={`inline-block w-0.5 h-8 md:h-12 lg:h-16 bg-white ml-1 ${blinking ? 'animate-blink' : ''}`}
+      style={{ 
+        animationDuration: '800ms', 
+        animationIterationCount: 'infinite',
+        verticalAlign: 'middle',
+        transform: 'translateY(0%)',
+        position: 'relative',
+        top: '0.05em',
+        display: 'inline-block'
+      }}
     />
   );
 };
@@ -22,13 +32,14 @@ const Hero = () => {
   const heroRef = useRef(null);
   const particlesContainerRef = useRef(null);
   
-  const phrases = [
-    'Intelligent Web Apps',
-    'AI Integration',
-    'Smart Solutions',
-    'Modern Development',
-    'Custom AI Features'
-  ];
+  // Memorizzo l'array phrases per evitare rigenerazioni ad ogni render
+  const phrases = useMemo(() => [
+    'AI-Powered Growth',
+    'Intelligent Automation',
+    'Data-Driven Insights',
+    'Business Transformation',
+    'Competitive Advantage'
+  ], []);
   
   // Typing effect
   useEffect(() => {
@@ -168,10 +179,17 @@ const Hero = () => {
           }}
         >
           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-          Modern AI Development
+          <DescriptedText
+            text="Enterprise AI Solutions"
+            className="text-white"
+            animateOn="view"
+            sequential={true}
+            speed={30}
+            parentClassName="text-sm font-medium"
+          />
         </div>
         
-        {/* Main Heading */}
+        {/* Main Heading - utilizzando il RainbowScrollFloat ma senza margine in basso */}
         <div 
           className="mb-12"
           style={{ 
@@ -180,17 +198,39 @@ const Hero = () => {
             opacity: Math.max(0, 1 - scrollY / 700),
           }}
         >
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 text-white tracking-tighter">
-            Building the Future with
-            <br />
-            <RainbowGradientText large={true} className="py-2 tracking-tighter">
-              {typedText}
-            </RainbowGradientText>
-            <TypewriterCursor />
-          </h1>
+          {/* Il contenitore principale con le classi di spaziatura */}
+          <div className="space-y-0">
+            {/* ScrollFloat senza margine in basso (mb-0 invece di mb-6) */}
+            <RainbowScrollFloat
+              fontSize="text-5xl md:text-7xl lg:text-8xl"
+              containerClassName="tracking-tighter mb-0"
+              animationDuration={1}
+              ease="back.inOut(2)"
+              scrollStart="center bottom+=50%"
+              scrollEnd="bottom bottom-=40%"
+              stagger={0.03}
+              large={true}
+              preserveRainbow={false}
+              lineHeight="leading-none"
+              noMargin={true}
+            >
+              Unleash the Power of
+            </RainbowScrollFloat>
+            
+            {/* Contenitore del testo arcobaleno con cursore allineato */}
+            <div className="tracking-tighter mt-0 flex items-center justify-center">
+              <div className="inline-flex items-center"> 
+                <RainbowGradientText large={true} className="tracking-tighter text-5xl md:text-7xl lg:text-8xl">
+                  {typedText}
+                </RainbowGradientText>
+                {/* Cursore con allineamento verticale regolato finemente */}
+                <TypewriterCursor />
+              </div>
+            </div>
+          </div>
         </div>
         
-        {/* Subtitle */}
+        {/* Subtitle with DescriptedText */}
         <div 
           className="mb-12"
           style={{ 
@@ -200,14 +240,27 @@ const Hero = () => {
           }}
         >
           <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-            We help businesses integrate{' '}
-            <span className="text-white font-semibold">artificial intelligence</span>{' '}
-            into their web applications and build{' '}
-            <span className="text-white font-semibold">smart, modern solutions</span>{' '}
-            that work better for users.
+            <DescriptedText
+              text="Transform your business with cutting-edge AI solutions that drive measurable growth and competitive advantage."
+              className="text-gray-300"
+              encryptedClassName="text-gray-500"
+              animateOn="view"
+              sequential={true}
+              speed={15}
+              maxIterations={20}
+              parentClassName="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed"
+            />
             <br className="hidden md:block" />
-            From AI-powered features to complete applications—we make{' '}
-            <span className="text-white font-semibold">intelligent technology accessible</span>.
+            <DescriptedText
+              text="From strategy to implementation, we deliver AI that powers your success."
+              className="text-gray-300"
+              encryptedClassName="text-gray-500"
+              animateOn="view"
+              sequential={true}
+              speed={15}
+              maxIterations={15}
+              parentClassName="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed"
+            />
           </p>
         </div>
         
@@ -224,29 +277,26 @@ const Hero = () => {
             href="#solutions" 
             className="
               inline-flex items-center justify-center
-              px-8 py-4 rounded-full font-medium text-lg
-              bg-white text-gray-900 hover:bg-gray-100
-              transform hover:-translate-y-1 hover:shadow-lg
+              px-6 py-3 rounded-none font-medium
+              bg-black text-white hover:bg-white hover:text-black
               transition-all duration-300
-              shadow-xl shadow-white/5
+              border border-white text-center
             "
           >
-            See What We Build
+            Explore Our Solutions
           </a>
           
           <a 
             href="#contact" 
             className="
               inline-flex items-center justify-center
-              px-8 py-4 rounded-full font-medium text-lg
-              bg-transparent text-white hover:text-white
-              border border-white/20 hover:border-white/40
-              transform hover:-translate-y-1 hover:shadow-lg
-              transition-all duration-300
-              shadow-xl shadow-white/5
+              px-6 py-3 rounded-none font-medium
+              bg-transparent text-white
+              border border-white/50 hover:border-white hover:bg-black/30
+              transition-all duration-300 text-center
             "
           >
-            Start a Project
+            Start Your AI Journey
           </a>
         </div>
         

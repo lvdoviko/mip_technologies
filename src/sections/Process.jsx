@@ -1,8 +1,8 @@
 // src/sections/Process.jsx
 import React, { useEffect, useState, useRef } from 'react';
-import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { steps } from '../data/process';
 import ScrollFloat from '../components/animations/ScrollFloat'; 
+import DescriptedText from '../components/ui/DescriptedText';
 
 const Process = () => {
   const [activeStep, setActiveStep] = useState(null);
@@ -161,9 +161,17 @@ const Process = () => {
                     {step.title}
                   </h3>
                   
-                  {/* Description */}
+                  {/* Description with DescriptedText */}
                   <p className="text-gray-400 leading-relaxed">
-                    {step.description}
+                    <DescriptedText
+                      text={step.description}
+                      className="text-gray-400"
+                      encryptedClassName="text-gray-600"
+                      animateOn="view"
+                      sequential={true}
+                      speed={25}
+                      maxIterations={15}
+                    />
                   </p>
                 </div>
                 
@@ -203,8 +211,14 @@ const Process = () => {
               Ready to Experience This Methodology?
             </h3>
             <p className="text-gray-400 mb-8">
-              Our systematic approach has delivered measurable results for companies across every major industry. 
-              Let's discuss how we can apply this proven methodology to accelerate your AI transformation.
+              <DescriptedText
+                text="Our systematic approach has delivered measurable results for companies across every major industry. Let's discuss how we can apply this proven methodology to accelerate your AI transformation."
+                className="text-gray-400"
+                encryptedClassName="text-gray-600"
+                animateOn="view"
+                sequential={true}
+                speed={20}
+              />
             </p>
             <a 
               href="#contact" 
