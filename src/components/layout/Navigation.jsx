@@ -1,3 +1,4 @@
+// src/components/layout/Navigation.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useScrollDetection } from '../../hooks/useScrollDetection';
 import Logo from '../ui/Logo';
@@ -11,16 +12,16 @@ const Navigation = () => {
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
-  // Gestisce la navigazione con tastiera
+  // Handle keyboard navigation
   useEffect(() => {
-    // Gestisce la chiusura del menu mobile con Escape
+    // Handle mobile menu close with Escape
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isMobileMenuOpen) {
         setIsMobileMenuOpen(false);
       }
     };
 
-    // Gestisce il focus trap nel menu mobile
+    // Focus trap in mobile menu
     const handleFocusTrap = (e) => {
       if (!isMobileMenuOpen || !mobileMenuRef.current) return;
       
@@ -31,16 +32,10 @@ const Navigation = () => {
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
       
-      // Se si preme Shift+Tab sull'elemento focusabile più in alto, 
-      // sposta il focus all'elemento più in basso
       if (e.key === 'Tab' && e.shiftKey && document.activeElement === firstElement) {
         e.preventDefault();
         lastElement.focus();
-      }
-      
-      // Se si preme Tab sull'elemento focusabile più in basso, 
-      // sposta il focus all'elemento più in alto
-      else if (e.key === 'Tab' && !e.shiftKey && document.activeElement === lastElement) {
+      } else if (e.key === 'Tab' && !e.shiftKey && document.activeElement === lastElement) {
         e.preventDefault();
         firstElement.focus();
       }
@@ -59,28 +54,24 @@ const Navigation = () => {
     };
   }, [isMobileMenuOpen]);
 
-  // Sposta il focus quando il menu mobile si apre/chiude
+  // Move focus when mobile menu opens/closes
   useEffect(() => {
     if (isMobileMenuOpen && mobileMenuRef.current) {
-      // Quando il menu si apre, sposta il focus al primo elemento
       const firstFocusable = mobileMenuRef.current.querySelector('a[href], button');
       if (firstFocusable) {
         setTimeout(() => firstFocusable.focus(), 100);
       }
     } else if (!isMobileMenuOpen && menuButtonRef.current) {
-      // Quando il menu si chiude, riporta il focus al pulsante
       menuButtonRef.current.focus();
     }
   }, [isMobileMenuOpen]);
 
-  // Observer per tracciare la sezione attiva
+  // Observer for tracking active section
   useEffect(() => {
-    // Rilascia l'observer precedente se esiste
     if (observerRef.current) {
       observerRef.current.disconnect();
     }
     
-    // Crea un nuovo observer
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -92,17 +83,14 @@ const Navigation = () => {
       { threshold: 0.3 }
     );
 
-    // Filtra gli elementi di navigazione per escludere "Get Started"
     const menuItems = navItems.filter(item => item.label !== "Get Started");
 
-    // Osserva tutte le sezioni
     menuItems.forEach((item) => {
-      const sectionId = item.href.slice(1); // Rimuove il # iniziale
+      const sectionId = item.href.slice(1);
       const element = document.getElementById(sectionId);
       if (element) observerRef.current.observe(element);
     });
 
-    // Cleanup dell'observer
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
@@ -111,12 +99,35 @@ const Navigation = () => {
     };
   }, []);
 
-  // Gestisce il toggle del menu mobile
+  // Handle smooth scrolling without changing URL
+  const handleSmoothScroll = (e, sectionId) => {
+    e.preventDefault();
+    
+    // Clean any existing hash in the URL
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState('', document.title, window.location.pathname);
+    }
+    
+    if (!sectionId || sectionId === '') {
+      // Scroll to top when clicking on logo or home
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Scroll to the specific section
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  };
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  // Filtra gli elementi di navigazione per escludere "Get Started" dal menu principale
   const menuItems = navItems.filter(item => item.label !== "Get Started");
 
   return (
@@ -131,11 +142,12 @@ const Navigation = () => {
     >
       <div className="container mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          {/* Logo Section */}
+          {/* Logo Section - Updated to scroll to top */}
           <a 
-            href="#" 
+            href="#"
             className="flex items-center gap-4 cursor-pointer group"
             aria-label="MIP Technologies - Torna alla home"
+            onClick={(e) => handleSmoothScroll(e, '')}
           >
             <div className="transition-transform duration-300 group-hover:scale-105">
               <Logo variant="dark" size="xl" className="mr-0" />
@@ -151,33 +163,41 @@ const Navigation = () => {
             </div>
           </a>
           
-          {/* Desktop Navigation - Solo elementi di menu filtrati */}
+          {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1" role="menubar">
             {menuItems.map((item) => {
               const isActive = activeSection === item.href.slice(1);
+              const sectionId = item.href.slice(1);
+              
               return (
                 <a
                   key={item.href}
                   href={item.href}
-                  className={`px-5 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${
-                    isActive 
-                      ? 'text-white bg-white/10 border border-white/20' 
-                      : 'text-gray-300 hover:text-white hover:bg-white/5'
-                  }`}
+                  onClick={(e) => handleSmoothScroll(e, sectionId)}
+                  className={`px-5 py-2.5 font-medium text-sm transition-all duration-200 relative
+                    ${isActive 
+                      ? 'text-white' 
+                      : 'text-gray-300 hover:text-white'
+                    }`}
                   aria-current={isActive ? 'page' : undefined}
                   role="menuitem"
                 >
                   {item.label}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-white"></div>
+                  )}
                 </a>
               );
             })}
           </div>
           
-          {/* CTA Button Desktop */}
+          {/* CTA Button Desktop - Updated style to match form button */}
           <div className="hidden md:flex items-center">
-            <a
-              href="#contact"
-              className="px-7 py-3 rounded-lg font-semibold text-sm bg-white text-black hover:bg-gray-100 transform hover:-translate-y-0.5 transition-all duration-300 shadow-lg hover:shadow-xl"
+            
+              <a
+                href="#contact"
+                onClick={(e) => handleSmoothScroll(e, 'contact')}
+                className="px-7 py-3 rounded-none font-medium border border-white bg-black text-white hover:bg-white hover:text-black transition-colors duration-300"
               aria-label="Inizia subito - Contattaci"
             >
               Get Started
@@ -221,7 +241,7 @@ const Navigation = () => {
           </div>
         </div>
         
-        {/* Mobile Menu - Menu mobile con elementi filtrati */}
+        {/* Mobile Menu */}
         <div 
           id="mobile-menu"
           ref={mobileMenuRef}
@@ -233,15 +253,16 @@ const Navigation = () => {
           role="menu"
           aria-labelledby="mobile-menu-button"
         >
-          <div className="bg-black/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 mt-4 overflow-hidden">
+          <div className="bg-black/90 backdrop-blur-md shadow-2xl border border-white/10 mt-4 overflow-hidden">
             {menuItems.map((item, index) => {
               const isActive = activeSection === item.href.slice(1);
+              const sectionId = item.href.slice(1);
               return (
                 <a
                   key={item.href}
                   href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block px-6 py-4 text-base font-medium transition-all duration-200 border-b border-white/5 last:border-b-0 ${
+                  onClick={(e) => handleSmoothScroll(e, sectionId)}
+                  className={`block px-6 py-4 text-base font-medium transition-all duration-200 border-b border-white/5 last:border-b-0 relative ${
                     isActive 
                       ? 'text-white bg-white/5' 
                       : 'text-gray-300 hover:text-white hover:bg-white/5'
@@ -251,18 +272,20 @@ const Navigation = () => {
                   tabIndex={isMobileMenuOpen ? 0 : -1}
                 >
                   {item.label}
+                  {isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-white"></div>
+                  )}
                 </a>
               );
             })}
             
-            {/* Mobile CTA - Manteniamo qui il pulsante Get Started */}
+            {/* Mobile CTA - Updated style to match form button */}
             <div className="p-6 border-t border-white/10">
-              <a
-                href="#contact"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full px-6 py-4 rounded-xl font-semibold text-center bg-white text-black hover:bg-gray-100 transition-all duration-300"
-                role="menuitem"
-                tabIndex={isMobileMenuOpen ? 0 : -1}
+                <a
+                  href="#contact"
+                  onClick={(e) => handleSmoothScroll(e, 'contact')}
+                  className="block w-full px-6 py-4 rounded-none font-medium border border-white bg-black text-white hover:bg-white hover:text-black transition-colors duration-300"
+                  role="menuitem"
               >
                 Get Started
               </a>

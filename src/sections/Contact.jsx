@@ -20,8 +20,7 @@ const ContactForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Invia il form a Formspree
-      // Sostituisci "YOUR_FORMSPREE_ID" con il tuo ID Formspree
+      // Submit the form to Formspree
       const response = await fetch('https://formspree.io/f/mqabajwv', {
         method: 'POST',
         headers: {
@@ -32,7 +31,7 @@ const ContactForm = () => {
           email: formData.email,
           company: formData.company,
           message: formData.message,
-          _subject: `New Contact from ${formData.name}` // Personalizza l'oggetto dell'email
+          _subject: `New Contact from ${formData.name}`
         })
       });
       
@@ -208,16 +207,9 @@ const Contact = () => {
           <div className="space-y-8 animate-on-scroll">
             <div>
               <h3 className="text-2xl font-bold mb-6 text-white">Ready to Start Your Project?</h3>
+              {/* Removed DescriptedText animation as requested */}
               <p className="text-gray-400 mb-8 leading-relaxed">
-                <DescriptedText
-                  text="We love working with businesses who want to explore what's possible with AI. Whether you have a clear vision or just an interesting problem to solve, we're here to help make it happen."
-                  className="text-gray-400"
-                  encryptedClassName="text-gray-600"
-                  animateOn="view"
-                  sequential={true}
-                  speed={20}
-                  maxIterations={15}
-                />
+                We love working with businesses who want to explore what's possible with AI. Whether you have a clear vision or just an interesting problem to solve, we're here to help make it happen.
               </p>
             </div>
             

@@ -32,7 +32,7 @@ const Hero = () => {
   const heroRef = useRef(null);
   const particlesContainerRef = useRef(null);
   
-  // Memorizzo l'array phrases per evitare rigenerazioni ad ogni render
+  // Store phrases array to avoid regeneration on each render
   const phrases = useMemo(() => [
     'AI-Powered Growth',
     'Intelligent Automation',
@@ -107,6 +107,12 @@ const Hero = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
   
+  // Find the longest phrase for fixed-height container calculation
+  const longestPhrase = useMemo(() => {
+    return phrases.reduce((longest, current) => 
+      current.length > longest.length ? current : longest, '');
+  }, [phrases]);
+  
   return (
     <section 
       ref={heroRef}
@@ -169,7 +175,7 @@ const Hero = () => {
       
       {/* Content Container */}
       <div className="container mx-auto max-w-6xl px-4 text-center relative z-10">
-        {/* Badge */}
+        {/* Badge - Plain text without animation */}
         <div 
           className="inline-flex items-center gap-2 bg-gray-800/80 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium mb-8 border border-gray-700/50 shadow-xl"
           style={{ 
@@ -179,17 +185,10 @@ const Hero = () => {
           }}
         >
           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-          <DescriptedText
-            text="Enterprise AI Solutions"
-            className="text-white"
-            animateOn="view"
-            sequential={true}
-            speed={30}
-            parentClassName="text-sm font-medium"
-          />
+          Enterprise AI Solutions
         </div>
         
-        {/* Main Heading - utilizzando il RainbowScrollFloat ma senza margine in basso */}
+        {/* Main Heading with fixed height container */}
         <div 
           className="mb-12"
           style={{ 
@@ -198,9 +197,7 @@ const Hero = () => {
             opacity: Math.max(0, 1 - scrollY / 700),
           }}
         >
-          {/* Il contenitore principale con le classi di spaziatura */}
           <div className="space-y-0">
-            {/* ScrollFloat senza margine in basso (mb-0 invece di mb-6) */}
             <RainbowScrollFloat
               fontSize="text-5xl md:text-7xl lg:text-8xl"
               containerClassName="tracking-tighter mb-0"
@@ -214,16 +211,16 @@ const Hero = () => {
               lineHeight="leading-none"
               noMargin={true}
             >
-              Unleash the Power of
+              Unlock the Power of
             </RainbowScrollFloat>
             
-            {/* Contenitore del testo arcobaleno con cursore allineato */}
+            {/* Fixed height container for the typewriter text */}
             <div className="tracking-tighter mt-0 flex items-center justify-center">
-              <div className="inline-flex items-center"> 
+              {/* Calculate fixed height based on the tallest text to prevent layout shifts */}
+              <div className="inline-flex items-center h-[4.5rem] md:h-[6.5rem] lg:h-[8.5rem] overflow-hidden"> 
                 <RainbowGradientText large={true} className="tracking-tighter text-5xl md:text-7xl lg:text-8xl">
                   {typedText}
                 </RainbowGradientText>
-                {/* Cursore con allineamento verticale regolato finemente */}
                 <TypewriterCursor />
               </div>
             </div>
@@ -275,19 +272,6 @@ const Hero = () => {
         >
           <a 
             href="#solutions" 
-            className="
-              inline-flex items-center justify-center
-              px-6 py-3 rounded-none font-medium
-              bg-black text-white hover:bg-white hover:text-black
-              transition-all duration-300
-              border border-white text-center
-            "
-          >
-            Explore Our Solutions
-          </a>
-          
-          <a 
-            href="#contact" 
             className="
               inline-flex items-center justify-center
               px-6 py-3 rounded-none font-medium
