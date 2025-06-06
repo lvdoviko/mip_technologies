@@ -3,9 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import ProjectCard from '../components/ui/ProjectCard';
 import { projects } from '../data/projects';
-import ScrollFloat from '../components/animations/ScrollFloat'; // Percorso corretto al componente ScrollFloat esistente
+import ScrollFloat from '../components/animations/ScrollFloat';
+import AlbatroveShowcase from '../components/showcase/AlbatroveShowcase';
 
-const Projects = () => {
+const Projects = ({ prefersReducedMotion = false }) => {
   useScrollAnimation();
   const [offset, setOffset] = useState(0);
 
@@ -41,42 +42,30 @@ const Projects = () => {
   }, []);
 
   return (
-    <section id="case-studies" className="py-20 bg-gray-50 relative overflow-hidden">
-      {/* Decorative elements that move with scroll */}
-      <div 
-        className="absolute -left-20 top-20 w-40 h-40 rounded-full bg-primary/5"
-        style={{ 
-          transform: `translateY(${offset * 0.2}px) rotate(${offset * 0.05}deg)`,
-          transition: 'transform 0.1s ease-out'
-        }}
-      />
-      <div 
-        className="absolute -right-20 bottom-40 w-60 h-60 rounded-full bg-accent/5"
-        style={{ 
-          transform: `translateY(${-offset * 0.15}px) rotate(${-offset * 0.03}deg)`,
-          transition: 'transform 0.1s ease-out'
-        }}
-      />
-      
-      <div className="container mx-auto max-w-7xl px-4 relative z-10">
-        <div className="text-center mb-16">
+    <section id="case-studies" className="py-8 bg-black">
+      <div className="container mx-auto max-w-7xl px-4">
+        <div className="text-center mb-10">
           <ScrollFloat
-            containerClassName="mb-6"
-            textClassName="text-4xl md:text-5xl font-bold"
+            containerClassName="mb-4"
+            textClassName="text-4xl md:text-5xl font-bold text-white"
             scrollStart="top bottom"
             scrollEnd="center center"
           >
             Proven Success Stories
           </ScrollFloat>
           
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             Discover how industry leaders achieved{' '}
-            <span className="text-gray-900 font-semibold">transformational results</span>{' '}
+            <span className="text-white font-semibold">transformational results</span>{' '}
             through our AI-powered solutions
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Albatrove Showcase - Featured Project */}
+        <AlbatroveShowcase prefersReducedMotion={prefersReducedMotion} />
+        
+        {/* Other Projects Grid - Rimosso padding superiore */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-2">
           {projects.map((project, index) => (
             <ProjectCard
               key={index}
@@ -86,8 +75,8 @@ const Projects = () => {
           ))}
         </div>
         
-        {/* CTA Section */}
-        <div className="text-center mt-16 animate-on-scroll">
+        {/* CTA Section - Ridotto margine */}
+        <div className="text-center mt-8 animate-on-scroll">
           <div className="bg-black rounded-xl p-8 md:p-12 max-w-4xl mx-auto border border-white/10">
             <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
               Ready to Write Your Success Story?
