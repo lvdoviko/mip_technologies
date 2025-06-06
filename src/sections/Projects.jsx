@@ -42,11 +42,11 @@ const Projects = ({ prefersReducedMotion = false }) => {
   }, []);
 
   return (
-    <section id="case-studies" className="py-8 bg-black">
+    <section id="case-studies" className="py-4 bg-black">
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="text-center mb-10">
+        <div className="text-center mb-6">
           <ScrollFloat
-            containerClassName="mb-4"
+            containerClassName="mb-3"
             textClassName="text-4xl md:text-5xl font-bold text-white"
             scrollStart="top bottom"
             scrollEnd="center center"
@@ -62,10 +62,12 @@ const Projects = ({ prefersReducedMotion = false }) => {
         </div>
         
         {/* Albatrove Showcase - Featured Project */}
-        <AlbatroveShowcase prefersReducedMotion={prefersReducedMotion} />
+        <div className="py-0">
+          <AlbatroveShowcase prefersReducedMotion={prefersReducedMotion} />
+        </div>
         
-        {/* Other Projects Grid - Rimosso padding superiore */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-2">
+        {/* Other Projects Grid - NASCOSTA per eliminare spazio vuoto */}
+        <div className="hidden grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-1">
           {projects.map((project, index) => (
             <ProjectCard
               key={index}
@@ -75,9 +77,9 @@ const Projects = ({ prefersReducedMotion = false }) => {
           ))}
         </div>
         
-        {/* CTA Section - Ridotto margine */}
-        <div className="text-center mt-8 animate-on-scroll">
-          <div className="bg-black rounded-xl p-8 md:p-12 max-w-4xl mx-auto border border-white/10">
+        {/* CTA Section - Spazio regolato e box squadrato */}
+        <div className="text-center mt-36 animate-on-scroll">
+          <div className="bg-black rounded-none p-8 md:p-12 max-w-4xl mx-auto border border-white/10">
             <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
               Ready to Write Your Success Story?
             </h3>

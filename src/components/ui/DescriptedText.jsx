@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 
 /**
- * DecryptedText - Versione corretta che risolve i frammenti scrambled persistenti
+ * DecryptedText - Versione con font professionale
  */
 export default function DecryptedText({
   text,
@@ -18,6 +18,7 @@ export default function DecryptedText({
   animateOn = 'hover',
   skipButton = false,
   duration = 2000,
+  professionalFont = true, // Nuova prop per font professionale
   ...props
 }) {
   const [displayText, setDisplayText] = useState(text)
@@ -35,6 +36,13 @@ export default function DecryptedText({
     currentIteration: 0,
     shouldStop: false
   })
+
+  // Font professionale - puoi scegliere tra questi
+  const professionalFontClass = professionalFont ? 'font-mono tracking-wide' : '';
+  // Altre opzioni:
+  // 'font-serif' per Times/Georgia
+  // 'font-sans tracking-tight' per una versione più pulita di Inter
+  // 'font-mono tracking-wider text-sm' per font monospace più leggibile
 
   // Verifica se l'utente preferisce reduced motion
   useEffect(() => {
@@ -285,7 +293,7 @@ export default function DecryptedText({
   return (
     <motion.span
       ref={containerRef}
-      className={`inline-block whitespace-pre-wrap ${parentClassName}`}
+      className={`inline-block whitespace-pre-wrap ${professionalFontClass} ${parentClassName}`}
       {...hoverProps}
       {...props}
     >
@@ -311,7 +319,7 @@ export default function DecryptedText({
           return (
             <span
               key={index}
-              className={isRevealed ? className : encryptedClassName}
+              className={`${professionalFontClass} ${isRevealed ? className : encryptedClassName}`}
             >
               {char}
             </span>

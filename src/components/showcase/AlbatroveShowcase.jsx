@@ -16,7 +16,7 @@ const AlbatroveShowcase = ({ prefersReducedMotion = false }) => {
   ];
   
   return (
-    <div className="py-3">
+    <div className="py-0">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left side: Description */}
