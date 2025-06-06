@@ -12,7 +12,7 @@ const AlbatroveShowcase = ({ prefersReducedMotion = false }) => {
   // Array delle immagini disponibili
   const images = [
     { src: "/Albatrove-Logo.png", alt: "Albatrove Logo", fallback: FALLBACK_LOGO },
-    { src: "/Albatrove-Conversation.png", alt: "Albatrove AI Conversation", fallback: FALLBACK_CONVERSATION }
+    { src: "/Albatrove-Conversation.PNG", alt: "Albatrove AI Conversation", fallback: FALLBACK_CONVERSATION }
   ];
   
   return (
