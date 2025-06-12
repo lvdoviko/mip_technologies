@@ -142,10 +142,10 @@ const Navigation = () => {
     >
       <div className="container mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          {/* Logo Section - Updated to scroll to top */}
+          {/* Logo Section - Fixed alignment */}
           <a 
             href="#"
-            className="flex items-center gap-4 cursor-pointer group"
+            className="flex items-baseline gap-1 cursor-pointer group"
             aria-label="MIP Technologies - Torna alla home"
             onClick={(e) => handleSmoothScroll(e, '')}
           >
@@ -153,11 +153,8 @@ const Navigation = () => {
               <Logo variant="dark" size="xl" className="mr-0" />
             </div>
             
-            <div className="hidden sm:flex items-baseline gap-1">
-              <span className="text-2xl font-black text-white tracking-tight">
-                MIP
-              </span>
-              <span className="text-lg font-medium text-gray-400 tracking-wide uppercase">
+            <div className="hidden sm:flex">
+              <span className="text-lg font-medium text-slate-500 tracking-wide uppercase leading-none transform translate-y-[-8px]">
                 Technologies
               </span>
             </div>
@@ -193,11 +190,10 @@ const Navigation = () => {
           
           {/* CTA Button Desktop - Updated style to match form button */}
           <div className="hidden md:flex items-center">
-            
-              <a
-                href="#contact"
-                onClick={(e) => handleSmoothScroll(e, 'contact')}
-                className="px-7 py-3 rounded-none font-medium border border-white bg-black text-white hover:bg-white hover:text-black transition-colors duration-300"
+            <a
+              href="#contact"
+              onClick={(e) => handleSmoothScroll(e, 'contact')}
+              className="px-7 py-3 rounded-none font-medium border border-white bg-black text-white hover:bg-white hover:text-black transition-colors duration-300"
               aria-label="Inizia subito - Contattaci"
             >
               Get Started
@@ -281,11 +277,11 @@ const Navigation = () => {
             
             {/* Mobile CTA - Updated style to match form button */}
             <div className="p-6 border-t border-white/10">
-                <a
-                  href="#contact"
-                  onClick={(e) => handleSmoothScroll(e, 'contact')}
-                  className="block w-full px-6 py-4 rounded-none font-medium border border-white bg-black text-white hover:bg-white hover:text-black transition-colors duration-300"
-                  role="menuitem"
+              <a
+                href="#contact"
+                onClick={(e) => handleSmoothScroll(e, 'contact')}
+                className="block w-full px-6 py-4 rounded-none font-medium border border-white bg-black text-white hover:bg-white hover:text-black transition-colors duration-300"
+                role="menuitem"
               >
                 Get Started
               </a>

@@ -36,9 +36,6 @@ const Footer = () => {
             <div className="flex items-center gap-4 mb-6">
               <Logo variant="dark" size="lg" className="mr-0" />
               <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black text-white tracking-tight">
-                  MIP
-                </span>
                 <span className="text-base font-medium text-gray-400 tracking-wide uppercase">
                   Technologies
                 </span>
