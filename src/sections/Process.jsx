@@ -1,4 +1,3 @@
-// src/sections/Process.jsx
 import React, { useEffect, useState, useRef } from 'react';
 import { steps } from '../data/process';
 import ScrollFloat from '../components/animations/ScrollFloat'; 
@@ -7,8 +6,21 @@ import DescriptedText from '../components/ui/DescriptedText';
 const Process = () => {
   const [activeStep, setActiveStep] = useState(null);
   const [offset, setOffset] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const sectionRef = useRef(null);
   const cardsRef = useRef([]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Scroll handling
   useEffect(() => {
@@ -63,7 +75,7 @@ const Process = () => {
   return (
     <section 
       id="methodology" 
-      className="py-20 bg-black relative overflow-hidden"
+      className="py-16 sm:py-20 bg-black relative overflow-hidden"
       ref={sectionRef}
     >
       {/* Background grid */}
@@ -75,31 +87,58 @@ const Process = () => {
             linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px)
           `,
           backgroundSize: '80px 80px',
-          transform: `translate(${offset * 0.04}px, ${offset * 0.05}px)`,
+          transform: isMobile ? 'none' : `translate(${offset * 0.04}px, ${offset * 0.05}px)`,
           transition: 'transform 0.2s ease-out',
         }}
       />
       
       <div className="container mx-auto max-w-7xl px-4 relative z-10">
-        <div className="text-center mb-16">
-          <ScrollFloat
-            containerClassName="mb-6"
-            textClassName="text-4xl md:text-5xl font-bold text-white"
-            scrollStart="top bottom"
-            scrollEnd="center center"
-          >
-            Our Proven Methodology
-          </ScrollFloat>
+        <div className="text-center mb-12 sm:mb-16">
+          {/* Mobile: Two lines, Desktop: One line */}
+          {isMobile ? (
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-3xl font-bold text-white leading-tight">
+                Our Proven<br />
+                Methodology
+              </h2>
+            </div>
+          ) : (
+            <ScrollFloat
+              containerClassName="mb-4 sm:mb-6"
+              textClassName="text-4xl md:text-5xl font-bold text-white"
+              scrollStart="top bottom"
+              scrollEnd="center center"
+            >
+              Our Proven Methodology
+            </ScrollFloat>
+          )}
           
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            A systematic, results-driven approach that has delivered{' '}
-            <span className="text-white font-semibold">transformational outcomes</span>{' '}
-            for Fortune 500 companies worldwide
-          </p>
+          {/* Mobile: Show static text, Desktop: Show animated text */}
+          {isMobile ? (
+            <p className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+              A systematic, results-driven approach that has delivered{' '}
+              <span className="text-white font-semibold">transformational outcomes</span>{' '}
+              for Fortune 500 companies worldwide
+            </p>
+          ) : (
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              A systematic, results-driven approach that has delivered{' '}
+              <DescriptedText
+                text="transformational outcomes"
+                className="text-white font-semibold"
+                encryptedClassName="text-gray-500"
+                animateOn="view"
+                sequential={true}
+                speed={30}
+                maxIterations={15}
+              />{' '}
+              for Fortune 500 companies worldwide
+            </p>
+          )}
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 relative">
-          {/* Horizontal timeline */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 relative">
+          {/* Horizontal timeline - hidden on mobile */}
           <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-px bg-white/10 transform -translate-y-1/2 z-0"></div>
           
           {steps.map((step, index) => (
@@ -115,7 +154,7 @@ const Process = () => {
             >
               {/* Card */}
               <div className={`
-                h-full bg-black border border-white/20 rounded-none p-6 md:p-8
+                h-full bg-black border border-white/20 rounded-none p-4 sm:p-6 md:p-8
                 transition-all duration-300 hover:-translate-y-2
                 ${activeStep === index 
                   ? 'border-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-105 z-10' 
@@ -123,10 +162,10 @@ const Process = () => {
                 }
               `}>
                 {/* Header Section */}
-                <div className="flex items-center mb-6">
+                <div className="flex items-center mb-4 sm:mb-6">
                   {/* Icon Container */}
                   <div className={`
-                    w-12 h-12 bg-black border rounded-none flex items-center justify-center text-xl mr-4
+                    w-10 h-10 sm:w-12 sm:h-12 bg-black border rounded-none flex items-center justify-center text-lg sm:text-xl mr-3 sm:mr-4
                     transition-all duration-300
                     ${activeStep === index ? 'border-white text-white' : 'border-white/30 text-white/70'}
                   `}>
@@ -136,13 +175,13 @@ const Process = () => {
                   {/* Step Number */}
                   <div className="flex items-center">
                     <span className={`
-                      text-4xl font-bold mr-3 transition-all duration-300
+                      text-2xl sm:text-4xl font-bold mr-2 sm:mr-3 transition-all duration-300
                       ${activeStep === index ? 'text-white/50' : 'text-white/20'}
                     `}>
                       {step.number}
                     </span>
                     <div className={`
-                      w-6 h-6 rounded-none text-xs font-bold flex items-center justify-center
+                      w-5 h-5 sm:w-6 sm:h-6 rounded-none text-xs font-bold flex items-center justify-center
                       transition-all duration-300
                       ${activeStep === index 
                         ? 'bg-white text-black' 
@@ -157,31 +196,35 @@ const Process = () => {
                 {/* Content */}
                 <div className="space-y-3">
                   {/* Title */}
-                  <h3 className="text-xl font-bold text-white">
+                  <h3 className="text-lg sm:text-xl font-bold text-white">
                     {step.title}
                   </h3>
                   
-                  {/* Description with DescriptedText */}
-                  <p className="text-gray-400 leading-relaxed">
-                    <DescriptedText
-                      text={step.description}
-                      className="text-gray-400"
-                      encryptedClassName="text-gray-600"
-                      animateOn="view"
-                      sequential={true}
-                      speed={25}
-                      maxIterations={15}
-                    />
-                  </p>
+                  {/* Description - Static on mobile, animated on desktop */}
+                  <div className="text-gray-400 leading-relaxed text-sm sm:text-base">
+                    {isMobile ? (
+                      step.description
+                    ) : (
+                      <DescriptedText
+                        text={step.description}
+                        className="text-gray-400"
+                        encryptedClassName="text-gray-600"
+                        animateOn="view"
+                        sequential={true}
+                        speed={25}
+                        maxIterations={15}
+                      />
+                    )}
+                  </div>
                 </div>
                 
                 {/* Progress Indicator */}
-                <div className="flex items-center gap-1 mt-6 pt-4 border-t border-white/10">
+                <div className="flex items-center gap-1 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/10">
                   {[...Array(steps.length)].map((_, i) => (
                     <div
                       key={i}
                       className={`
-                        w-2 h-2 transition-all duration-300
+                        w-1.5 h-1.5 sm:w-2 sm:h-2 transition-all duration-300
                         ${i === index 
                           ? 'bg-white' 
                           : i < index 
@@ -194,7 +237,7 @@ const Process = () => {
                 </div>
               </div>
 
-              {/* Connection Line */}
+              {/* Connection Line - Only on desktop */}
               {index < steps.length - 1 && index % 3 !== 2 && (
                 <div className="hidden lg:block absolute top-1/2 right-0 transform translate-x-4 -translate-y-1/2 z-10">
                   <div className="w-8 h-px bg-white/20"></div>
@@ -205,24 +248,28 @@ const Process = () => {
         </div>
         
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <div className="max-w-3xl mx-auto bg-black border border-white/10 rounded-xl p-8 md:p-12">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
+        <div className="text-center mt-12 sm:mt-16">
+          <div className="max-w-3xl mx-auto bg-black border border-white/10 rounded-xl p-6 sm:p-8 md:p-12">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 text-white">
               Ready to Experience This Methodology?
             </h3>
-            <p className="text-gray-400 mb-8">
-              <DescriptedText
-                text="Our systematic approach has delivered measurable results for companies across every major industry. Let's discuss how we can apply this proven methodology to accelerate your AI transformation."
-                className="text-gray-400"
-                encryptedClassName="text-gray-600"
-                animateOn="view"
-                sequential={true}
-                speed={20}
-              />
-            </p>
+            <div className="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base leading-relaxed">
+              {isMobile ? (
+                "Our systematic approach has delivered measurable results for companies across every major industry. Let's discuss how we can apply this proven methodology to accelerate your AI transformation."
+              ) : (
+                <DescriptedText
+                  text="Our systematic approach has delivered measurable results for companies across every major industry. Let's discuss how we can apply this proven methodology to accelerate your AI transformation."
+                  className="text-gray-400"
+                  encryptedClassName="text-gray-600"
+                  animateOn="view"
+                  sequential={true}
+                  speed={20}
+                />
+              )}
+            </div>
             <a 
               href="#contact" 
-              className="inline-flex items-center justify-center px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300"
+              className="inline-flex items-center justify-center px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300 touch-manipulation"
             >
               Begin Your AI Journey
             </a>
