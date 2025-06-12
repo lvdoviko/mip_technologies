@@ -1,33 +1,35 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 
 /**
- * DecryptedText - Versione con font professionale
+ * DescriptedText - Mobile-optimized with compact spacing
  */
-export default function DecryptedText({
+export default function DescriptedText({
   text,
   speed = 50,
   maxIterations = 10,
   sequential = false,
   revealDirection = 'start',
   useOriginalCharsOnly = false,
-  characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+',
+  characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+',
   className = '',
   parentClassName = '',
   encryptedClassName = '',
-  animateOn = 'hover',
+  animateOn = 'view',
   skipButton = false,
   duration = 2000,
-  professionalFont = true, // Nuova prop per font professionale
+  professionalFont = true,
+  delay = 0,
   ...props
 }) {
-  const [displayText, setDisplayText] = useState(text)
-  const [isHovering, setIsHovering] = useState(false)
-  const [hasViewAnimated, setHasViewAnimated] = useState(false)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
-  const [isManuallySkipped, setIsManuallySkipped] = useState(false)
+  const [displayText, setDisplayText] = useState(text);
+  const [isHovering, setIsHovering] = useState(false);
+  const [hasViewAnimated, setHasViewAnimated] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isManuallySkipped, setIsManuallySkipped] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isIntersecting, setIsIntersecting] = useState(false);
   
-  const containerRef = useRef(null)
+  const containerRef = useRef(null);
   const animationStateRef = useRef({
     isRunning: false,
     intervalId: null,
@@ -35,16 +37,21 @@ export default function DecryptedText({
     revealedIndices: new Set(),
     currentIteration: 0,
     shouldStop: false
-  })
+  });
 
-  // Font professionale - puoi scegliere tra questi
-  const professionalFontClass = professionalFont ? 'font-mono tracking-wide' : '';
-  // Altre opzioni:
-  // 'font-serif' per Times/Georgia
-  // 'font-sans tracking-tight' per una versione più pulita di Inter
-  // 'font-mono tracking-wider text-sm' per font monospace più leggibile
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  // Verifica se l'utente preferisce reduced motion
+  // Check for reduced motion preference
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
@@ -55,7 +62,12 @@ export default function DecryptedText({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Funzione di pulizia totale
+  // Professional font with mobile optimization - more compact on mobile
+  const professionalFontClass = professionalFont 
+    ? `font-mono tracking-wide ${isMobile ? 'text-sm leading-snug' : ''}` 
+    : '';
+
+  // Complete animation cleanup
   const stopAnimation = useCallback(() => {
     const state = animationStateRef.current;
     
@@ -75,20 +87,21 @@ export default function DecryptedText({
     state.revealedIndices = new Set();
   }, []);
 
-  // Funzione di completamento garantito
+  // Complete animation immediately
   const completeAnimation = useCallback(() => {
     stopAnimation();
     setDisplayText(text);
   }, [text, stopAnimation]);
 
-  // Funzione principale di animazione
+  // Main animation function with faster mobile performance
   const startDecryption = useCallback(() => {
+    // Skip animation based on conditions
     if (prefersReducedMotion || isManuallySkipped) {
       completeAnimation();
       return;
     }
 
-    // Ferma qualsiasi animazione in corso
+    // Stop any running animation
     stopAnimation();
     
     const state = animationStateRef.current;
@@ -97,11 +110,12 @@ export default function DecryptedText({
     state.revealedIndices = new Set();
     state.currentIteration = 0;
 
-    // Calcola parametri sicuri
-    const safeSpeed = Math.max(speed, 30);
-    const maxTime = Math.min(duration, 4000);
+    // Mobile-optimized parameters - faster on mobile
+    const mobileSpeedMultiplier = isMobile ? 1.5 : 1;
+    const safeSpeed = Math.max(speed * mobileSpeedMultiplier, 25);
+    const maxTime = Math.min(duration, isMobile ? 2000 : 3000); // Shorter on mobile
     
-    // Timer di sicurezza per completamento garantito
+    // Safety timeout for guaranteed completion
     state.timeoutId = setTimeout(() => {
       completeAnimation();
     }, maxTime);
@@ -115,7 +129,7 @@ export default function DecryptedText({
       }
 
       if (sequential) {
-        // Modalità sequenziale
+        // Sequential reveal mode
         if (state.revealedIndices.size < text.length) {
           const nextIndex = getNextIndex(state.revealedIndices);
           state.revealedIndices.add(nextIndex);
@@ -132,22 +146,31 @@ export default function DecryptedText({
           return;
         }
       } else {
-        // Modalità random
+        // Random reveal mode - fewer iterations on mobile
+        const mobileMaxIterations = isMobile ? Math.min(maxIterations, 8) : maxIterations;
         const newText = generateDisplayText(text, state.revealedIndices);
         setDisplayText(newText);
         
         state.currentIteration++;
-        if (state.currentIteration >= maxIterations) {
+        if (state.currentIteration >= mobileMaxIterations) {
           completeAnimation();
           return;
         }
       }
     };
 
-    // Avvia l'animazione
-    state.intervalId = setInterval(runAnimation, safeSpeed);
+    // Start animation with delay if specified
+    if (delay > 0) {
+      setTimeout(() => {
+        if (state.isRunning) {
+          state.intervalId = setInterval(runAnimation, safeSpeed);
+        }
+      }, delay);
+    } else {
+      state.intervalId = setInterval(runAnimation, safeSpeed);
+    }
     
-  }, [text, speed, maxIterations, sequential, duration, prefersReducedMotion, isManuallySkipped, completeAnimation, stopAnimation]);
+  }, [text, speed, maxIterations, sequential, duration, prefersReducedMotion, isManuallySkipped, isMobile, delay, completeAnimation, stopAnimation]);
 
   const getNextIndex = (revealedSet) => {
     const textLength = text.length;
@@ -168,6 +191,7 @@ export default function DecryptedText({
           return nextIndex;
         }
         
+        // Fallback: find first unrevealed character
         for (let i = 0; i < textLength; i++) {
           if (!revealedSet.has(i)) return i;
         }
@@ -187,7 +211,7 @@ export default function DecryptedText({
       
       const availableChars = nonSpacePositions.map(item => item.char);
       
-      // Shuffle disponibili
+      // Shuffle available characters
       for (let i = availableChars.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [availableChars[i], availableChars[j]] = [availableChars[j], availableChars[i]];
@@ -212,29 +236,37 @@ export default function DecryptedText({
     }
   };
 
-  // Gestione hover
+  // Touch-friendly hover handlers
   const handleMouseEnter = useCallback(() => {
-    if (animateOn === 'hover') {
+    if (animateOn === 'hover' && !isMobile) {
       setIsHovering(true);
       startDecryption();
     }
-  }, [animateOn, startDecryption]);
+  }, [animateOn, isMobile, startDecryption]);
 
   const handleMouseLeave = useCallback(() => {
-    if (animateOn === 'hover') {
+    if (animateOn === 'hover' && !isMobile) {
       setIsHovering(false);
       stopAnimation();
       setDisplayText(text);
     }
-  }, [animateOn, text, stopAnimation]);
+  }, [animateOn, isMobile, text, stopAnimation]);
 
-  // Gestione skip
+  // Touch handlers for mobile
+  const handleTouchStart = useCallback(() => {
+    if (animateOn === 'hover' && isMobile) {
+      setIsHovering(true);
+      startDecryption();
+    }
+  }, [animateOn, isMobile, startDecryption]);
+
+  // Skip animation handler
   const handleSkip = useCallback(() => {
     setIsManuallySkipped(true);
     completeAnimation();
   }, [completeAnimation]);
 
-  // Intersection Observer per animazione su vista
+  // Intersection Observer for view-based animation - more aggressive on mobile
   useEffect(() => {
     if (animateOn !== 'view' || hasViewAnimated || prefersReducedMotion || isManuallySkipped) {
       return;
@@ -242,17 +274,22 @@ export default function DecryptedText({
 
     const observerCallback = (entries) => {
       entries.forEach((entry) => {
+        setIsIntersecting(entry.isIntersecting);
         if (entry.isIntersecting && !hasViewAnimated) {
           setHasViewAnimated(true);
-          startDecryption();
+          // Shorter delay for mobile for faster perceived performance
+          const triggerDelay = isMobile ? 50 : 100;
+          setTimeout(() => {
+            startDecryption();
+          }, triggerDelay);
         }
       });
     };
 
     const observerOptions = {
       root: null,
-      rootMargin: '50px',
-      threshold: 0.3,
+      rootMargin: isMobile ? '20px' : '50px',
+      threshold: isMobile ? 0.1 : 0.2,
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
@@ -267,7 +304,7 @@ export default function DecryptedText({
         observer.unobserve(currentRef);
       }
     };
-  }, [animateOn, hasViewAnimated, prefersReducedMotion, isManuallySkipped, startDecryption]);
+  }, [animateOn, hasViewAnimated, prefersReducedMotion, isManuallySkipped, isMobile, startDecryption]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -276,7 +313,7 @@ export default function DecryptedText({
     };
   }, [stopAnimation]);
 
-  // Reset quando il testo cambia
+  // Reset when text changes
   useEffect(() => {
     stopAnimation();
     setHasViewAnimated(false);
@@ -284,28 +321,47 @@ export default function DecryptedText({
     setDisplayText(text);
   }, [text, stopAnimation]);
 
-  const hoverProps = animateOn === 'hover' && !prefersReducedMotion && !isManuallySkipped
-    ? { onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave }
-    : {};
+  // Event handlers based on device type
+  const interactionProps = {};
+  if (animateOn === 'hover' && !prefersReducedMotion && !isManuallySkipped) {
+    if (isMobile) {
+      interactionProps.onTouchStart = handleTouchStart;
+    } else {
+      interactionProps.onMouseEnter = handleMouseEnter;
+      interactionProps.onMouseLeave = handleMouseLeave;
+    }
+  }
 
   const isAnimating = animationStateRef.current.isRunning;
 
   return (
-    <motion.span
+    <span
       ref={containerRef}
-      className={`inline-block whitespace-pre-wrap ${professionalFontClass} ${parentClassName}`}
-      {...hoverProps}
+      className={`descriptext-container inline-block whitespace-pre-wrap ${professionalFontClass} ${parentClassName} ${
+        isAnimating ? 'animating' : ''
+      }`}
+      style={{
+        // Tighter line height on mobile to reduce spacing
+        lineHeight: isMobile ? '1.4' : undefined
+      }}
+      {...interactionProps}
       {...props}
     >
-      {/* Testo accessibile per screen reader */}
+      {/* Screen reader accessible text */}
       <span className="sr-only">{text}</span>
 
-      {/* Skip button */}
+      {/* Skip button - smaller and more compact on mobile */}
       {skipButton && isAnimating && (
         <button 
           onClick={handleSkip}
-          className="ml-2 px-2 py-1 text-xs bg-black/30 border border-white/20 rounded-full hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50"
-          aria-label="Salta animazione"
+          className={`descriptext-skip-btn ml-1 px-2 py-1 text-xs bg-black/30 border border-white/20 rounded-full hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+            isMobile ? 'text-xs px-2 py-1' : ''
+          }`}
+          style={{
+            fontSize: isMobile ? '10px' : undefined,
+            minHeight: isMobile ? '24px' : undefined
+          }}
+          aria-label="Skip animation"
         >
           Skip
         </button>
@@ -319,13 +375,19 @@ export default function DecryptedText({
           return (
             <span
               key={index}
-              className={`${professionalFontClass} ${isRevealed ? className : encryptedClassName}`}
+              className={`${professionalFontClass} ${isRevealed ? className : encryptedClassName} ${
+                isMobile ? 'inline-block' : ''
+              }`}
+              style={isMobile ? { 
+                lineHeight: '1.4',
+                letterSpacing: '0.01em' // Tighter letter spacing on mobile
+              } : undefined}
             >
               {char}
             </span>
           );
         })}
       </span>
-    </motion.span>
+    </span>
   );
 }

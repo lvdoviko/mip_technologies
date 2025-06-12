@@ -1,37 +1,82 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import RainbowGradientText from '../components/ui/RainbowGradientText';
-import ScrollFloat from '../components/animations/ScrollFloat';
 import RainbowScrollFloat from '../components/animations/RainbowScrollFloat';
 import DescriptedText from '../components/ui/DescriptedText';
 
-// Component for typing cursor with better vertical alignment
-const TypewriterCursor = ({ blinking = true }) => {
+// Enhanced TypewriterCursor component with mobile optimization
+const TypewriterCursor = ({ blinking = true, isMobile = false }) => {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Much smaller height for mobile to reduce gap
+  const heightClass = isMobile 
+    ? 'h-4 sm:h-8 md:h-12 lg:h-16' 
+    : 'h-8 md:h-12 lg:h-16';
+
   return (
     <span 
-      className={`inline-block w-0.5 h-8 md:h-12 lg:h-16 bg-white ml-1 ${blinking ? 'animate-blink' : ''}`}
+      className={`inline-block w-0.5 ${heightClass} bg-white ml-1 ${
+        blinking && !prefersReducedMotion ? 'animate-typewriter-blink' : ''
+      }`}
       style={{ 
         animationDuration: '800ms', 
         animationIterationCount: 'infinite',
         verticalAlign: 'middle',
-        transform: 'translateY(0%)',
+        transform: 'translateY(-2px)',
         position: 'relative',
-        top: '0.05em',
         display: 'inline-block'
       }}
+      aria-hidden="true"
     />
   );
 };
 
-const Hero = () => {
+const Hero = ({ prefersReducedMotion: propReducedMotion = false }) => {
   const [typedText, setTypedText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [typingSpeed, setTypingSpeed] = useState(80);
   const [scrollY, setScrollY] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(propReducedMotion);
+  const [isVisible, setIsVisible] = useState(false);
   
   const heroRef = useRef(null);
   const particlesContainerRef = useRef(null);
+  const typewriterTimeoutRef = useRef(null);
   
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Check for reduced motion preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches || propReducedMotion);
+
+    const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [propReducedMotion]);
+
   // Store phrases array to avoid regeneration on each render
   const phrases = useMemo(() => [
     'AI-Powered Growth',
@@ -41,14 +86,30 @@ const Hero = () => {
     'Competitive Advantage'
   ], []);
   
-  // Typing effect
+  // Cleanup function for typewriter
+  const cleanupTypewriter = useCallback(() => {
+    if (typewriterTimeoutRef.current) {
+      clearTimeout(typewriterTimeoutRef.current);
+      typewriterTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Enhanced typing effect with mobile optimization
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setTypedText(phrases[currentPhraseIndex]);
+      return;
+    }
+
     const currentPhrase = phrases[currentPhraseIndex];
+    const mobileSpeedMultiplier = isMobile ? 1.2 : 1;
     
-    const timer = setTimeout(() => {
+    cleanupTypewriter();
+    
+    typewriterTimeoutRef.current = setTimeout(() => {
       if (!isDeleting) {
         setTypedText(currentPhrase.substring(0, typedText.length + 1));
-        setTypingSpeed(80);
+        setTypingSpeed(80 * mobileSpeedMultiplier);
         
         if (typedText === currentPhrase) {
           setTypingSpeed(2000);
@@ -56,7 +117,7 @@ const Hero = () => {
         }
       } else {
         setTypedText(currentPhrase.substring(0, typedText.length - 1));
-        setTypingSpeed(40);
+        setTypingSpeed(40 * mobileSpeedMultiplier);
         
         if (typedText === '') {
           setIsDeleting(false);
@@ -65,70 +126,123 @@ const Hero = () => {
       }
     }, typingSpeed);
     
-    return () => clearTimeout(timer);
-  }, [typedText, isDeleting, currentPhraseIndex, phrases, typingSpeed]);
+    return cleanupTypewriter;
+  }, [typedText, isDeleting, currentPhraseIndex, phrases, typingSpeed, isMobile, prefersReducedMotion, cleanupTypewriter]);
   
-  // Parallax effect on scroll
+  // Optimized scroll handling
   useEffect(() => {
+    if (isMobile) return; // Disable parallax on mobile for performance
+    
+    let ticking = false;
+    
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isMobile]);
   
-  // 3D particles effect following mouse
+  // Optimized 3D particles effect
   useEffect(() => {
-    if (!particlesContainerRef.current) return;
+    if (!particlesContainerRef.current || isMobile || prefersReducedMotion) return;
     
     const container = particlesContainerRef.current;
     const particles = Array.from(container.children);
+    let rafId = null;
     
     const handleMouseMove = (e) => {
-      const { clientX, clientY } = e;
-      const rect = container.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
+      if (rafId) return;
       
-      const moveX = (clientX - centerX) / 50;
-      const moveY = (clientY - centerY) / 50;
-      
-      particles.forEach((particle, index) => {
-        const depth = parseFloat(particle.getAttribute('data-depth') || 1);
-        const offsetX = moveX * depth;
-        const offsetY = moveY * depth;
+      rafId = requestAnimationFrame(() => {
+        const { clientX, clientY } = e;
+        const rect = container.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
         
-        particle.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        const moveX = (clientX - centerX) / 50;
+        const moveY = (clientY - centerY) / 50;
+        
+        particles.forEach((particle) => {
+          const depth = parseFloat(particle.getAttribute('data-depth') || 1);
+          const offsetX = moveX * depth;
+          const offsetY = moveY * depth;
+          
+          particle.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        });
+        
+        rafId = null;
       });
     };
     
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, [isMobile, prefersReducedMotion]);
+  
+  // Intersection observer for fade-in effect
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (heroRef.current) {
+      observer.observe(heroRef.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
-  
-  // Find the longest phrase for fixed-height container calculation
-  const longestPhrase = useMemo(() => {
-    return phrases.reduce((longest, current) => 
-      current.length > longest.length ? current : longest, '');
-  }, [phrases]);
-  
+
+  // Calculate parallax transforms
+  const getParallaxTransform = (factor) => {
+    if (isMobile || prefersReducedMotion) return 'none';
+    return `translateY(${-scrollY * factor}px)`;
+  };
+
+  const getParallaxOpacity = (maxScroll) => {
+    if (isMobile) return 1;
+    return Math.max(0, 1 - scrollY / maxScroll);
+  };
+
   return (
     <section 
       ref={heroRef}
-      className="min-h-screen flex items-center justify-center pt-20 relative overflow-hidden"
+      className={`min-h-screen flex items-center justify-center pt-16 sm:pt-20 relative overflow-hidden ${
+        isMobile ? 'hero-mobile' : ''
+      }`}
       style={{ 
         background: 'linear-gradient(135deg, #0c0c0c 0%, #121212 50%, #141414 100%)'
       }}
     >
-      {/* Interactive 3D particles */}
+      {/* Interactive 3D particles - reduced count on mobile */}
       <div 
         ref={particlesContainerRef}
         className="absolute inset-0 pointer-events-none overflow-hidden"
-        style={{ perspective: '1000px' }}
+        style={{ 
+          perspective: '1000px',
+          opacity: isVisible ? 1 : 0,
+          transition: 'opacity 1s ease-out'
+        }}
       >
-        {[...Array(20)].map((_, i) => {
-          const size = Math.random() * 6 + 2;
+        {[...Array(isMobile ? 8 : 20)].map((_, i) => {
+          const size = Math.random() * (isMobile ? 4 : 6) + 2;
           const depth = Math.random() * 2.5 + 0.5;
           const opacity = Math.random() * 0.12 + 0.03;
           const left = Math.random() * 100;
@@ -138,7 +252,7 @@ const Hero = () => {
             <div
               key={i}
               data-depth={depth}
-              className="absolute rounded-full"
+              className="absolute rounded-full will-change-transform"
               style={{
                 width: `${size}px`,
                 height: `${size}px`,
@@ -167,39 +281,43 @@ const Hero = () => {
             linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
             linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px)
           `,
-          backgroundSize: '80px 80px',
-          transform: `translate(${scrollY * 0.05}px, ${scrollY * 0.05}px)`,
+          backgroundSize: isMobile ? '60px 60px' : '80px 80px',
+          transform: getParallaxTransform(0.05),
           transition: 'transform 0.2s ease-out',
+          opacity: isVisible ? 1 : 0,
         }}
       />
       
       {/* Content Container */}
-      <div className="container mx-auto max-w-6xl px-4 text-center relative z-10">
-        {/* Badge - Plain text without animation */}
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 text-center relative z-10">
+        {/* Badge */}
         <div 
-          className="inline-flex items-center gap-2 bg-gray-800/80 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium mb-8 border border-gray-700/50 shadow-xl"
+          className={`inline-flex items-center gap-2 bg-gray-800/80 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 border border-gray-700/50 shadow-xl ${
+            isVisible ? 'animate-fade-in' : 'opacity-0'
+          }`}
           style={{ 
-            transform: `translateY(${-scrollY * 0.1}px)`,
-            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-            opacity: Math.max(0, 1 - scrollY / 500),
+            transform: getParallaxTransform(0.1),
+            opacity: getParallaxOpacity(500),
+            animationDelay: '0.2s'
           }}
         >
           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
           Enterprise AI Solutions
         </div>
         
-        {/* Main Heading with fixed height container */}
+        {/* Main Heading with MUCH tighter spacing on mobile */}
         <div 
-          className="mb-12"
+          className={`mb-6 sm:mb-12 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}
           style={{ 
-            transform: `translateY(${-scrollY * 0.15}px)`,
-            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-            opacity: Math.max(0, 1 - scrollY / 700),
+            transform: getParallaxTransform(0.15),
+            opacity: getParallaxOpacity(700),
+            animationDelay: '0.4s'
           }}
         >
-          <div className="space-y-0">
+          {/* Tighter spacing container for mobile */}
+          <div className={`${isMobile ? 'space-y-1' : 'space-y-0'}`}>
             <RainbowScrollFloat
-              fontSize="text-5xl md:text-7xl lg:text-8xl"
+              fontSize="text-3xl sm:text-5xl md:text-7xl lg:text-8xl"
               containerClassName="tracking-tighter mb-0"
               animationDuration={1}
               ease="back.inOut(2)"
@@ -208,88 +326,113 @@ const Hero = () => {
               stagger={0.03}
               large={true}
               preserveRainbow={false}
-              lineHeight="leading-none"
+              lineHeight="leading-tight sm:leading-none"
               noMargin={true}
             >
               Unlock the Power of
             </RainbowScrollFloat>
             
-            {/* Fixed height container for the typewriter text */}
+            {/* MUCH smaller fixed height container for mobile to eliminate gap */}
             <div className="tracking-tighter mt-0 flex items-center justify-center">
-              {/* Calculate fixed height based on the tallest text to prevent layout shifts */}
-              <div className="inline-flex items-center h-[4.5rem] md:h-[6.5rem] lg:h-[8.5rem] overflow-hidden"> 
-                <RainbowGradientText large={true} className="tracking-tighter text-5xl md:text-7xl lg:text-8xl">
+              <div className={`inline-flex items-center overflow-hidden ${
+                isMobile 
+                  ? 'h-[2rem]' // Very small height on mobile (32px)
+                  : 'h-[4.5rem] sm:h-[4.5rem] md:h-[6.5rem] lg:h-[8.5rem]'
+              }`}> 
+                <RainbowGradientText 
+                  large={true} 
+                  className={`tracking-tighter ${
+                    isMobile 
+                      ? 'text-2xl' // Smaller text on mobile to fit smaller container
+                      : 'text-3xl sm:text-5xl md:text-7xl lg:text-8xl'
+                  }`}
+                  animate={!prefersReducedMotion}
+                >
                   {typedText}
                 </RainbowGradientText>
-                <TypewriterCursor />
+                <TypewriterCursor isMobile={isMobile} blinking={!prefersReducedMotion} />
               </div>
             </div>
           </div>
         </div>
         
-        {/* Subtitle with DescriptedText */}
+        {/* Subtitle with DescriptedText - Reduced margin on mobile */}
         <div 
-          className="mb-12"
+          className={`mb-6 sm:mb-12 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}
           style={{ 
-            transform: `translateY(${-scrollY * 0.1}px)`,
-            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-            opacity: Math.max(0, 1 - scrollY / 600),
+            transform: getParallaxTransform(0.1),
+            opacity: getParallaxOpacity(600),
+            animationDelay: '0.6s'
           }}
         >
-          <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+          <div className="text-base sm:text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed space-y-2 sm:space-y-0">
             <DescriptedText
               text="Transform your business with cutting-edge AI solutions that drive measurable growth and competitive advantage."
               className="text-gray-300"
               encryptedClassName="text-gray-500"
               animateOn="view"
               sequential={true}
-              speed={15}
-              maxIterations={20}
-              parentClassName="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed"
+              speed={isMobile ? 40 : 20}
+              maxIterations={isMobile ? 15 : 20}
+              delay={800}
+              parentClassName="text-base sm:text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed block sm:inline"
             />
-            <br className="hidden md:block" />
+            <br className="hidden sm:block" />
             <DescriptedText
               text="From strategy to implementation, we deliver AI that powers your success."
               className="text-gray-300"
               encryptedClassName="text-gray-500"
               animateOn="view"
               sequential={true}
-              speed={15}
-              maxIterations={15}
-              parentClassName="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed"
+              speed={isMobile ? 40 : 20}
+              maxIterations={isMobile ? 12 : 15}
+              delay={1200}
+              parentClassName="text-base sm:text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed block sm:inline"
             />
-          </p>
+          </div>
         </div>
         
-        {/* CTA Buttons */}
+        {/* CTA Buttons - Mobile optimized */}
         <div
-          className="flex flex-col sm:flex-row gap-5 justify-center items-center"
+          className={`flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center items-center px-4 ${
+            isVisible ? 'animate-fade-in' : 'opacity-0'
+          }`}
           style={{ 
-            transform: `translateY(${-scrollY * 0.05}px)`,
-            transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-            opacity: Math.max(0, 1 - scrollY / 800),
+            transform: getParallaxTransform(0.05),
+            opacity: getParallaxOpacity(800),
+            animationDelay: '0.8s'
           }}
         >
           <a 
             href="#solutions" 
             className="
               inline-flex items-center justify-center
-              px-6 py-3 rounded-none font-medium
-              bg-transparent text-white
+              px-6 py-3 sm:py-3 rounded-none font-medium
+              bg-transparent text-white w-full sm:w-auto
               border border-white/50 hover:border-white hover:bg-black/30
-              transition-all duration-300 text-center
+              transition-all duration-300 text-center text-sm sm:text-base
+              touch-manipulation btn-touch
             "
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('solutions')?.scrollIntoView({ 
+                behavior: 'smooth' 
+              });
+            }}
           >
             Start Your AI Journey
           </a>
         </div>
         
-        {/* Scroll Indicator */}
+        {/* Scroll Indicator - Hidden on mobile */}
         <div 
-          className="absolute -bottom-24 left-1/2 transform -translate-x-1/2"
+          className={`absolute -bottom-16 sm:-bottom-24 left-1/2 transform -translate-x-1/2 ${
+            isMobile ? 'hidden' : 'block'
+          } ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}
           style={{ 
-            opacity: Math.max(0, 1 - scrollY / 250),
+            opacity: getParallaxOpacity(250),
             transition: 'opacity 0.3s ease-out',
+            animationDelay: '1s'
           }}
         >
           <div className="w-8 h-14 border-2 border-white/30 rounded-full flex justify-center">
