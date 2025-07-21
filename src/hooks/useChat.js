@@ -1153,6 +1153,12 @@ export const useChat = (config = {}) => {
       if (isUnmountedRef.current) return;
       
       console.log('🎉 [Chat] AI response completed via WebSocket', data);
+      console.log('🔍 [DEBUG] Response complete data structure:', {
+        type: data.type,
+        timestamp: data.timestamp,
+        dataKeys: Object.keys(data.data || {}),
+        fullData: data.data
+      });
       
       // Clear processing timeout
       if (processingTimeoutRef.current) {
@@ -1180,38 +1186,73 @@ export const useChat = (config = {}) => {
         processingError: null
       }));
       
-      // Create AI response message from backend data
-      if (data.data && data.data.message) {
-        const aiMessage = {
-          id: data.data.message.id,
-          content: sanitizeInput(data.data.message.content),
-          role: 'assistant',
-          timestamp: data.data.message.created_at || new Date().toISOString(),
-          status: MESSAGE_STATUS.RECEIVED,
-          metadata: {
-            promptTokens: data.data.message.prompt_tokens,
-            completionTokens: data.data.message.completion_tokens,
-            totalTokens: data.data.message.prompt_tokens + data.data.message.completion_tokens,
-            responseTime: data.data.message.response_time_ms,
-            model: data.data.message.llm_model,
-            costEstimate: data.data.cost_estimate_usd,
-            sequenceNumber: data.data.message.sequence_number,
-            processingDuration: processingDuration
+      // Create AI response message from backend data (corrected structure)
+      if (data.data && data.data.content) {
+        // Check if message already exists (streaming case)
+        const existingMessage = messages.find(msg => msg.id === data.data.message_id);
+        
+        if (existingMessage) {
+          console.log('📝 [Chat] Updating existing message (streaming case)');
+          // Update existing message metadata for streaming case
+          setMessages(prev => prev.map(msg => 
+            msg.id === data.data.message_id 
+              ? { 
+                  ...msg, 
+                  status: MESSAGE_STATUS.RECEIVED,
+                  metadata: {
+                    ...msg.metadata,
+                    streaming: false,
+                    totalTokens: data.data.total_tokens || (data.data.prompt_tokens + data.data.completion_tokens),
+                    responseTime: data.data.response_time_ms,
+                    model: data.data.llm_model,
+                    costEstimate: data.data.cost_estimate || 0, // Default if missing
+                    sources: data.data.sources || [], // Default if missing
+                    totalChunks: data.data.total_chunks || 0, // Default if missing
+                    processingDuration: processingDuration,
+                    promptTokens: data.data.prompt_tokens,
+                    completionTokens: data.data.completion_tokens
+                  }
+                }
+              : msg
+          ));
+        } else {
+          console.log('📝 [Chat] Creating new message (non-streaming case)');
+          // Create new message for non-streaming case
+          const aiMessage = {
+            id: data.data.message_id,
+            content: sanitizeInput(data.data.content),
+            role: 'assistant',
+            timestamp: data.data.created_at ? new Date(data.data.created_at * 1000).toISOString() : new Date().toISOString(),
+            status: MESSAGE_STATUS.RECEIVED,
+            metadata: {
+              streaming: false,
+              totalTokens: data.data.total_tokens || (data.data.prompt_tokens + data.data.completion_tokens),
+              responseTime: data.data.response_time_ms,
+              model: data.data.llm_model,
+              costEstimate: data.data.cost_estimate || 0, // Default if missing
+              sources: data.data.sources || [], // Default if missing
+              totalChunks: data.data.total_chunks || 0, // Default if missing  
+              processingDuration: processingDuration,
+              promptTokens: data.data.prompt_tokens,
+              completionTokens: data.data.completion_tokens
+            }
+          };
+          
+          console.log('📝 [Chat] Adding AI message to UI', aiMessage);
+          setMessages(prev => [...prev, aiMessage]);
+          
+          // Persist message if enabled
+          if (chatConfig.enablePersistence) {
+            sessionRef.current.addChatMessage(aiMessage);
           }
-        };
-        
-        console.log('📝 [Chat] Adding AI message to UI', aiMessage);
-        setMessages(prev => [...prev, aiMessage]);
-        
-        // Persist message if enabled
-        if (chatConfig.enablePersistence) {
-          sessionRef.current.addChatMessage(aiMessage);
         }
         
         // Track performance
         if (chatConfig.enablePerformanceTracking) {
-          performanceRef.current.trackChatWidget('ai_response_received', data.data.message.response_time_ms);
+          performanceRef.current.trackChatWidget('ai_response_received', data.data.response_time_ms);
         }
+      } else {
+        console.warn('⚠️ [Chat] Invalid response_complete data structure:', data);
       }
     };
 
