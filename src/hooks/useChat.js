@@ -116,6 +116,10 @@ export const useChat = (config = {}) => {
   const retryCountRef = useRef(0);
   const isUnmountedRef = useRef(false);
   
+  // ✅ FIX: Deduplication refs to prevent duplicate message handling
+  const processedEventsRef = useRef(new Set());
+  const lastResponseDataRef = useRef(null);
+  
   // ✅ Phase 4: React hook deduplication to prevent StrictMode duplicate connections
   const isInitializingRef = useRef(false);
   const initializationPromiseRef = useRef(null);
@@ -1152,6 +1156,22 @@ export const useChat = (config = {}) => {
     const handleAiResponseComplete = (data) => {
       if (isUnmountedRef.current) return;
       
+      // ✅ FIX: Prevent duplicate processing of the same event
+      const eventKey = `${data.type}_${data.data?.message_id}_${data.timestamp || Date.now()}`;
+      if (processedEventsRef.current.has(eventKey)) {
+        console.log('🔄 [Chat] Skipping duplicate response_complete event:', eventKey);
+        return;
+      }
+      processedEventsRef.current.add(eventKey);
+      
+      // ✅ FIX: Check if this is identical to the last processed data to prevent React double processing
+      const dataSignature = JSON.stringify(data.data);
+      if (lastResponseDataRef.current === dataSignature) {
+        console.log('🔄 [Chat] Skipping identical response data (React double render)');
+        return;
+      }
+      lastResponseDataRef.current = dataSignature;
+      
       console.log('🎉 [Chat] AI response completed via WebSocket', data);
       console.log('🔍 [DEBUG] Response complete data structure:', {
         type: data.type,
@@ -1262,7 +1282,16 @@ export const useChat = (config = {}) => {
       
       console.log('⚙️ [Chat] AI processing started', data);
       
-      const messageId = data.data?.message_id;
+      // ✅ FIX: Get messageId from correct location in backend data structure
+      const messageId = data.data?.message_id || data.messageId;
+      
+      // ✅ FIX: Don't start timeout if messageId is undefined
+      if (!messageId) {
+        console.warn('⚠️ [Chat] Processing event missing messageId, cannot track timeout');
+        console.warn('⚠️ [DEBUG] Processing data structure:', data);
+        return;
+      }
+      
       const processingStartTime = data.processingStartTime || Date.now();
       
       // Set AI processing state
@@ -1278,7 +1307,7 @@ export const useChat = (config = {}) => {
       // Set processing timeout (30 seconds)
       processingTimeoutRef.current = setTimeout(() => {
         if (!isUnmountedRef.current) {
-          console.warn('⏰ [Chat] AI processing timeout');
+          console.warn('⏰ [Chat] AI processing timeout for messageId:', messageId);
           setErrorState(prev => ({
             ...prev,
             processingError: {
@@ -1294,13 +1323,11 @@ export const useChat = (config = {}) => {
       }, 30000); // 30 second timeout
       
       // Update message status if we have the message
-      if (messageId) {
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, status: 'processing', processingStarted: processingStartTime }
-            : msg
-        ));
-      }
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, status: 'processing', processingStarted: processingStartTime }
+          : msg
+      ));
     };
 
     // ✅ NEW: Handle message received confirmation
@@ -1334,10 +1361,8 @@ export const useChat = (config = {}) => {
     wsManager.on('chatResponseStreaming', handleResponseChunk); // ✅ CRITICAL: Add streaming handler
     wsManager.on('chat_response_streaming', handleResponseChunk); // ✅ CRITICAL: Add platform streaming handler
     // ✅ NEW: Backend REST-WebSocket integration events
-    wsManager.on('responseComplete', handleAiResponseComplete); // Main AI response event
-    wsManager.on('response_complete', handleAiResponseComplete); // Alternative name
-    wsManager.on('aiResponseComplete', handleAiResponseComplete); // Alias for clarity
-    wsManager.on('ai_response_complete', handleAiResponseComplete); // Backend event name
+    // ✅ FIX: Use only ONE event handler to prevent duplicates
+    wsManager.on('response_complete', handleAiResponseComplete); // Primary backend event name
     wsManager.on('processing', handleProcessingStarted); // AI processing started
     wsManager.on('aiProcessingStarted', handleProcessingStarted); // Alternative name
     wsManager.on('ai_processing_started', handleProcessingStarted); // Backend event name
@@ -1376,10 +1401,8 @@ export const useChat = (config = {}) => {
         wsManager.off('chatResponseStreaming', handleResponseChunk); // ✅ CRITICAL: Remove streaming handler
         wsManager.off('chat_response_streaming', handleResponseChunk); // ✅ CRITICAL: Remove platform streaming handler
         // ✅ NEW: Remove backend REST-WebSocket integration events
-        wsManager.off('responseComplete', handleAiResponseComplete);
+        // ✅ FIX: Remove only the ONE event handler we registered
         wsManager.off('response_complete', handleAiResponseComplete);
-        wsManager.off('aiResponseComplete', handleAiResponseComplete);
-        wsManager.off('ai_response_complete', handleAiResponseComplete);
         wsManager.off('processing', handleProcessingStarted);
         wsManager.off('aiProcessingStarted', handleProcessingStarted);
         wsManager.off('ai_processing_started', handleProcessingStarted);
@@ -1450,6 +1473,10 @@ export const useChat = (config = {}) => {
       // ✅ Phase 4: Reset initialization state on cleanup
       isInitializingRef.current = false;
       initializationPromiseRef.current = null;
+      
+      // ✅ FIX: Clear deduplication caches on cleanup
+      processedEventsRef.current.clear();
+      lastResponseDataRef.current = null;
       
       // Clear all timeouts
       if (typingTimeoutRef.current) {
