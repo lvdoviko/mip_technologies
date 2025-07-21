@@ -4,19 +4,24 @@
   "description": "MIP Technologies website with advanced animations",
   "main": "src/index.js",
   "dependencies": {
+    "axios": "^1.10.0",
+    "dompurify": "^3.2.6",
     "framer-motion": "^10.18.0",
     "gsap": "^3.13.0",
     "lucide-react": "^0.263.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-error-boundary": "^6.0.0",
     "react-scripts": "5.0.1",
     "tailwindcss": "^3.3.3",
     "three": "^0.177.0",
+    "uuid": "^11.1.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

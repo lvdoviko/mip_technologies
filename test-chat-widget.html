@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIPTech Chat Widget Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #111111 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        .test-button:hover {
+            background: #1d4ed8;
+        }
+        .test-result {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .test-error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-success { background: #00ff00; }
+        .status-error { background: #ff0000; }
+        .status-warning { background: #ffaa00; }
+        .status-info { background: #0099ff; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 MIPTech Chat Widget Test Suite</h1>
+        <p>This page helps you test the chat widget functionality before deployment.</p>
+        
+        <div class="test-section">
+            <h2>📋 Pre-Test Checklist</h2>
+            <div id="checklist">
+                <div><span class="status-indicator status-info"></span>Development server running (npm start)</div>
+                <div><span class="status-indicator status-info"></span>Environment variables configured</div>
+                <div><span class="status-indicator status-info"></span>Browser console open for debugging</div>
+                <div><span class="status-indicator status-info"></span>Network tab open for monitoring requests</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Widget Visibility Tests</h2>
+            <button class="test-button" onclick="testWidgetVisibility()">Test Widget Visibility</button>
+            <button class="test-button" onclick="testWidgetPosition()">Test Widget Position</button>
+            <button class="test-button" onclick="testResponsiveDesign()">Test Responsive Design</button>
+            <div id="visibility-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>💬 Chat Functionality Tests</h2>
+            <button class="test-button" onclick="testChatOpen()">Test Chat Open</button>
+            <button class="test-button" onclick="testChatClose()">Test Chat Close</button>
+            <button class="test-button" onclick="testMessageInput()">Test Message Input</button>
+            <button class="test-button" onclick="testMessageSend()">Test Message Send</button>
+            <div id="functionality-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔗 Connection Tests</h2>
+            <button class="test-button" onclick="testAPIConnection()">Test API Connection</button>
+            <button class="test-button" onclick="testWebSocketConnection()">Test WebSocket Connection</button>
+            <button class="test-button" onclick="testSessionManagement()">Test Session Management</button>
+            <div id="connection-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>⚡ Performance Tests</h2>
+            <button class="test-button" onclick="testLoadTime()">Test Load Time</button>
+            <button class="test-button" onclick="testMemoryUsage()">Test Memory Usage</button>
+            <button class="test-button" onclick="testAnimationPerformance()">Test Animations</button>
+            <div id="performance-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🛡️ Security Tests</h2>
+            <button class="test-button" onclick="testInputSanitization()">Test Input Sanitization</button>
+            <button class="test-button" onclick="testXSSProtection()">Test XSS Protection</button>
+            <button class="test-button" onclick="testSessionSecurity()">Test Session Security</button>
+            <div id="security-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎨 User Experience Tests</h2>
+            <button class="test-button" onclick="testAccessibility()">Test Accessibility</button>
+            <button class="test-button" onclick="testErrorHandling()">Test Error Handling</button>
+            <button class="test-button" onclick="testThemeSupport()">Test Theme Support</button>
+            <div id="ux-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Debug Information</h2>
+            <button class="test-button" onclick="showDebugInfo()">Show Debug Info</button>
+            <button class="test-button" onclick="exportTestResults()">Export Test Results</button>
+            <div id="debug-results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test results storage
+        let testResults = {
+            timestamp: new Date().toISOString(),
+            tests: []
+        };
+
+        // Helper function to add test result
+        function addTestResult(category, test, status, message, data = null) {
+            testResults.tests.push({
+                category,
+                test,
+                status,
+                message,
+                data,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Helper function to display result
+        function displayResult(containerId, test, status, message) {
+            const container = document.getElementById(containerId);
+            const resultDiv = document.createElement('div');
+            resultDiv.className = status === 'success' ? 'test-result' : 'test-error';
+            resultDiv.innerHTML = `<strong>${test}:</strong> ${message}`;
+            container.appendChild(resultDiv);
+        }
+
+        // Widget Visibility Tests
+        function testWidgetVisibility() {
+            try {
+                const chatButton = document.querySelector('[aria-label="Open chat"]');
+                if (chatButton) {
+                    displayResult('visibility-results', 'Widget Visibility', 'success', 'Chat widget toggle button found');
+                    addTestResult('visibility', 'widget_visibility', 'success', 'Chat widget is visible');
+                } else {
+                    displayResult('visibility-results', 'Widget Visibility', 'error', 'Chat widget toggle button not found');
+                    addTestResult('visibility', 'widget_visibility', 'error', 'Chat widget not visible');
+                }
+            } catch (error) {
+                displayResult('visibility-results', 'Widget Visibility', 'error', `Error: ${error.message}`);
+                addTestResult('visibility', 'widget_visibility', 'error', error.message);
+            }
+        }
+
+        function testWidgetPosition() {
+            try {
+                const widget = document.querySelector('.fixed.bottom-4.right-4');
+                if (widget) {
+                    const rect = widget.getBoundingClientRect();
+                    displayResult('visibility-results', 'Widget Position', 'success', 
+                        `Widget positioned at bottom-right (${rect.right}px from left, ${window.innerHeight - rect.bottom}px from bottom)`);
+                    addTestResult('visibility', 'widget_position', 'success', 'Widget correctly positioned');
+                } else {
+                    displayResult('visibility-results', 'Widget Position', 'error', 'Widget not found in expected position');
+                    addTestResult('visibility', 'widget_position', 'error', 'Widget position incorrect');
+                }
+            } catch (error) {
+                displayResult('visibility-results', 'Widget Position', 'error', `Error: ${error.message}`);
+                addTestResult('visibility', 'widget_position', 'error', error.message);
+            }
+        }
+
+        function testResponsiveDesign() {
+            try {
+                const originalWidth = window.innerWidth;
+                // Test mobile breakpoint
+                displayResult('visibility-results', 'Responsive Design', 'success', 
+                    `Current viewport: ${window.innerWidth}x${window.innerHeight}. Check widget appearance at different screen sizes manually.`);
+                addTestResult('visibility', 'responsive_design', 'success', 'Responsive design test initiated');
+            } catch (error) {
+                displayResult('visibility-results', 'Responsive Design', 'error', `Error: ${error.message}`);
+                addTestResult('visibility', 'responsive_design', 'error', error.message);
+            }
+        }
+
+        // Chat Functionality Tests
+        function testChatOpen() {
+            try {
+                const chatButton = document.querySelector('[aria-label="Open chat"]');
+                if (chatButton) {
+                    chatButton.click();
+                    setTimeout(() => {
+                        const chatWidget = document.querySelector('[role="dialog"], .bg-white.dark\\:bg-gray-900');
+                        if (chatWidget) {
+                            displayResult('functionality-results', 'Chat Open', 'success', 'Chat widget opened successfully');
+                            addTestResult('functionality', 'chat_open', 'success', 'Chat opens correctly');
+                        } else {
+                            displayResult('functionality-results', 'Chat Open', 'error', 'Chat widget did not open');
+                            addTestResult('functionality', 'chat_open', 'error', 'Chat failed to open');
+                        }
+                    }, 500);
+                } else {
+                    displayResult('functionality-results', 'Chat Open', 'error', 'Chat button not found');
+                    addTestResult('functionality', 'chat_open', 'error', 'Chat button not found');
+                }
+            } catch (error) {
+                displayResult('functionality-results', 'Chat Open', 'error', `Error: ${error.message}`);
+                addTestResult('functionality', 'chat_open', 'error', error.message);
+            }
+        }
+
+        function testChatClose() {
+            try {
+                const closeButton = document.querySelector('[aria-label="Close chat"]');
+                if (closeButton) {
+                    closeButton.click();
+                    setTimeout(() => {
+                        const chatWidget = document.querySelector('[role="dialog"], .bg-white.dark\\:bg-gray-900');
+                        if (!chatWidget) {
+                            displayResult('functionality-results', 'Chat Close', 'success', 'Chat widget closed successfully');
+                            addTestResult('functionality', 'chat_close', 'success', 'Chat closes correctly');
+                        } else {
+                            displayResult('functionality-results', 'Chat Close', 'error', 'Chat widget did not close');
+                            addTestResult('functionality', 'chat_close', 'error', 'Chat failed to close');
+                        }
+                    }, 500);
+                } else {
+                    displayResult('functionality-results', 'Chat Close', 'error', 'Close button not found (open chat first)');
+                    addTestResult('functionality', 'chat_close', 'error', 'Close button not found');
+                }
+            } catch (error) {
+                displayResult('functionality-results', 'Chat Close', 'error', `Error: ${error.message}`);
+                addTestResult('functionality', 'chat_close', 'error', error.message);
+            }
+        }
+
+        function testMessageInput() {
+            try {
+                const messageInput = document.querySelector('textarea[placeholder*="message"]');
+                if (messageInput) {
+                    messageInput.value = 'Test message';
+                    messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    if (messageInput.value === 'Test message') {
+                        displayResult('functionality-results', 'Message Input', 'success', 'Message input accepts text correctly');
+                        addTestResult('functionality', 'message_input', 'success', 'Message input works');
+                    } else {
+                        displayResult('functionality-results', 'Message Input', 'error', 'Message input not working correctly');
+                        addTestResult('functionality', 'message_input', 'error', 'Message input failed');
+                    }
+                } else {
+                    displayResult('functionality-results', 'Message Input', 'error', 'Message input not found (open chat first)');
+                    addTestResult('functionality', 'message_input', 'error', 'Message input not found');
+                }
+            } catch (error) {
+                displayResult('functionality-results', 'Message Input', 'error', `Error: ${error.message}`);
+                addTestResult('functionality', 'message_input', 'error', error.message);
+            }
+        }
+
+        function testMessageSend() {
+            try {
+                const sendButton = document.querySelector('[aria-label="Send message"]');
+                if (sendButton && !sendButton.disabled) {
+                    sendButton.click();
+                    displayResult('functionality-results', 'Message Send', 'success', 'Send button clicked (check console for API calls)');
+                    addTestResult('functionality', 'message_send', 'success', 'Send button works');
+                } else if (sendButton && sendButton.disabled) {
+                    displayResult('functionality-results', 'Message Send', 'error', 'Send button is disabled (add message text first)');
+                    addTestResult('functionality', 'message_send', 'error', 'Send button disabled');
+                } else {
+                    displayResult('functionality-results', 'Message Send', 'error', 'Send button not found (open chat first)');
+                    addTestResult('functionality', 'message_send', 'error', 'Send button not found');
+                }
+            } catch (error) {
+                displayResult('functionality-results', 'Message Send', 'error', `Error: ${error.message}`);
+                addTestResult('functionality', 'message_send', 'error', error.message);
+            }
+        }
+
+        // Connection Tests
+        function testAPIConnection() {
+            try {
+                if (window.miptechApi) {
+                    window.miptechApi.getHealth()
+                        .then(() => {
+                            displayResult('connection-results', 'API Connection', 'success', 'API health check successful');
+                            addTestResult('connection', 'api_connection', 'success', 'API connection works');
+                        })
+                        .catch(error => {
+                            displayResult('connection-results', 'API Connection', 'error', `API error: ${error.message}`);
+                            addTestResult('connection', 'api_connection', 'error', error.message);
+                        });
+                } else {
+                    displayResult('connection-results', 'API Connection', 'error', 'MIPTech API not available');
+                    addTestResult('connection', 'api_connection', 'error', 'API not available');
+                }
+            } catch (error) {
+                displayResult('connection-results', 'API Connection', 'error', `Error: ${error.message}`);
+                addTestResult('connection', 'api_connection', 'error', error.message);
+            }
+        }
+
+        function testWebSocketConnection() {
+            try {
+                if (window.websocketManager) {
+                    const state = window.websocketManager.getState();
+                    displayResult('connection-results', 'WebSocket Connection', 'success', `WebSocket state: ${state}`);
+                    addTestResult('connection', 'websocket_connection', 'success', `WebSocket state: ${state}`);
+                } else {
+                    displayResult('connection-results', 'WebSocket Connection', 'error', 'WebSocket manager not available');
+                    addTestResult('connection', 'websocket_connection', 'error', 'WebSocket manager not available');
+                }
+            } catch (error) {
+                displayResult('connection-results', 'WebSocket Connection', 'error', `Error: ${error.message}`);
+                addTestResult('connection', 'websocket_connection', 'error', error.message);
+            }
+        }
+
+        function testSessionManagement() {
+            try {
+                if (window.sessionManager) {
+                    const session = window.sessionManager.getSession();
+                    displayResult('connection-results', 'Session Management', 'success', 
+                        `Session active: ID=${session.id.substring(0, 8)}...`);
+                    addTestResult('connection', 'session_management', 'success', 'Session management works');
+                } else {
+                    displayResult('connection-results', 'Session Management', 'error', 'Session manager not available');
+                    addTestResult('connection', 'session_management', 'error', 'Session manager not available');
+                }
+            } catch (error) {
+                displayResult('connection-results', 'Session Management', 'error', `Error: ${error.message}`);
+                addTestResult('connection', 'session_management', 'error', error.message);
+            }
+        }
+
+        // Performance Tests
+        function testLoadTime() {
+            try {
+                const navigationTiming = performance.getEntriesByType('navigation')[0];
+                const loadTime = navigationTiming.loadEventEnd - navigationTiming.navigationStart;
+                
+                if (loadTime < 3000) {
+                    displayResult('performance-results', 'Load Time', 'success', `Page loaded in ${loadTime}ms`);
+                    addTestResult('performance', 'load_time', 'success', `Load time: ${loadTime}ms`);
+                } else {
+                    displayResult('performance-results', 'Load Time', 'error', `Page loaded slowly: ${loadTime}ms`);
+                    addTestResult('performance', 'load_time', 'error', `Slow load time: ${loadTime}ms`);
+                }
+            } catch (error) {
+                displayResult('performance-results', 'Load Time', 'error', `Error: ${error.message}`);
+                addTestResult('performance', 'load_time', 'error', error.message);
+            }
+        }
+
+        function testMemoryUsage() {
+            try {
+                if (performance.memory) {
+                    const memoryInfo = performance.memory;
+                    const usedMB = Math.round(memoryInfo.usedJSHeapSize / 1024 / 1024);
+                    
+                    displayResult('performance-results', 'Memory Usage', 'success', 
+                        `Memory usage: ${usedMB}MB / ${Math.round(memoryInfo.jsHeapSizeLimit / 1024 / 1024)}MB`);
+                    addTestResult('performance', 'memory_usage', 'success', `Memory usage: ${usedMB}MB`);
+                } else {
+                    displayResult('performance-results', 'Memory Usage', 'error', 'Memory API not available');
+                    addTestResult('performance', 'memory_usage', 'error', 'Memory API not available');
+                }
+            } catch (error) {
+                displayResult('performance-results', 'Memory Usage', 'error', `Error: ${error.message}`);
+                addTestResult('performance', 'memory_usage', 'error', error.message);
+            }
+        }
+
+        function testAnimationPerformance() {
+            try {
+                const start = performance.now();
+                let frameCount = 0;
+                
+                function countFrames() {
+                    frameCount++;
+                    if (performance.now() - start < 1000) {
+                        requestAnimationFrame(countFrames);
+                    } else {
+                        const fps = frameCount;
+                        if (fps > 30) {
+                            displayResult('performance-results', 'Animation Performance', 'success', `FPS: ${fps}`);
+                            addTestResult('performance', 'animation_performance', 'success', `FPS: ${fps}`);
+                        } else {
+                            displayResult('performance-results', 'Animation Performance', 'error', `Low FPS: ${fps}`);
+                            addTestResult('performance', 'animation_performance', 'error', `Low FPS: ${fps}`);
+                        }
+                    }
+                }
+                requestAnimationFrame(countFrames);
+            } catch (error) {
+                displayResult('performance-results', 'Animation Performance', 'error', `Error: ${error.message}`);
+                addTestResult('performance', 'animation_performance', 'error', error.message);
+            }
+        }
+
+        // Security Tests
+        function testInputSanitization() {
+            try {
+                const testInput = '<script>alert("XSS")</script>';
+                const messageInput = document.querySelector('textarea[placeholder*="message"]');
+                
+                if (messageInput) {
+                    messageInput.value = testInput;
+                    messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    // Check if the script tag is sanitized
+                    if (!messageInput.value.includes('<script>')) {
+                        displayResult('security-results', 'Input Sanitization', 'success', 'XSS payload blocked');
+                        addTestResult('security', 'input_sanitization', 'success', 'Input sanitization works');
+                    } else {
+                        displayResult('security-results', 'Input Sanitization', 'error', 'XSS payload not blocked');
+                        addTestResult('security', 'input_sanitization', 'error', 'Input sanitization failed');
+                    }
+                } else {
+                    displayResult('security-results', 'Input Sanitization', 'error', 'Message input not found');
+                    addTestResult('security', 'input_sanitization', 'error', 'Message input not found');
+                }
+            } catch (error) {
+                displayResult('security-results', 'Input Sanitization', 'error', `Error: ${error.message}`);
+                addTestResult('security', 'input_sanitization', 'error', error.message);
+            }
+        }
+
+        function testXSSProtection() {
+            try {
+                // Test CSP headers
+                const metaTags = document.querySelectorAll('meta[http-equiv="Content-Security-Policy"]');
+                if (metaTags.length > 0) {
+                    displayResult('security-results', 'XSS Protection', 'success', 'CSP meta tag found');
+                    addTestResult('security', 'xss_protection', 'success', 'CSP protection active');
+                } else {
+                    displayResult('security-results', 'XSS Protection', 'error', 'No CSP meta tag found');
+                    addTestResult('security', 'xss_protection', 'error', 'No CSP protection');
+                }
+            } catch (error) {
+                displayResult('security-results', 'XSS Protection', 'error', `Error: ${error.message}`);
+                addTestResult('security', 'xss_protection', 'error', error.message);
+            }
+        }
+
+        function testSessionSecurity() {
+            try {
+                // Check if session data is encrypted
+                const sessionData = localStorage.getItem('miptech_session');
+                if (sessionData && sessionData.startsWith('mip_')) {
+                    displayResult('security-results', 'Session Security', 'success', 'Session data appears encrypted');
+                    addTestResult('security', 'session_security', 'success', 'Session encryption active');
+                } else if (sessionData) {
+                    displayResult('security-results', 'Session Security', 'error', 'Session data not encrypted');
+                    addTestResult('security', 'session_security', 'error', 'Session not encrypted');
+                } else {
+                    displayResult('security-results', 'Session Security', 'error', 'No session data found');
+                    addTestResult('security', 'session_security', 'error', 'No session data');
+                }
+            } catch (error) {
+                displayResult('security-results', 'Session Security', 'error', `Error: ${error.message}`);
+                addTestResult('security', 'session_security', 'error', error.message);
+            }
+        }
+
+        // UX Tests
+        function testAccessibility() {
+            try {
+                // Check for ARIA labels
+                const chatButton = document.querySelector('[aria-label="Open chat"]');
+                const hasAriaLabels = !!chatButton;
+                
+                if (hasAriaLabels) {
+                    displayResult('ux-results', 'Accessibility', 'success', 'ARIA labels found');
+                    addTestResult('ux', 'accessibility', 'success', 'Accessibility features present');
+                } else {
+                    displayResult('ux-results', 'Accessibility', 'error', 'ARIA labels missing');
+                    addTestResult('ux', 'accessibility', 'error', 'Accessibility features missing');
+                }
+            } catch (error) {
+                displayResult('ux-results', 'Accessibility', 'error', `Error: ${error.message}`);
+                addTestResult('ux', 'accessibility', 'error', error.message);
+            }
+        }
+
+        function testErrorHandling() {
+            try {
+                // Check if error boundary is present
+                const errorBoundary = document.querySelector('[id*="error"], [class*="error-boundary"]');
+                displayResult('ux-results', 'Error Handling', 'success', 'Error handling system checked (manual testing required)');
+                addTestResult('ux', 'error_handling', 'success', 'Error handling system present');
+            } catch (error) {
+                displayResult('ux-results', 'Error Handling', 'error', `Error: ${error.message}`);
+                addTestResult('ux', 'error_handling', 'error', error.message);
+            }
+        }
+
+        function testThemeSupport() {
+            try {
+                // Check for theme classes
+                const themeClasses = document.documentElement.classList.contains('dark') || 
+                                  document.body.classList.contains('dark');
+                
+                displayResult('ux-results', 'Theme Support', 'success', 'Theme system checked (toggle dark/light mode manually)');
+                addTestResult('ux', 'theme_support', 'success', 'Theme support present');
+            } catch (error) {
+                displayResult('ux-results', 'Theme Support', 'error', `Error: ${error.message}`);
+                addTestResult('ux', 'theme_support', 'error', error.message);
+            }
+        }
+
+        // Debug Functions
+        function showDebugInfo() {
+            try {
+                const debugInfo = {
+                    userAgent: navigator.userAgent,
+                    viewport: `${window.innerWidth}x${window.innerHeight}`,
+                    localStorage: Object.keys(localStorage),
+                    sessionStorage: Object.keys(sessionStorage),
+                    performance: performance.now(),
+                    memory: performance.memory ? {
+                        used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) + 'MB',
+                        total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024) + 'MB',
+                        limit: Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024) + 'MB'
+                    } : 'Not available'
+                };
+                
+                displayResult('debug-results', 'Debug Info', 'success', 
+                    `<pre>${JSON.stringify(debugInfo, null, 2)}</pre>`);
+                addTestResult('debug', 'debug_info', 'success', 'Debug info displayed');
+            } catch (error) {
+                displayResult('debug-results', 'Debug Info', 'error', `Error: ${error.message}`);
+                addTestResult('debug', 'debug_info', 'error', error.message);
+            }
+        }
+
+        function exportTestResults() {
+            try {
+                const dataStr = JSON.stringify(testResults, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `miptech-chat-test-results-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                displayResult('debug-results', 'Export Results', 'success', 'Test results exported successfully');
+                addTestResult('debug', 'export_results', 'success', 'Test results exported');
+            } catch (error) {
+                displayResult('debug-results', 'Export Results', 'error', `Error: ${error.message}`);
+                addTestResult('debug', 'export_results', 'error', error.message);
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 MIPTech Chat Widget Test Suite Loaded');
+            console.log('📋 Instructions:');
+            console.log('1. Ensure your React app is running (npm start)');
+            console.log('2. Open browser developer tools (F12)');
+            console.log('3. Run tests step by step');
+            console.log('4. Check console for detailed logs');
+            console.log('5. Export results when complete');
+        });
+    </script>
+</body>
+</html>

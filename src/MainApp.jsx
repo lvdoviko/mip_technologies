@@ -11,6 +11,9 @@ import Process from './sections/Process';
 import About from './sections/About';
 import Contact from './sections/Contact';
 import AnimatedBackground from './components/ui/AnimatedBackground';
+import ChatWidget from './components/ChatWidget';
+import ChatErrorBoundary from './components/ChatErrorBoundary';
+import ConnectionDebugger from './components/ConnectionDebugger';
 import useReducedMotion from './hooks/useReducedMotion'; // Importa il nuovo hook
 import './styles/globals.css';
 
@@ -110,6 +113,43 @@ const MainApp = () => {
         <Contact prefersReducedMotion={prefersReducedMotion} />
         <Footer />
       </div>
+      
+      {/* Enterprise Connection Debugger (Development Mode Only) */}
+      {process.env.NODE_ENV === 'development' && <ConnectionDebugger />}
+      
+      {/* MIPTech AI Chat Widget */}
+      <ChatErrorBoundary
+        title="MIPTech AI Chat Unavailable"
+        position="bottom-right"
+        onError={(error, errorInfo) => {
+          console.error('[MainApp] Chat widget error:', error, errorInfo);
+        }}
+      >
+        <ChatWidget 
+          position="bottom-right"
+          size="medium"
+          theme="auto"
+          primaryColor="#2563eb"
+          title="MIPTech AI Assistant"
+          placeholder="Ask me anything about MIP Technologies..."
+          enableSounds={false}
+          enableNotifications={false}
+          maxMessageLength={4000}
+          showPerformanceIndicator={process.env.NODE_ENV === 'development'}
+          onChatOpen={() => {
+            console.log('[MainApp] Chat opened');
+          }}
+          onChatClose={() => {
+            console.log('[MainApp] Chat closed');
+          }}
+          onMessageSent={(message) => {
+            console.log('[MainApp] Message sent:', message);
+          }}
+          onError={(error) => {
+            console.error('[MainApp] Chat error:', error);
+          }}
+        />
+      </ChatErrorBoundary>
     </div>
   );
 };
