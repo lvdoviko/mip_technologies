@@ -162,11 +162,12 @@ class MIPTechApiClient {
     });
   }
 
-  async sendMessage(chatId, message, options = {}) {
-    return this.request(`/api/v1/chat/${chatId}/message`, {
+  async sendMessage(chatId, content, options = {}) {
+    return this.request(`/api/v1/chat/${chatId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ 
-        message,
+        content,
+        role: 'user',
         metadata: options.metadata || {}
       })
     });

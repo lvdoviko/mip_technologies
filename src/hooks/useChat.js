@@ -31,6 +31,7 @@ export const CHAT_STATES = {
   DISCONNECTED: 'disconnected',
   CONNECTING: 'connecting',
   CONNECTED: 'connected',
+  READY: 'ready',
   RECONNECTING: 'reconnecting',
   FAILED: 'failed'
 };
@@ -79,6 +80,22 @@ export const useChat = (config = {}) => {
     chunks: []
   });
   
+  // AI Processing state
+  const [aiProcessingState, setAiProcessingState] = useState({
+    isProcessing: false,
+    messageId: null,
+    startTime: null,
+    processingTimeout: null
+  });
+  
+  // Enhanced error state
+  const [errorState, setErrorState] = useState({
+    connectionError: null,
+    processingError: null,
+    validationError: null,
+    rateLimitError: null
+  });
+  
   // Performance tracking
   const [performanceMetrics, setPerformanceMetrics] = useState({
     connectionTime: 0,
@@ -95,6 +112,7 @@ export const useChat = (config = {}) => {
   const typingTimeoutRef = useRef(null);
   const messageTimeoutRef = useRef(new Map());
   const connectionTimeoutRef = useRef(null);
+  const processingTimeoutRef = useRef(null);
   const retryCountRef = useRef(0);
   const isUnmountedRef = useRef(false);
   
@@ -874,7 +892,7 @@ export const useChat = (config = {}) => {
         
         setCanSendMessages(true);  // NOW enable message sending
         setIsConnectionReady(true); // FIX: This was missing - critical for application
-        setConnectionState(CHAT_STATES.CONNECTED); // Keep as CONNECTED for compatibility
+        setConnectionState(CHAT_STATES.READY); // Set as READY to enable input
         setError(null);
         
         if (chatConfig.enablePerformanceTracking) {
@@ -902,7 +920,8 @@ export const useChat = (config = {}) => {
     const handleMessage = (data) => {
       if (isUnmountedRef.current) return;
       
-      if (data.type === 'chat_message') {
+      // Handle both chat_message and chat_response types
+      if (data.type === 'chat_message' || data.type === 'chat_response') {
         const message = {
           ...data.message,
           content: sanitizeInput(data.message.content),
@@ -954,12 +973,106 @@ export const useChat = (config = {}) => {
       const wsError = handleWebSocketError(error);
       setError(wsError);
       
+      // Set connection error
+      setErrorState(prev => ({
+        ...prev,
+        connectionError: wsError
+      }));
+      
       // Track error
       if (chatConfig.enablePerformanceTracking) {
         setPerformanceMetrics(prev => ({
           ...prev,
           errorCount: prev.errorCount + 1
         }));
+      }
+    };
+    
+    // ✅ NEW: Handle specific AI processing errors
+    const handleAiProcessingError = (data) => {
+      if (isUnmountedRef.current) return;
+      
+      console.error('🤖 [Chat] AI Processing Error:', data);
+      
+      // Clear processing timeout
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+        processingTimeoutRef.current = null;
+      }
+      
+      // Reset processing state
+      setAiProcessingState({
+        isProcessing: false,
+        messageId: null,
+        startTime: null,
+        processingTimeout: null
+      });
+      
+      setIsLoading(false);
+      
+      // Set processing error
+      setErrorState(prev => ({
+        ...prev,
+        processingError: {
+          type: 'ai_processing_error',
+          message: data.message || 'AI processing failed',
+          details: data.details,
+          messageId: data.messageId,
+          timestamp: data.timestamp
+        }
+      }));
+      
+      // Update message status if we have the message ID
+      if (data.messageId) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === data.messageId 
+            ? { ...msg, status: MESSAGE_STATUS.FAILED, error: data }
+            : msg
+        ));
+      }
+    };
+    
+    // ✅ NEW: Handle rate limit errors
+    const handleRateLimitError = (data) => {
+      if (isUnmountedRef.current) return;
+      
+      console.error('🚦 [Chat] Rate Limit Error:', data);
+      
+      setErrorState(prev => ({
+        ...prev,
+        rateLimitError: {
+          type: 'rate_limit_error',
+          message: data.message || 'Rate limit exceeded',
+          retryAfter: data.retry_after,
+          timestamp: data.timestamp
+        }
+      }));
+    };
+    
+    // ✅ NEW: Handle message validation errors
+    const handleMessageValidationError = (data) => {
+      if (isUnmountedRef.current) return;
+      
+      console.error('📝 [Chat] Message Validation Error:', data);
+      
+      setErrorState(prev => ({
+        ...prev,
+        validationError: {
+          type: 'message_validation_error',
+          message: data.message || 'Message validation failed',
+          details: data.details,
+          messageId: data.messageId,
+          timestamp: data.timestamp
+        }
+      }));
+      
+      // Update message status if we have the message ID
+      if (data.messageId) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === data.messageId 
+            ? { ...msg, status: MESSAGE_STATUS.FAILED, error: data }
+            : msg
+        ));
       }
     };
     
@@ -1034,6 +1147,136 @@ export const useChat = (config = {}) => {
           : msg
       ));
     };
+
+    // ✅ NEW: Handle AI response complete from backend REST-WebSocket integration
+    const handleAiResponseComplete = (data) => {
+      if (isUnmountedRef.current) return;
+      
+      console.log('🎉 [Chat] AI response completed via WebSocket', data);
+      
+      // Clear processing timeout
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+        processingTimeoutRef.current = null;
+      }
+      
+      // Reset AI processing state
+      const processingDuration = aiProcessingState.startTime 
+        ? Date.now() - aiProcessingState.startTime 
+        : null;
+      
+      setAiProcessingState({
+        isProcessing: false,
+        messageId: null,
+        startTime: null,
+        processingTimeout: null
+      });
+      
+      setIsLoading(false);
+      
+      // Clear any processing errors
+      setErrorState(prev => ({
+        ...prev,
+        processingError: null
+      }));
+      
+      // Create AI response message from backend data
+      if (data.data && data.data.message) {
+        const aiMessage = {
+          id: data.data.message.id,
+          content: sanitizeInput(data.data.message.content),
+          role: 'assistant',
+          timestamp: data.data.message.created_at || new Date().toISOString(),
+          status: MESSAGE_STATUS.RECEIVED,
+          metadata: {
+            promptTokens: data.data.message.prompt_tokens,
+            completionTokens: data.data.message.completion_tokens,
+            totalTokens: data.data.message.prompt_tokens + data.data.message.completion_tokens,
+            responseTime: data.data.message.response_time_ms,
+            model: data.data.message.llm_model,
+            costEstimate: data.data.cost_estimate_usd,
+            sequenceNumber: data.data.message.sequence_number,
+            processingDuration: processingDuration
+          }
+        };
+        
+        console.log('📝 [Chat] Adding AI message to UI', aiMessage);
+        setMessages(prev => [...prev, aiMessage]);
+        
+        // Persist message if enabled
+        if (chatConfig.enablePersistence) {
+          sessionRef.current.addChatMessage(aiMessage);
+        }
+        
+        // Track performance
+        if (chatConfig.enablePerformanceTracking) {
+          performanceRef.current.trackChatWidget('ai_response_received', data.data.message.response_time_ms);
+        }
+      }
+    };
+
+    // ✅ NEW: Handle processing started
+    const handleProcessingStarted = (data) => {
+      if (isUnmountedRef.current) return;
+      
+      console.log('⚙️ [Chat] AI processing started', data);
+      
+      const messageId = data.data?.message_id;
+      const processingStartTime = data.processingStartTime || Date.now();
+      
+      // Set AI processing state
+      setAiProcessingState({
+        isProcessing: true,
+        messageId: messageId,
+        startTime: processingStartTime,
+        processingTimeout: null
+      });
+      
+      setIsLoading(true);
+      
+      // Set processing timeout (30 seconds)
+      processingTimeoutRef.current = setTimeout(() => {
+        if (!isUnmountedRef.current) {
+          console.warn('⏰ [Chat] AI processing timeout');
+          setErrorState(prev => ({
+            ...prev,
+            processingError: {
+              type: 'processing_timeout',
+              message: 'AI processing is taking longer than expected',
+              messageId: messageId,
+              timeout: 30000
+            }
+          }));
+          setAiProcessingState(prev => ({ ...prev, isProcessing: false }));
+          setIsLoading(false);
+        }
+      }, 30000); // 30 second timeout
+      
+      // Update message status if we have the message
+      if (messageId) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, status: 'processing', processingStarted: processingStartTime }
+            : msg
+        ));
+      }
+    };
+
+    // ✅ NEW: Handle message received confirmation
+    const handleMessageReceived = (data) => {
+      if (isUnmountedRef.current) return;
+      
+      console.log('✅ [Chat] Message received confirmation', data);
+      
+      // Update message status to confirmed/delivered if we have the message ID
+      if (data.data && data.data.message_id) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === data.data.message_id 
+            ? { ...msg, status: MESSAGE_STATUS.DELIVERED }
+            : msg
+        ));
+      }
+    };
     
     // Add event listeners
     wsManager.on('connected', handleConnected);
@@ -1049,6 +1292,23 @@ export const useChat = (config = {}) => {
     wsManager.on('chat_response', handleMessage); // ✅ CRITICAL: Add platform event handler
     wsManager.on('chatResponseStreaming', handleResponseChunk); // ✅ CRITICAL: Add streaming handler
     wsManager.on('chat_response_streaming', handleResponseChunk); // ✅ CRITICAL: Add platform streaming handler
+    // ✅ NEW: Backend REST-WebSocket integration events
+    wsManager.on('responseComplete', handleAiResponseComplete); // Main AI response event
+    wsManager.on('response_complete', handleAiResponseComplete); // Alternative name
+    wsManager.on('aiResponseComplete', handleAiResponseComplete); // Alias for clarity
+    wsManager.on('ai_response_complete', handleAiResponseComplete); // Backend event name
+    wsManager.on('processing', handleProcessingStarted); // AI processing started
+    wsManager.on('aiProcessingStarted', handleProcessingStarted); // Alternative name
+    wsManager.on('ai_processing_started', handleProcessingStarted); // Backend event name
+    wsManager.on('messageReceived', handleMessageReceived); // Message received confirmation
+    wsManager.on('message_received', handleMessageReceived); // Alternative name
+    // ✅ NEW: Enhanced error handling
+    wsManager.on('aiProcessingError', handleAiProcessingError); // AI processing errors
+    wsManager.on('ai_processing_error', handleAiProcessingError); // Backend event name
+    wsManager.on('rateLimitError', handleRateLimitError); // Rate limit errors
+    wsManager.on('rate_limit_error', handleRateLimitError); // Backend event name
+    wsManager.on('messageValidationError', handleMessageValidationError); // Validation errors
+    wsManager.on('message_validation_error', handleMessageValidationError); // Backend event name
     wsManager.on('disconnected', handleDisconnected);
     wsManager.on('reconnecting', handleReconnecting);
     wsManager.on('message', handleMessage);
@@ -1074,6 +1334,23 @@ export const useChat = (config = {}) => {
         wsManager.off('chat_response', handleMessage); // ✅ CRITICAL: Remove platform event handler
         wsManager.off('chatResponseStreaming', handleResponseChunk); // ✅ CRITICAL: Remove streaming handler
         wsManager.off('chat_response_streaming', handleResponseChunk); // ✅ CRITICAL: Remove platform streaming handler
+        // ✅ NEW: Remove backend REST-WebSocket integration events
+        wsManager.off('responseComplete', handleAiResponseComplete);
+        wsManager.off('response_complete', handleAiResponseComplete);
+        wsManager.off('aiResponseComplete', handleAiResponseComplete);
+        wsManager.off('ai_response_complete', handleAiResponseComplete);
+        wsManager.off('processing', handleProcessingStarted);
+        wsManager.off('aiProcessingStarted', handleProcessingStarted);
+        wsManager.off('ai_processing_started', handleProcessingStarted);
+        wsManager.off('messageReceived', handleMessageReceived);
+        wsManager.off('message_received', handleMessageReceived);
+        // ✅ NEW: Remove enhanced error handling events
+        wsManager.off('aiProcessingError', handleAiProcessingError);
+        wsManager.off('ai_processing_error', handleAiProcessingError);
+        wsManager.off('rateLimitError', handleRateLimitError);
+        wsManager.off('rate_limit_error', handleRateLimitError);
+        wsManager.off('messageValidationError', handleMessageValidationError);
+        wsManager.off('message_validation_error', handleMessageValidationError);
         wsManager.off('disconnected', handleDisconnected);
         wsManager.off('reconnecting', handleReconnecting);
         wsManager.off('message', handleMessage);
@@ -1142,6 +1419,10 @@ export const useChat = (config = {}) => {
         clearTimeout(connectionTimeoutRef.current);
       }
       
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+      
       if (wsCleanupTimeoutRef.current) {
         clearTimeout(wsCleanupTimeoutRef.current);
         wsCleanupTimeoutRef.current = null;
@@ -1180,7 +1461,6 @@ export const useChat = (config = {}) => {
     isReady: connectionState === CHAT_STATES.READY && isConnectionReady,
     isConnecting: connectionState === CHAT_STATES.CONNECTING,
     isReconnecting: connectionState === CHAT_STATES.RECONNECTING,
-    hasConnectionError: connectionState === CHAT_STATES.ERROR,
     
     // Chat data
     currentChat,
@@ -1215,6 +1495,17 @@ export const useChat = (config = {}) => {
     initializationStatus,
     canSendMessages,
     
+    // AI Processing state
+    aiProcessingState,
+    isAiProcessing: aiProcessingState.isProcessing,
+    
+    // Enhanced error state
+    errorState,
+    hasConnectionError: errorState.connectionError !== null,
+    hasProcessingError: errorState.processingError !== null,
+    hasValidationError: errorState.validationError !== null,
+    hasRateLimitError: errorState.rateLimitError !== null,
+    
     // Streaming state
     streamingResponse
   }), [
@@ -1237,6 +1528,8 @@ export const useChat = (config = {}) => {
     isConnectionReady,
     canSendMessages,
     initializationStatus,
+    aiProcessingState,
+    errorState,
     streamingResponse
   ]);
 };

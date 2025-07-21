@@ -253,14 +253,108 @@ class MIPTechWebSocketManager {
           this.emit('chat_response_streaming', data); // ✅ CRITICAL: Emit for streaming handlers
           break;
 
+        case 'message_received':
+          console.log('✅ [WebSocket] Message received confirmation', {
+            messageId: data.data?.message_id,
+            chatId: data.data?.chat_id,
+            timestamp: data.data?.timestamp || Date.now()
+          });
+          
+          // Enhanced data with confirmation context
+          const receivedData = {
+            ...data,
+            receivedTime: Date.now(),
+            source: 'backend_integration'
+          };
+          
+          this.emit('messageReceived', receivedData);
+          this.emit('message_received', receivedData);
+          break;
+
+        case 'processing':
+          console.log('⚙️ [WebSocket] AI processing started', {
+            messageId: data.data?.message_id,
+            chatId: data.data?.chat_id,
+            timestamp: data.data?.timestamp || Date.now()
+          });
+          
+          // Enhanced data with processing context
+          const processingData = {
+            ...data,
+            processingStartTime: Date.now(),
+            source: 'backend_integration'
+          };
+          
+          this.emit('processing', processingData);
+          this.emit('aiProcessingStarted', processingData);
+          this.emit('ai_processing_started', processingData); // Backend event name
+          break;
+
+        case 'response_complete':
+          console.log('🎉 [WebSocket] AI response completed', {
+            messageId: data.data?.message?.id,
+            chatId: data.data?.chat_id,
+            responseTime: data.data?.message?.response_time_ms,
+            tokens: data.data?.message?.completion_tokens,
+            timestamp: data.data?.timestamp || Date.now()
+          });
+          
+          // Enhanced data with completion context
+          const completionData = {
+            ...data,
+            completionTime: Date.now(),
+            source: 'backend_integration'
+          };
+          
+          this.emit('responseComplete', completionData);
+          this.emit('response_complete', completionData);
+          this.emit('aiResponseComplete', completionData); // Additional alias for clarity
+          this.emit('ai_response_complete', completionData); // Backend event name
+          break;
+
         case 'typing_indicator':
           this.emit('typingIndicator', data);
           this.emit('typing_indicator', data); // ✅ CRITICAL: Emit both event names
           break;
 
+        case 'typing_start':
+          this.emit('typing', { type: 'typing', data: data.data });
+          this.emit('typingStart', data);
+          break;
+
+        case 'typing_stop':
+          this.emit('stop_typing', { type: 'stop_typing', data: data.data });
+          this.emit('typingStop', data);
+          break;
+
         case 'error':
           console.error('💥 [WebSocket] Server error:', data.data);
-          this.emit('error', data.data);
+          // Enhanced error handling to distinguish between error types
+          const errorData = {
+            ...data.data,
+            source: 'server',
+            timestamp: Date.now(),
+            errorType: data.data?.type || 'general_error'
+          };
+          
+          // Emit specific error types for better frontend handling
+          if (data.data?.type === 'ai_processing_error') {
+            console.error('🤖 [WebSocket] AI Processing Error:', data.data);
+            this.emit('aiProcessingError', errorData);
+            this.emit('ai_processing_error', errorData);
+          } else if (data.data?.type === 'message_validation_error') {
+            console.error('📝 [WebSocket] Message Validation Error:', data.data);
+            this.emit('messageValidationError', errorData);
+            this.emit('message_validation_error', errorData);
+          } else if (data.data?.type === 'rate_limit_error') {
+            console.error('🚦 [WebSocket] Rate Limit Error:', data.data);
+            this.emit('rateLimitError', errorData);
+            this.emit('rate_limit_error', errorData);
+          }
+          
+          // Always emit generic error event for backward compatibility
+          this.emit('error', errorData);
+          this.emit('serverError', errorData);
           break;
 
         case 'authentication_required':
@@ -566,9 +660,24 @@ class MIPTechWebSocketManager {
 
   // Typing indicator methods (required by useChat hook)
   sendTyping(chatId, isTyping) {
-    this.sendMessage('typing_indicator', {
+    const eventType = isTyping ? 'typing_start' : 'typing_stop';
+    this.sendMessage(eventType, {
       chat_id: chatId,
-      is_typing: isTyping,
+      tenant_id: this.tenantId
+    });
+  }
+
+  // New dedicated methods for clarity
+  sendTypingStart(chatId) {
+    this.sendMessage('typing_start', {
+      chat_id: chatId,
+      tenant_id: this.tenantId
+    });
+  }
+
+  sendTypingStop(chatId) {
+    this.sendMessage('typing_stop', {
+      chat_id: chatId,
       tenant_id: this.tenantId
     });
   }
