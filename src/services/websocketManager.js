@@ -1,7 +1,9 @@
 // src/services/websocketManager.js
+import eventNormalizer from '../utils/eventNormalizer';
+
 class MIPTechWebSocketManager {
   constructor(options = {}) {
-    this.baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_WS_URL || 'ws://localhost:8000';
+    this.baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_WS_URL || 'ws://localhost:8001';
     this.tenantId = options.tenantId || process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
     this.userId = options.userId || null; // For authenticated users
     this.authToken = options.authToken || null; // JWT token for enterprise auth
@@ -29,6 +31,12 @@ class MIPTechWebSocketManager {
     this.developmentReconnectDelay = this.isDevelopment ? 2000 : this.reconnectDelay; // Longer delays in dev
     
     this.eventListeners = new Map();
+    
+    // ✅ FE-02: Single-listener guard and deduplication
+    this.registeredListeners = new Map(); // Track registered listeners for dedup prevention
+    this.processedEvents = new Set(); // Track processed events to prevent duplicates
+    this.eventHistory = new Map(); // Track recent events for duplicate detection
+    this.dedupWindowMs = 1000; // 1 second window for duplicate event detection
   }
 
   /**
@@ -192,10 +200,82 @@ class MIPTechWebSocketManager {
     });
   }
 
+  /**
+   * ✅ FE-02: Check if event is duplicate
+   */
+  isDuplicateEvent(eventData) {
+    const eventId = this.generateEventId(eventData);
+    const now = Date.now();
+    
+    // Check if we've seen this exact event recently
+    if (this.eventHistory.has(eventId)) {
+      const lastSeen = this.eventHistory.get(eventId);
+      if (now - lastSeen < this.dedupWindowMs) {
+        return true; // Duplicate within window
+      }
+    }
+    
+    // Update history
+    this.eventHistory.set(eventId, now);
+    
+    // Clean up old entries (keep history manageable)
+    if (this.eventHistory.size > 1000) {
+      const cutoff = now - this.dedupWindowMs * 2;
+      for (const [id, timestamp] of this.eventHistory.entries()) {
+        if (timestamp < cutoff) {
+          this.eventHistory.delete(id);
+        }
+      }
+    }
+    
+    return false;
+  }
+  
+  /**
+   * ✅ FE-02: Generate unique event ID for duplicate detection
+   */
+  generateEventId(eventData) {
+    const type = eventData.type;
+    const messageId = eventData.messageId || eventData.data?.messageId || '';
+    const chatId = eventData.chatId || eventData.data?.chatId || '';
+    const timestamp = eventData.eventTs || eventData.timestamp || '';
+    const content = typeof eventData.data?.content === 'string' ? 
+      eventData.data.content.substring(0, 50) : ''; // First 50 chars
+    
+    return `${type}:${messageId}:${chatId}:${timestamp}:${content}`;
+  }
+
   handleMessage(event) {
     try {
-      const data = JSON.parse(event.data);
+      const rawData = JSON.parse(event.data);
+      
+      // ✅ FE-01: Normalize incoming event with central event normalizer
+      const data = eventNormalizer.normalizeIncomingEvent(rawData);
+      
+      // ✅ FE-02: Check for duplicate events
+      if (this.isDuplicateEvent(data)) {
+        if (this.enableVerboseLogging) {
+          console.log('🔄 [EventDedup] Filtered duplicate event:', {
+            type: data.type,
+            messageId: data.messageId,
+            eventTs: data.eventTs
+          });
+        }
+        return; // Skip duplicate event
+      }
+      
       console.log('📥 [WebSocket] Received:', data.type, data);
+      
+      // Log normalization for debugging
+      if (this.enableVerboseLogging && data.__normalized) {
+        console.log('🔄 [EventNormalizer] Event normalized:', {
+          originalType: rawData.type,
+          normalizedType: data.type,
+          hasMessageId: !!data.messageId,
+          hasEventTs: !!data.eventTs,
+          normalizedAt: data.__normalizedAt
+        });
+      }
 
       switch (data.type) {
         case 'connection_established':
@@ -306,10 +386,20 @@ class MIPTechWebSocketManager {
             source: 'backend_integration'
           };
           
+          console.log('🔥 [WebSocket] About to emit response_complete events with data:', {
+            type: completionData.type,
+            hasMessage: !!completionData.data?.message,
+            messageId: completionData.data?.message?.id,
+            content: completionData.data?.message?.content?.substring(0, 50) + '...',
+            eventsToEmit: ['responseComplete', 'response_complete', 'aiResponseComplete', 'ai_response_complete']
+          });
+          
           this.emit('responseComplete', completionData);
           this.emit('response_complete', completionData);
           this.emit('aiResponseComplete', completionData); // Additional alias for clarity
           this.emit('ai_response_complete', completionData); // Backend event name
+          
+          console.log('✅ [WebSocket] All response_complete events emitted');
           break;
 
         case 'typing_indicator':
@@ -626,8 +716,23 @@ class MIPTechWebSocketManager {
       clientId: this.serverClientId || this.customClientId
     };
 
-    console.log('📤 [WebSocket] Sending:', type, message);
-    this.ws.send(JSON.stringify(message));
+    // ✅ FE-01: Normalize outgoing event with central event normalizer
+    const normalizedMessage = eventNormalizer.normalizeOutgoingEvent(message);
+    
+    console.log('📤 [WebSocket] Sending:', type, normalizedMessage);
+    
+    // Log normalization for debugging
+    if (this.enableVerboseLogging && normalizedMessage.__normalized) {
+      console.log('🔄 [EventNormalizer] Outgoing event normalized:', {
+        originalType: message.type,
+        normalizedType: normalizedMessage.type,
+        hasMessageId: !!normalizedMessage.message_id,
+        hasEventTs: !!normalizedMessage.event_ts,
+        normalizedAt: normalizedMessage.__normalizedAt
+      });
+    }
+    
+    this.ws.send(JSON.stringify(normalizedMessage));
   }
 
   // Chat-specific methods
@@ -682,12 +787,65 @@ class MIPTechWebSocketManager {
     });
   }
 
-  // Event handling
+  // ✅ FE-02: Event handling with single-listener guard
   on(event, handler) {
+    // Generate listener ID for duplicate detection
+    const listenerId = this.generateListenerId(event, handler);
+    
+    // ✅ DEBUG: Always log listener registration attempts
+    console.log(`📝 [WebSocket] Attempting to register listener for event: ${event}`, {
+      listenerId: listenerId.substring(0, 12),
+      handlerType: typeof handler,
+      isDuplicate: this.registeredListeners.has(listenerId),
+      currentListenerCount: this.eventListeners.has(event) ? this.eventListeners.get(event).length : 0
+    });
+    
+    // Check for duplicate registration
+    if (this.registeredListeners.has(listenerId)) {
+      console.warn(`⚠️ [WebSocket] Duplicate listener registration detected for event '${event}'.`, {
+        event,
+        listenerId: listenerId.substring(0, 12),
+        action: 'skipped'
+      });
+      return; // Skip duplicate registration
+    }
+    
+    // Register listener
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, []);
     }
+    
     this.eventListeners.get(event).push(handler);
+    this.registeredListeners.set(listenerId, { event, handler, registeredAt: Date.now() });
+    
+    console.log(`✅ [WebSocket] Successfully registered listener for '${event}'`, {
+      listenerId: listenerId.substring(0, 12),
+      totalListeners: this.eventListeners.get(event).length,
+      registeredAt: Date.now()
+    });
+  }
+  
+  /**
+   * ✅ FE-02: Generate unique listener ID
+   */
+  generateListenerId(event, handler) {
+    const handlerString = handler.toString();
+    const handlerHash = this.simpleHash(handlerString);
+    return `${event}:${handlerHash}:${Date.now()}`;
+  }
+  
+  /**
+   * ✅ FE-02: Simple hash function for listener identification
+   */
+  simpleHash(str) {
+    let hash = 0;
+    if (str.length === 0) return hash;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(36);
   }
 
   once(event, handler) {
@@ -704,19 +862,43 @@ class MIPTechWebSocketManager {
       const index = handlers.indexOf(handler);
       if (index > -1) {
         handlers.splice(index, 1);
+        
+        // ✅ FE-02: Remove from registered listeners tracking
+        for (const [listenerId, listenerInfo] of this.registeredListeners.entries()) {
+          if (listenerInfo.event === event && listenerInfo.handler === handler) {
+            this.registeredListeners.delete(listenerId);
+            if (this.enableVerboseLogging) {
+              console.log(`📝 [WebSocket] Unregistered listener for '${event}' (ID: ${listenerId.substring(0, 8)}...)`);
+            }
+            break;
+          }
+        }
       }
     }
   }
 
   emit(event, data) {
+    // ✅ DEBUG: Log all event emissions
+    console.log(`🚀 [WebSocket] Emitting event: ${event}`, {
+      hasListeners: this.eventListeners.has(event),
+      listenerCount: this.eventListeners.has(event) ? this.eventListeners.get(event).length : 0,
+      eventData: data?.type || 'no-type',
+      dataKeys: data ? Object.keys(data) : []
+    });
+    
     if (this.eventListeners.has(event)) {
-      this.eventListeners.get(event).forEach(handler => {
+      const handlers = this.eventListeners.get(event);
+      handlers.forEach((handler, index) => {
         try {
+          console.log(`📞 [WebSocket] Calling handler ${index + 1}/${handlers.length} for event: ${event}`);
           handler(data);
+          console.log(`✅ [WebSocket] Handler ${index + 1} completed for event: ${event}`);
         } catch (error) {
-          console.error(`❌ [WebSocket] Event handler error for ${event}:`, error);
+          console.error(`❌ [WebSocket] Event handler error for ${event} (handler ${index + 1}):`, error);
         }
       });
+    } else {
+      console.warn(`⚠️ [WebSocket] No listeners registered for event: ${event}`);
     }
   }
 
@@ -734,6 +916,15 @@ class MIPTechWebSocketManager {
     this.reconnectAttempts = 0;
     this.lastErrorType = null;
     this.currentChatId = null;
+    
+    // ✅ FE-02: Clear deduplication structures
+    this.registeredListeners.clear();
+    this.processedEvents.clear();
+    this.eventHistory.clear();
+    
+    if (this.enableVerboseLogging) {
+      console.log('✅ [WebSocket] Cleared deduplication structures');
+    }
     
     if (this.ws) {
       // Remove event listeners to prevent callbacks
@@ -761,6 +952,64 @@ class MIPTechWebSocketManager {
   // Health check
   ping() {
     this.sendMessage('ping', { timestamp: Date.now() });
+  }
+  
+  /**
+   * ✅ FE-02: Get deduplication statistics for debugging
+   */
+  getDedupStats() {
+    return {
+      registeredListeners: this.registeredListeners.size,
+      eventHistorySize: this.eventHistory.size,
+      processedEventsSize: this.processedEvents.size,
+      dedupWindowMs: this.dedupWindowMs,
+      listenersByEvent: this.getListenerCountByEvent(),
+      oldestEventInHistory: this.getOldestEventInHistory(),
+      newestEventInHistory: this.getNewestEventInHistory()
+    };
+  }
+  
+  /**
+   * ✅ FE-02: Get listener count by event type
+   */
+  getListenerCountByEvent() {
+    const counts = {};
+    for (const [event, handlers] of this.eventListeners.entries()) {
+      counts[event] = handlers.length;
+    }
+    return counts;
+  }
+  
+  /**
+   * ✅ FE-02: Get oldest event in history
+   */
+  getOldestEventInHistory() {
+    if (this.eventHistory.size === 0) return null;
+    let oldest = null;
+    let oldestTime = Infinity;
+    for (const [id, timestamp] of this.eventHistory.entries()) {
+      if (timestamp < oldestTime) {
+        oldestTime = timestamp;
+        oldest = { id: id.substring(0, 30) + '...', timestamp };
+      }
+    }
+    return oldest;
+  }
+  
+  /**
+   * ✅ FE-02: Get newest event in history
+   */
+  getNewestEventInHistory() {
+    if (this.eventHistory.size === 0) return null;
+    let newest = null;
+    let newestTime = 0;
+    for (const [id, timestamp] of this.eventHistory.entries()) {
+      if (timestamp > newestTime) {
+        newestTime = timestamp;
+        newest = { id: id.substring(0, 30) + '...', timestamp };
+      }
+    }
+    return newest;
   }
 }
 

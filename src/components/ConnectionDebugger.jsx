@@ -128,7 +128,7 @@ const ConnectionDebugger = () => {
     
     try {
       // ✅ CORRECT: Use proper MIPTech platform WebSocket URL format
-      const baseUrl = process.env.REACT_APP_MIPTECH_WS_URL || 'ws://localhost:8000';
+      const baseUrl = process.env.REACT_APP_MIPTECH_WS_URL || 'ws://localhost:8001';
       const tenantId = process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
       const testClientId = `debug_test_${Date.now()}_platform_aware`;
       

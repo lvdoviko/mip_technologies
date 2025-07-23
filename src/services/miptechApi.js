@@ -1,9 +1,10 @@
 // src/services/miptechApi.js
 class MIPTechApiClient {
   constructor(options = {}) {
-    this.baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8000';
+    this.baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8001';
     this.tenantId = options.tenantId || process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
-    this.apiKey = options.apiKey || process.env.REACT_APP_MIPTECH_API_KEY;
+    // ✅ FIX: Store apiKey options but read from env dynamically to avoid caching issues
+    this.apiKeyOptions = options.apiKey;
     this.version = options.version || process.env.REACT_APP_MIPTECH_API_VERSION || 'v1';
     
     // ✅ ENHANCEMENT: Environment-specific configuration
@@ -25,8 +26,10 @@ class MIPTechApiClient {
       'User-Agent': 'MIPTech-Client/1.0'
     };
 
-    if (this.apiKey) {
-      headers['Authorization'] = `Bearer ${this.apiKey}`;
+    // ✅ FIX: Read API key dynamically from environment to avoid caching issues
+    const apiKey = this.apiKeyOptions || process.env.REACT_APP_MIPTECH_API_KEY;
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
     return headers;

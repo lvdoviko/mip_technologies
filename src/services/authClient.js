@@ -18,7 +18,7 @@ class APIError extends Error {
  */
 class MIPTechAuthClient {
   constructor(apiUrl, tenantId) {
-    this.apiUrl = apiUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8000';
+    this.apiUrl = apiUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8001';
     this.tenantId = tenantId || process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
     this.accessToken = localStorage.getItem('miptech_access_token');
     this.refreshToken = localStorage.getItem('miptech_refresh_token');

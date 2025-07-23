@@ -406,6 +406,18 @@ const ChatInput = ({
   const inputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   
+  // ✅ DEBUG: Log ChatInput props for troubleshooting
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 [ChatInput] Props received:', {
+      isDisabled,
+      isReady,
+      isConnected,
+      connectionState,
+      isConnecting,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
   // Auto-focus input when chat opens
   useEffect(() => {
     if (inputRef.current) {
@@ -625,6 +637,22 @@ const ChatWidget = ({
     enableTypingIndicator: true,
     maxMessageLength
   });
+  
+  // ✅ DEBUG: Log ChatWidget state for troubleshooting
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 [ChatWidget] State update:', {
+      connectionState,
+      isConnected,
+      isReady,
+      isConnecting,
+      canSendMessage,
+      isLoading,
+      isOpen,
+      hasChat: !!currentChat,
+      inputDisabled: !isReady || !canSendMessage,
+      timestamp: new Date().toISOString()
+    });
+  }
   
   // Detect dark mode
   useEffect(() => {
@@ -975,6 +1003,14 @@ const ChatWidget = ({
                 )}
                 
                 {/* Messages */}
+                {messages.length > 0 && process.env.NODE_ENV === 'development' && 
+                  console.log('🔍 [ChatWidget] Rendering messages:', {
+                    totalMessages: messages.length,
+                    messageIds: messages.map(m => m.id),
+                    messageRoles: messages.map(m => m.role),
+                    messageStatuses: messages.map(m => m.status)
+                  })
+                }
                 {messages.map((message) => (
                   <Message
                     key={message.id}
@@ -1002,6 +1038,11 @@ const ChatWidget = ({
                 {isLoading && (
                   <div className="flex justify-center py-2">
                     <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    {process.env.NODE_ENV === 'development' && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        Loading: {isLoading ? 'true' : 'false'} | Ready: {isReady ? 'true' : 'false'}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>

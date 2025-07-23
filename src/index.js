@@ -6,8 +6,9 @@ import ReactDOM from 'react-dom/client';
 import MainApp from './MainApp.jsx';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+// ✅ DEBUG: Temporarily disable StrictMode to fix handler registration
 root.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <MainApp />
-  </React.StrictMode>
+  // </React.StrictMode>
 );

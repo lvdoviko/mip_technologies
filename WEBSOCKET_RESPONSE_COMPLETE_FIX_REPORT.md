@@ -18,7 +18,7 @@
     "message_id": "44c06ce9-cca7-4585-918d-24536fb4b67c",
     "content": "Un tafano è un insetto...",
     "role": "assistant",
-    "llm_model": "gpt-4o-mini-2024-07-18",
+    "llm_model": "gpt-4.1-mini",
     "prompt_tokens": 167,
     "completion_tokens": 102,
     "total_tokens": 269,
