@@ -99,11 +99,6 @@
       "GENERATE_SOURCEMAP": "false"
     }
   },
-  "functions": {
-    "functions/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "regions": ["iad1"],
   "github": {
     "enabled": true,
