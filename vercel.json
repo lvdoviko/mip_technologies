@@ -1,98 +1,10 @@
 {
-  "version": 2,
-  "name": "mip-technologies",
-  "routes": [
-    {
-      "src": "/static/(.*)",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/(.*\\.(js|css|woff2|png|jpg|svg))",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/api/(.*)",
-      "headers": {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0"
-      }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
-        },
-        {
-          "key": "Strict-Transport-Security",
-          "value": "max-age=31536000; includeSubDomains"
-        },
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' https://api.miptechnologies.tech wss://api.miptechnologies.tech https://www.google-analytics.com https://analytics.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-        }
-      ]
-    }
-  ],
   "env": {
     "REACT_APP_MIPTECH_API_URL": "https://api.miptechnologies.tech",
     "REACT_APP_MIPTECH_WS_URL": "wss://api.miptechnologies.tech",
     "REACT_APP_ENVIRONMENT": "production",
     "REACT_APP_DEBUG": "false",
     "REACT_APP_ENABLE_CHAT": "true",
-    "REACT_APP_ENABLE_PERFORMANCE_MONITORING": "true",
-    "REACT_APP_ENABLE_ERROR_REPORTING": "true",
-    "REACT_APP_ENABLE_ANALYTICS": "true",
-    "REACT_APP_SHOW_PERFORMANCE_INDICATOR": "false",
-    "REACT_APP_SHOW_DEBUG_INFO": "false",
     "GENERATE_SOURCEMAP": "false"
-  },
-  "build": {
-    "env": {
-      "REACT_APP_MIPTECH_API_URL": "https://api.miptechnologies.tech",
-      "REACT_APP_MIPTECH_WS_URL": "wss://api.miptechnologies.tech",
-      "REACT_APP_ENVIRONMENT": "production",
-      "REACT_APP_DEBUG": "false",
-      "REACT_APP_ENABLE_CHAT": "true",
-      "REACT_APP_ENABLE_PERFORMANCE_MONITORING": "true",
-      "REACT_APP_ENABLE_ERROR_REPORTING": "true",
-      "REACT_APP_ENABLE_ANALYTICS": "true",
-      "REACT_APP_SHOW_PERFORMANCE_INDICATOR": "false",
-      "REACT_APP_SHOW_DEBUG_INFO": "false",
-      "GENERATE_SOURCEMAP": "false"
-    }
-  },
-  "regions": ["iad1"],
-  "github": {
-    "enabled": true,
-    "autoAlias": true
   }
 }
