@@ -347,27 +347,11 @@ export const useChat = (config = {}) => {
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      const response = await fetch(`${process.env.REACT_APP_MIPTECH_API_URL}/api/v1/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-ID': tenantId  // ✅ CRITICAL: Add required header (CLIENT-FIX-REPORT.md line 544)
-        },
-        body: JSON.stringify({
-          session_id: sessionId,   // ✅ CRITICAL: Required field (CLIENT-FIX-REPORT.md line 547)
-          visitor_id: visitorId,   // ✅ CRITICAL: Required field (CLIENT-FIX-REPORT.md line 548)
-          title: 'Website Chat Session',
-          tenant_id: tenantId      // ✅ CRITICAL: Required in body (CLIENT-FIX-REPORT.md line 550)
-        })
+      // ✅ FIX: Use API client instead of direct fetch to avoid double path issue
+      const chatData = await apiRef.current.createChat(sessionId, visitorId, {
+        title: 'Website Chat Session'
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ [Platform] Chat creation failed:', errorText);
-        throw new Error(`Failed to create chat session: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-
-      const chatData = await response.json();
       console.log('✅ [Platform] Chat session created:', chatData.chat_id || chatData.id);
       return chatData.chat_id || chatData.id;
     } catch (error) {
