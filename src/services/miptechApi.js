@@ -107,7 +107,7 @@ class MIPTechApiClient {
 
   // Health check
   async health() {
-    return this.request('/api/v1/health');  // ✅ CORRECT WITH FIXED request() METHOD
+    return this.request('/health');
   }
 
   // Chat endpoints
@@ -159,14 +159,14 @@ class MIPTechApiClient {
     
     console.log('🔍 [API] Creating chat with validated data:', requestData);
     
-    return this.request('/api/v1/chat', {   // ✅ CRITICAL: Correct endpoint
+    return this.request('/chat', {
       method: 'POST',
       body: JSON.stringify(requestData)
     });
   }
 
   async sendMessage(chatId, content, options = {}) {
-    return this.request(`/api/v1/chat/${chatId}/messages`, {
+    return this.request(`/chat/${chatId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ 
         content,

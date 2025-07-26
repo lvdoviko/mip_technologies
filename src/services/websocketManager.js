@@ -63,7 +63,11 @@ class MIPTechWebSocketManager {
       params.set('token', this.authToken);
     }
     
-    return `${this.baseUrl}/api/v1/ws/chat?${params.toString()}`;
+    // Check if baseUrl already includes the path
+    const hasPath = this.baseUrl.includes('/api/v1/ws/chat');
+    const baseUrlToUse = hasPath ? this.baseUrl : `${this.baseUrl}/api/v1/ws/chat`;
+    
+    return `${baseUrlToUse}?${params.toString()}`;
   }
 
   /**
@@ -91,7 +95,11 @@ class MIPTechWebSocketManager {
       params.set('token', this.authToken);
     }
     
-    return `${this.baseUrl}/api/v1/ws/chat?${params.toString()}`;
+    // Check if baseUrl already includes the path
+    const hasPath = this.baseUrl.includes('/api/v1/ws/chat');
+    const baseUrlToUse = hasPath ? this.baseUrl : `${this.baseUrl}/api/v1/ws/chat`;
+    
+    return `${baseUrlToUse}?${params.toString()}`;
   }
 
   async connect(chatId = null) {
