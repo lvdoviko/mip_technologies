@@ -242,6 +242,12 @@ export const useChat = (config = {}) => {
     isInitializingRef.current = false;
     initializationPromiseRef.current = null;
     
+    console.log('✅ [StrictMode] Component mount state reset complete:', {
+      isUnmounted: isUnmountedRef.current,
+      componentMounted: componentMountedRef.current,
+      mountCount: mountCountRef.current
+    });
+    
     // Clear any pending strict mode cleanup
     if (wsCleanupTimeoutRef.current) {
       clearTimeout(wsCleanupTimeoutRef.current);
@@ -445,9 +451,14 @@ export const useChat = (config = {}) => {
    */
   const initializeChat = useCallback(async (options = {}) => {
     console.log('🚀 [DEBUG] initializeChat called with options:', options);
-    console.log('🔍 [DEBUG] isUnmountedRef.current:', isUnmountedRef.current);
+    console.log('🔍 [DEBUG] isUnmountedRef.current (before reset):', isUnmountedRef.current);
     console.log('🔍 [DEBUG] isInitializingRef.current:', isInitializingRef.current);
     console.log('🔍 [DEBUG] initializationPromiseRef.current:', initializationPromiseRef.current);
+    
+    // ✅ CRITICAL FIX: Reset unmounted state when explicitly initializing
+    // This handles the case where React cleanup runs but component remounts
+    isUnmountedRef.current = false;
+    console.log('🔧 [DEBUG] FORCED isUnmountedRef.current to false');
     
     // Enhanced unmount checking with StrictMode awareness
     if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
