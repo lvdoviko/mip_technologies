@@ -314,7 +314,7 @@ export const useChat = (config = {}) => {
         console.log(`🔍 [Platform] Checking readiness (${i + 1}/${retries})...`);
         
         // ✅ FIX: Use API client instead of direct fetch to avoid double path issue
-        const health = await apiClient.health();
+        const health = await apiRef.current.health();
         
         if (health && (health.ai_services_ready || health.status === 'healthy')) {
           console.log('✅ [Platform] AI services ready');
