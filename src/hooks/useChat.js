@@ -303,25 +303,22 @@ export const useChat = (config = {}) => {
    * Platform needs 1.7+ seconds for AI service initialization
    */
   const waitForPlatformReady = useCallback(async (retries = 5) => {
-    const apiUrl = process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8001';
-    const tenantId = process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
-
     for (let i = 0; i < retries; i++) {
       try {
+        // ✅ FIX: Reset unmount state during platform checks to prevent early returns
+        if (isUnmountedRef && isUnmountedRef.current) {
+          console.log('🔄 [Platform] Resetting unmount state during platform check');
+          isUnmountedRef.current = false;
+        }
+        
         console.log(`🔍 [Platform] Checking readiness (${i + 1}/${retries})...`);
-        // ✅ CRITICAL: Use correct endpoint and headers (FINAL-CLIENT-SIDE.md requirement)
-        const response = await fetch(`${apiUrl}/api/v1/health`, {
-          headers: {
-            'X-Tenant-ID': tenantId  // ✅ CRITICAL: Add required header
-          }
-        });
-
-        if (response.ok) {
-          const health = await response.json();
-          if (health.ai_services_ready || health.status === 'healthy') {
-            console.log('✅ [Platform] AI services ready');
-            return true;
-          }
+        
+        // ✅ FIX: Use API client instead of direct fetch to avoid double path issue
+        const health = await apiClient.health();
+        
+        if (health && (health.ai_services_ready || health.status === 'healthy')) {
+          console.log('✅ [Platform] AI services ready');
+          return true;
         }
       } catch (error) {
         console.log(`⚠️ [Platform] Check ${i + 1}/${retries} failed:`, error.message);
