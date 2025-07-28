@@ -191,7 +191,7 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
             ${message.status === MESSAGE_STATUS.FAILED ? 'border-2 border-accent-500' : ''}
           `}
         >
-          <p className="text-sm leading-relaxed break-words font-inter font-normal">{message.content}</p>
+          <p className="text-sm leading-relaxed break-words font-mono tracking-wide">{message.content}</p>
           
           {/* Message metadata */}
           <div className={`flex items-center justify-between mt-2 ${isUser ? 'text-white/70' : 'text-gray-400'}`}>
@@ -530,6 +530,9 @@ const ChatInput = ({
             placeholder={getSmartPlaceholder()}
             disabled={isDisabled}
             rows={1}
+            style={{
+              textAlign: inputValue ? 'left' : 'center'
+            }}
             className={`
               chat-input-textarea
               w-full px-4 py-3 pr-16 text-sm resize-none font-inter h-12
