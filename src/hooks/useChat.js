@@ -303,6 +303,10 @@ export const useChat = (config = {}) => {
    * Platform needs 1.7+ seconds for AI service initialization
    */
   const waitForPlatformReady = useCallback(async (retries = 5) => {
+    console.log('🔍 [DIAGNOSTIC] === waitForPlatformReady START ===');
+    console.log('🔍 [DIAGNOSTIC] apiRef.current:', apiRef.current);
+    console.log('🔍 [DIAGNOSTIC] apiRef.current?.healthz type:', typeof apiRef.current?.healthz);
+    
     for (let i = 0; i < retries; i++) {
       try {
         // ✅ FIX: Reset unmount state during platform checks to prevent early returns
@@ -323,6 +327,10 @@ export const useChat = (config = {}) => {
           return true;
         }
       } catch (error) {
+        console.error(`🔴 [DIAGNOSTIC] Platform check ${i + 1}/${retries} error:`, error);
+        console.error('🔴 [DIAGNOSTIC] Error name:', error.name);
+        console.error('🔴 [DIAGNOSTIC] Error message:', error.message);
+        console.error('🔴 [DIAGNOSTIC] Error stack:', error.stack);
         console.log(`⚠️ [Platform] Check ${i + 1}/${retries} failed:`, error.message);
       }
 
@@ -333,8 +341,9 @@ export const useChat = (config = {}) => {
       }
     }
 
-    console.warn('⚠️ [Platform] AI services not confirmed ready, proceeding anyway');
-    return false;
+    console.error('❌ [DIAGNOSTIC] All platform ready checks failed after', retries, 'attempts');
+    // Throw error to trigger proper error handling
+    throw new Error('Platform health check failed after all retries');
   }, []);
 
   /**
