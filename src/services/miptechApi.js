@@ -36,10 +36,10 @@ class MIPTechApiClient {
       'User-Agent': 'MIPTech-Client/1.0'
     };
 
-    // ✅ FIX: Read API key dynamically from environment to avoid caching issues
+    // ✅ ENTERPRISE FIX: Use X-API-Key header format (enterprise standard)
     const apiKey = this.apiKeyOptions || process.env.REACT_APP_MIPTECH_API_KEY;
     if (apiKey) {
-      headers['Authorization'] = `Bearer ${apiKey}`;
+      headers['X-API-Key'] = apiKey;
     }
 
     return headers;
