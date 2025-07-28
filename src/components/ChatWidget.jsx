@@ -532,14 +532,18 @@ const ChatInput = ({
             rows={1}
             style={{
               outline: 'none !important',
-              boxShadow: 'none !important'
+              boxShadow: 'none !important',
+              border: isOverLimit ? '1px solid rgb(248 113 113)' : '1px solid rgba(255, 255, 255, 0.5) !important',
+              borderRadius: '0 !important'
             }}
             className={`
-              w-full px-4 py-3 pr-16 text-sm border rounded-none resize-none font-inter h-12
+              w-full px-4 py-3 pr-16 text-sm resize-none font-inter h-12
               bg-transparent backdrop-blur-sm text-white placeholder-gray-400
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-300
-              ${isOverLimit ? 'border-accent-500' : 'border-white/50 hover:border-white hover:bg-black/30 !focus:border-white focus:outline-none focus:ring-0'}
+              hover:border-white hover:bg-black/30
+              focus:outline-none focus:ring-0 focus:shadow-none
+              !outline-none !ring-0 !shadow-none
             `}
           />
           
