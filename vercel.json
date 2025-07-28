@@ -1,8 +1,8 @@
 {
   "build": {
     "env": {
-      "REACT_APP_MIPTECH_API_URL": "https://api.miptechnologies.tech/api/v1",
-      "REACT_APP_MIPTECH_WS_URL": "wss://api.miptechnologies.tech/api/v1/ws/chat",
+      "REACT_APP_MIPTECH_API_URL": "https://api.miptechnologies.tech",
+      "REACT_APP_MIPTECH_WS_URL": "wss://api.miptechnologies.tech",
       "REACT_APP_MIPTECH_TENANT_ID": "miptech-company",
       "REACT_APP_MIPTECH_API_KEY": "miptech_f62ed9ac9dcfb3fab8ac681e12aa084f",
       "REACT_APP_ENVIRONMENT": "production",

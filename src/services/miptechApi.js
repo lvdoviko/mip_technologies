@@ -1,10 +1,7 @@
 // src/services/miptechApi.js
 class MIPTechApiClient {
   constructor(options = {}) {
-    let baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8001';
-    // Strip /api/v1 if present at the end to prevent double path
-    this.baseUrl = baseUrl.replace(/\/api\/v1\/?$/, '');
-    
+    this.baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8001';
     this.tenantId = options.tenantId || process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
     // ✅ FIX: Store apiKey options but read from env dynamically to avoid caching issues
     this.apiKeyOptions = options.apiKey;
