@@ -531,11 +531,13 @@ const ChatInput = ({
             disabled={isDisabled}
             rows={1}
             style={{
-              textAlign: inputValue ? 'left' : 'center'
+              lineHeight: '48px', // Matches h-12 (48px) to center placeholder vertically
+              paddingTop: '0',
+              paddingBottom: '0'
             }}
             className={`
               chat-input-textarea
-              w-full px-4 py-3 pr-16 text-sm resize-none font-inter h-12
+              w-full px-4 pr-16 text-sm resize-none font-inter h-12
               text-white placeholder-gray-400
               disabled:opacity-50 disabled:cursor-not-allowed
               ${isOverLimit ? '!border-red-400' : ''}
