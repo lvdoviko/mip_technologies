@@ -189,14 +189,16 @@ class MIPTechWebSocketManager {
 
   handleOpen(event) {
     // ✅ ENHANCEMENT: Environment-specific connection logging
-    if (this.enableVerboseLogging) {
-      console.log('✅ [WebSocket] Connected successfully', {
+    if (this.enableVerboseLogging || process.env.NODE_ENV === 'development') {
+      console.log('🟢 [WebSocket] Connection OPENED', {
         environment: this.isDevelopment ? 'development' : 'production',
         url: event.target?.url,
-        readyState: event.target?.readyState
+        readyState: event.target?.readyState,
+        protocol: event.target?.protocol,
+        timestamp: new Date().toISOString()
       });
     } else {
-      console.log('✅ [WebSocket] Connected successfully');
+      console.log('🟢 [WebSocket] Connection OPENED');
     }
     
     this.isConnected = true;

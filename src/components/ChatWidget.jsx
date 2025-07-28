@@ -598,6 +598,7 @@ const ChatWidget = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [hasTriggeredConnection, setHasTriggeredConnection] = useState(false);
   
   const prefersReducedMotion = useReducedMotion();
   
@@ -705,23 +706,25 @@ const ChatWidget = ({
   
   // Initialize chat when user demonstrates intent (lazy connection strategy)
   useEffect(() => {
-    console.log(`🔍 [ChatWidget] useEffect triggered - isOpen: ${isOpen}, currentChat: ${!!currentChat}`);
+    console.log(`🔍 [ChatWidget] useEffect triggered - isOpen: ${isOpen}, currentChat: ${!!currentChat}, hasTriggered: ${hasTriggeredConnection}`);
     
     // ✅ LAZY CONNECTION: Only connect when user actually wants to chat
     // Connection will be triggered by:
     // 1. User starts typing (primary trigger)
     // 2. User clicks send (fallback trigger)
-    // 3. Chat open + 3 second delay (safety trigger)
+    // 3. Chat open + 3 second delay (safety trigger - ONE TIME ONLY)
     
-    if (isOpen && !currentChat && !isConnecting) {
+    if (isOpen && !currentChat && !isConnecting && !hasTriggeredConnection) {
       console.log('🔄 [ChatWidget] Chat opened - ready for user interaction (no auto-connect)');
       onChatOpen?.();
       
-      // Safety trigger: Auto-connect after 3 seconds if user hasn't interacted
+      // One-shot safety trigger: Auto-connect after 3 seconds if user hasn't interacted
       const safetyConnectTimer = setTimeout(() => {
-        if (!currentChat && !isConnecting && isOpen) {
-          console.log('🔄 [ChatWidget] Safety trigger - connecting after 3s delay');
+        if (!currentChat && !isConnecting && isOpen && !hasTriggeredConnection) {
+          console.log('🔄 [ChatWidget] Safety trigger - one-time connection after 3s');
+          setHasTriggeredConnection(true);
           performanceMonitor.startTimer('chat_widget_load');
+          
           initializeChat()
             .then(() => {
               console.log('✅ [ChatWidget] Safety connection successful');
@@ -730,6 +733,7 @@ const ChatWidget = ({
             .catch((error) => {
               console.error('❌ [ChatWidget] Safety connection failed:', error);
               performanceMonitor.endTimer('chat_widget_load');
+              setHasTriggeredConnection(false); // Allow retry on error
               onError?.(error);
             });
         }
@@ -737,7 +741,12 @@ const ChatWidget = ({
       
       return () => clearTimeout(safetyConnectTimer);
     }
-  }, [isOpen, currentChat, initializeChat, onChatOpen, onError, isConnecting]);
+    
+    // Reset trigger state when chat closes
+    if (!isOpen && hasTriggeredConnection) {
+      setHasTriggeredConnection(false);
+    }
+  }, [isOpen, currentChat, initializeChat, onChatOpen, onError, isConnecting, hasTriggeredConnection]);
   
   // Debug: Track ChatWidget mount
   useEffect(() => {

@@ -36,27 +36,12 @@ class MIPTechApiClient {
   }
 
   async request(endpoint, options = {}) {
-    // Fix double path issue: handle case where baseUrl already includes /api/v1
-    let cleanEndpoint = endpoint;
+    // Simple fix: endpoints already include /api/v1, just concatenate
+    const url = `${this.baseUrl}${endpoint}`;
     
-    // Remove /api/v1 prefix from endpoint if baseUrl already includes it
-    if (this.baseUrl.includes('/api/v1') && endpoint.startsWith('/api/v1/')) {
-      cleanEndpoint = endpoint.replace('/api/v1', '');
+    if (this.enableRequestLogging) {
+      console.log('🔗 [API] Request URL:', url);
     }
-    
-    // Ensure proper path joining
-    const url = this.baseUrl.endsWith('/') && cleanEndpoint.startsWith('/') 
-      ? `${this.baseUrl}${cleanEndpoint.slice(1)}`  // Remove duplicate slash
-      : this.baseUrl.endsWith('/') || cleanEndpoint.startsWith('/')
-      ? `${this.baseUrl}${cleanEndpoint}`  // Already has proper separator
-      : `${this.baseUrl}/${cleanEndpoint}`;  // Add separator
-    
-    console.log('🔗 [API] Request URL constructed:', {
-      baseUrl: this.baseUrl,
-      originalEndpoint: endpoint,
-      cleanEndpoint,
-      finalUrl: url
-    });
 
     const config = {
       ...options,
