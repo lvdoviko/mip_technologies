@@ -196,7 +196,7 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
             <p className="text-sm leading-relaxed break-words font-mono tracking-wide flex-1">{message.content}</p>
             
             {/* Status icon inline with last line */}
-            <div className="flex items-center space-x-1 flex-shrink-0">
+            <div className="flex items-center space-x-1 flex-shrink-0" style={{ marginBottom: '2px' }}>
               <MessageStatusIcon status={message.status} />
               
               {message.status === MESSAGE_STATUS.FAILED && (
