@@ -533,7 +533,9 @@ const ChatInput = ({
             style={{
               outline: 'none !important',
               boxShadow: 'none !important',
-              border: isOverLimit ? '1px solid rgb(248 113 113)' : '1px solid rgba(255, 255, 255, 0.5) !important',
+              border: isOverLimit 
+                ? '1px solid rgb(248 113 113)' 
+                : '1px solid rgba(255, 255, 255, 0.5) !important', // Bianco con opacità
               borderRadius: '0 !important'
             }}
             className={`
@@ -541,10 +543,18 @@ const ChatInput = ({
               bg-transparent backdrop-blur-sm text-white placeholder-gray-400
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-300
-              hover:border-white hover:bg-black/30
+              hover:bg-black/30
               focus:outline-none focus:ring-0 focus:shadow-none
               !outline-none !ring-0 !shadow-none
             `}
+            onFocus={(e) => {
+              e.target.style.border = '1px solid rgba(255, 255, 255, 1)'; // Bianco solid in focus
+            }}
+            onBlur={(e) => {
+              e.target.style.border = isOverLimit 
+                ? '1px solid rgb(248 113 113)' 
+                : '1px solid rgba(255, 255, 255, 0.5)'; // Torna al bordo normale bianco
+            }}
           />
           
           {/* Character count */}
