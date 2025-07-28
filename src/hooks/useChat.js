@@ -503,8 +503,13 @@ export const useChat = (config = {}) => {
     
     try {
       console.log('🔗 [DEBUG] About to call performInitializationInternal...');
-      initializationPromiseRef.current = performInitializationInternal(options);
-      console.log('🔗 [DEBUG] performInitializationInternal assigned to promise ref');
+      try {
+        initializationPromiseRef.current = performInitializationInternal(options);
+        console.log('🔗 [DEBUG] performInitializationInternal assigned to promise ref');
+      } catch (syncError) {
+        console.error('🔴 [TRACE] Synchronous error creating promise:', syncError);
+        throw syncError;
+      }
       
       const result = await initializationPromiseRef.current;
       console.log('✅ [DEBUG] performInitializationInternal completed successfully:', result);
@@ -531,6 +536,7 @@ export const useChat = (config = {}) => {
    * Internal initialization function
    */
   const performInitializationInternal = useCallback(async (options = {}) => {
+    console.log('🟢 [TRACE] performInitializationInternal ENTERED');
     const startTime = Date.now();
     console.log('🚀 [INIT] === performInitializationInternal START ===', new Date().toISOString());
     console.log('🔍 [INIT] Environment:', {

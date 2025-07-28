@@ -200,6 +200,7 @@ class MIPTechApiClient {
   // Healthz endpoint (working endpoint)
   async healthz() {
     const url = `${this.baseUrl}/healthz`;
+    console.log('🟢 [HEALTHZ] Starting healthz check to:', url);
     if (this.enableRequestLogging) {
       console.log('🔗 [API] healthz URL:', url);
     }
@@ -216,7 +217,20 @@ class MIPTechApiClient {
         signal: controller.signal
       };
       
-      const response = await fetch(url, config);
+      console.log('🟢 [HEALTHZ] About to fetch with config:', { headers: config.headers });
+      let response;
+      try {
+        response = await fetch(url, config);
+      } catch (fetchError) {
+        console.error('🔴 [HEALTHZ] Fetch failed:', fetchError);
+        console.error('🔴 [HEALTHZ] Fetch error name:', fetchError.name);
+        console.error('🔴 [HEALTHZ] Fetch error message:', fetchError.message);
+        // Enhance error for proper handling
+        const enhancedError = new Error(`Network request failed: ${fetchError.message}`);
+        enhancedError.request = { url, method: 'GET' };
+        enhancedError.code = fetchError.name === 'TypeError' ? 'NETWORK_ERROR' : 'FETCH_ERROR';
+        throw enhancedError;
+      }
       clearTimeout(timeoutId);
       
       if (!response.ok) {
@@ -232,11 +246,17 @@ class MIPTechApiClient {
       
       return result; // { status: "healthy", version: "0.1.0" }
     } catch (error) {
+      console.error('🔴 [HEALTHZ] Caught error in healthz:', error);
       // Enhance error for proper handling
       if (error.name === 'AbortError') {
         const timeoutError = new Error(`Healthz timeout after ${this.developmentTimeout}ms`);
         timeoutError.code = 'TIMEOUT';
+        timeoutError.request = { url, method: 'GET' };
         throw timeoutError;
+      }
+      // Ensure error has request context
+      if (!error.request) {
+        error.request = { url, method: 'GET' };
       }
       throw error;
     }
