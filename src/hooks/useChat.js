@@ -314,10 +314,12 @@ export const useChat = (config = {}) => {
         console.log(`🔍 [Platform] Checking readiness (${i + 1}/${retries})...`);
         
         // ✅ FIX: Use healthz endpoint which returns 200
+        console.log('🌐 [Platform] Calling apiRef.current.healthz()...');
         const health = await apiRef.current.healthz();
+        console.log('📥 [Platform] healthz() response:', health);
         
         if (health && (health.ai_services_ready || health.status === 'healthy')) {
-          console.log('✅ [Platform] AI services ready');
+          console.log('✅ [Platform] AI services ready - platform check successful');
           return true;
         }
       } catch (error) {
@@ -341,18 +343,22 @@ export const useChat = (config = {}) => {
    */
   const createChatSession = useCallback(async (tenantId) => {
     try {
-      console.log('💬 [Platform] Creating chat session via REST API...');
+      console.log('💬 [Platform] Creating chat session via REST API for tenant:', tenantId);
       
       // ✅ CRITICAL: Generate required session and visitor IDs (CLIENT-FIX-REPORT.md lines 537-538)
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       const visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+      console.log('🎲 [Platform] Generated IDs:', { sessionId, visitorId });
 
       // ✅ FIX: Use API client instead of direct fetch to avoid double path issue
+      console.log('🌐 [Platform] Calling apiRef.current.createChat()...');
       const chatData = await apiRef.current.createChat(sessionId, visitorId, {
         title: 'Website Chat Session'
       });
+      console.log('📥 [Platform] createChat() response:', chatData);
 
-      console.log('✅ [Platform] Chat session created:', chatData.chat_id || chatData.id);
+      const chatId = chatData.chat_id || chatData.id;
+      console.log('✅ [Platform] Chat session created with ID:', chatId);
       return chatData.chat_id || chatData.id;
     } catch (error) {
       console.error('❌ [Platform] Failed to create chat session:', error);
@@ -391,35 +397,47 @@ export const useChat = (config = {}) => {
    * Connect to WebSocket
    */
   const connectWebSocket = useCallback(async (chatId) => {
-    console.log(`🔌 [DEBUG] connectWebSocket called with chatId: ${chatId}`);
+    console.log(`🔌 [WebSocket] === connectWebSocket START with chatId: ${chatId} ===`);
     
     // CRITICAL: Check if WebSocket manager exists
-    console.log('🔍 [DEBUG] websocketRef.current:', websocketRef.current);
-    console.log('🔍 [DEBUG] typeof websocketRef.current:', typeof websocketRef.current);
+    console.log('🔍 [WebSocket] websocketRef.current:', websocketRef.current);
+    console.log('🔍 [WebSocket] typeof websocketRef.current:', typeof websocketRef.current);
     
     if (!websocketRef.current) {
-      console.error('❌ [CRITICAL] WebSocket manager is NULL - this is the bug!');
+      console.error('❌ [WebSocket] CRITICAL ERROR: WebSocket manager is NULL!');
       throw new Error('WebSocket manager not initialized');
     }
     
     // Check connect method exists
-    console.log('🔍 [DEBUG] connect method:', typeof websocketRef.current.connect);
+    console.log('🔍 [WebSocket] connect method type:', typeof websocketRef.current.connect);
     
     try {
       if (chatConfig.enablePerformanceTracking) {
         performanceRef.current.startTimer('websocket_connection');
+        console.log('📊 [WebSocket] Performance tracking started');
       }
       
-      console.log('🔌 [DEBUG] Calling websocketRef.current.connect() with chatId...');
+      console.log('🌐 [WebSocket] Calling websocketRef.current.connect() with chatId...');
       await websocketRef.current.connect(chatId);
-      console.log('✅ [DEBUG] WebSocket connection established successfully');
+      console.log('✅ [WebSocket] WebSocket connection established successfully');
       
       if (chatConfig.enablePerformanceTracking) {
         const duration = performanceRef.current.endTimer('websocket_connection');
         performanceRef.current.trackWebSocketConnection('connected', duration?.duration);
+        console.log('📊 [WebSocket] Performance tracking completed:', duration);
       }
       
+      console.log('🎉 [WebSocket] === connectWebSocket SUCCESS ===');
+      
     } catch (error) {
+      console.error('❌ [WebSocket] === connectWebSocket ERROR ===');
+      console.error('❌ [WebSocket] WebSocket connection failed:', error);
+      console.error('❌ [WebSocket] Error details:', {
+        message: error.message,
+        name: error.name,
+        type: error.type,
+        chatId
+      });
       const wsError = handleWebSocketError(error, { chatId });
       setError(wsError);
       throw wsError;
@@ -431,7 +449,8 @@ export const useChat = (config = {}) => {
    * Initialize chat connection
    */
   const initializeChat = useCallback(async (options = {}) => {
-    console.log('🚀 [DEBUG] initializeChat called with options:', options);
+    console.log('🚀 [DEBUG] === initializeChat START ===');
+    console.log('🔍 [DEBUG] initializeChat called with options:', options);
     console.log('🔍 [DEBUG] isUnmountedRef.current (before reset):', isUnmountedRef.current);
     console.log('🔍 [DEBUG] isInitializingRef.current:', isInitializingRef.current);
     console.log('🔍 [DEBUG] initializationPromiseRef.current:', initializationPromiseRef.current);
@@ -469,13 +488,20 @@ export const useChat = (config = {}) => {
       
       const result = await initializationPromiseRef.current;
       console.log('✅ [DEBUG] performInitializationInternal completed successfully:', result);
+      console.log('🎉 [DEBUG] === initializeChat SUCCESS ===');
       return result;
     } catch (error) {
+      console.error('❌ [DEBUG] === initializeChat ERROR ===');
       console.error('❌ [DEBUG] Error in initializeChat:', error);
+      console.error('❌ [DEBUG] Error name:', error.name);
+      console.error('❌ [DEBUG] Error message:', error.message);
+      console.error('❌ [DEBUG] Error type:', error.type);
+      console.error('❌ [DEBUG] Error status:', error.status);
+      console.error('❌ [DEBUG] Error endpoint:', error.endpoint);
       console.error('❌ [DEBUG] Error stack:', error.stack);
       throw error;
     } finally {
-      console.log('🧹 [DEBUG] Resetting initialization flags');
+      console.log('🧹 [DEBUG] === initializeChat FINALLY - Resetting initialization flags ===');
       isInitializingRef.current = false;
       initializationPromiseRef.current = null;
     }
@@ -524,8 +550,9 @@ export const useChat = (config = {}) => {
       
       // MVP: Platform Architecture Implementation
       // Step 1: Wait for platform AI services to be ready
-      console.log('🔍 [INIT] Step 1: Checking platform readiness...');
-      await waitForPlatformReady();
+      console.log('🔍 [INIT] STEP 1: healthz() - Checking platform readiness...');
+      const healthResult = await waitForPlatformReady();
+      console.log('✅ [INIT] STEP 1 COMPLETED: healthz() returned:', healthResult);
       
       // Small delay to let React refs stabilize after async operation
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -541,8 +568,9 @@ export const useChat = (config = {}) => {
       
       // Step 2: Create chat session via REST API
       const tenantId = process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
-      console.log('💬 [INIT] Step 2: Creating chat session for tenant:', tenantId);
+      console.log('🔍 [INIT] STEP 2: createChatSession() - Creating chat session for tenant:', tenantId);
       const chatId = await createChatSession(tenantId);
+      console.log('✅ [INIT] STEP 2 COMPLETED: createChatSession() returned chatId:', chatId);
       
       // Small delay to let React refs stabilize after async operation
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -586,17 +614,17 @@ export const useChat = (config = {}) => {
       // MVP: Chat history loading disabled for initial implementation
       // Load chat history if persistence is enabled
       if (chatConfig.enablePersistence && false) { // MVP: Disabled for first implementation
-        console.log('📚 [INIT] Loading chat history...');
+        console.log('🔍 [INIT] STEP 3: loadChatHistory() - Loading chat history...');
         await loadChatHistory(chat.id);
-        console.log('📚 [INIT] Chat history loaded');
+        console.log('✅ [INIT] STEP 3 COMPLETED: loadChatHistory() finished');
       } else {
-        console.log('📚 [INIT] Chat history loading disabled for MVP implementation');
+        console.log('⏭️ [INIT] STEP 3 SKIPPED: Chat history loading disabled for MVP implementation');
       }
       
-      // Step 3: Connect WebSocket with chat_id parameter (MVP requirement)
-      console.log('🔗 [INIT] Step 3: Connecting WebSocket with chat_id:', chat.id);
+      // Step 4: Connect WebSocket with chat_id parameter (MVP requirement)
+      console.log('🔍 [INIT] STEP 4: connectWebSocket() - Connecting WebSocket with chat_id:', chat.id);
       await connectWebSocket(chat.id);
-      console.log('✅ [INIT] connectWebSocket completed successfully');
+      console.log('✅ [INIT] STEP 4 COMPLETED: connectWebSocket() succeeded');
       
       // Track performance
       if (chatConfig.enablePerformanceTracking) {

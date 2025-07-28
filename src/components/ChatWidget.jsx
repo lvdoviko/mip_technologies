@@ -708,7 +708,20 @@ const ChatWidget = ({
   useEffect(() => {
     if (isOpen && !currentChat && connectionState === CHAT_STATES.DISCONNECTED) {
       console.log('🚀 [ChatWidget] Opening chat → calling initializeChat()');
-      initializeChat().catch(err => console.error('🔴 initializeChat error:', err));
+      initializeChat().catch(err => {
+        // Don't swallow internal logs - re-throw so we can see the real failure point
+        console.error('🔴 [ChatWidget] initializeChat caught error:', err);
+        console.error('🔴 [ChatWidget] Error stack:', err.stack);
+        console.error('🔴 [ChatWidget] Error details:', {
+          message: err.message,
+          name: err.name,
+          type: err.type,
+          status: err.status,
+          endpoint: err.endpoint
+        });
+        // Re-throw to surface internal logs during debugging
+        throw err;
+      });
     }
   }, [isOpen, currentChat, connectionState, initializeChat]);
 
