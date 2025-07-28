@@ -2,6 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fix definitivo per textarea chatbot */
+.chat-input-textarea {
+  outline: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background: transparent !important;
+  backdrop-filter: blur(4px) !important;
+  transition: border-color 0.3s ease !important;
+}
+
+.chat-input-textarea:hover {
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+.chat-input-textarea:focus {
+  outline: none !important;
+  border: 1px solid rgba(255, 255, 255, 1) !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+.chat-input-textarea:focus-visible {
+  outline: none !important;
+  border: 1px solid rgba(255, 255, 255, 1) !important;
+  box-shadow: none !important;
+}
+
+/* Sovrascrive qualsiasi stile del browser */
+.chat-input-textarea::-webkit-outer-spin-button,
+.chat-input-textarea::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('./enhanced.css');
 
