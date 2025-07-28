@@ -73,23 +73,20 @@ const LanguageSelector = ({ className = '' }) => {
       <button
         ref={buttonRef}
         onClick={toggleDropdown}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white transition-all duration-200 rounded-none border border-transparent hover:border-white/20 hover:bg-white/5"
+        className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        aria-label={`Current language: ${currentLanguage.nativeName}. Click to change language`}
+        aria-label={`Current language: ${currentLanguage.nativeName}`}
       >
-        <Globe className="w-4 h-4" />
-        <span className="hidden sm:inline">{currentLanguage.flag}</span>
-        <span className="hidden md:inline">{currentLanguage.code.toUpperCase()}</span>
-        <ChevronDown 
-          className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
-        />
+        <span>{currentLanguage.flag}</span>
+        <span className="hidden sm:inline text-xs">{currentLanguage.code.toUpperCase()}</span>
+        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-black/95 backdrop-blur-md border border-white/10 shadow-xl z-50 overflow-hidden">
-          <div className="py-1" role="listbox">
+        <div className="absolute right-0 top-full mt-1 w-32 bg-black/95 backdrop-blur-md border border-white/10 shadow-xl z-50 overflow-hidden">
+          <div role="listbox">
             {languages.map((language, index) => {
               const isSelected = language.code === i18n.language;
               
@@ -97,7 +94,7 @@ const LanguageSelector = ({ className = '' }) => {
                 <button
                   key={language.code}
                   onClick={() => handleLanguageChange(language.code)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 text-left ${
+                  className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors duration-200 text-left ${
                     isSelected
                       ? 'bg-white/10 text-white' 
                       : 'text-gray-300 hover:text-white hover:bg-white/5'
@@ -131,13 +128,12 @@ const LanguageSelector = ({ className = '' }) => {
                     }
                   }}
                 >
-                  <span className="text-lg">{language.flag}</span>
-                  <div className="flex-1">
-                    <div className="font-medium">{language.nativeName}</div>
-                    <div className="text-xs text-gray-400">{language.name}</div>
+                  <div className="flex items-center gap-2">
+                    <span>{language.flag}</span>
+                    <span className="font-medium">{language.nativeName}</span>
                   </div>
                   {isSelected && (
-                    <div className="w-2 h-2 bg-white rounded-none"></div>
+                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                   )}
                 </button>
               );
