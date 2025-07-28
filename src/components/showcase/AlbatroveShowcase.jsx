@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import RainbowScrollFloat from '../animations/RainbowScrollFloat';
 
 // Fallback for conversation image only
@@ -8,6 +9,8 @@ const FALLBACK_CONVERSATION = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.or
 const FALLBACK_LOGO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23202020'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='12' text-anchor='middle' fill='white' dominant-baseline='middle'%3EA%3C/text%3E%3C/svg%3E";
 
 const AlbatroveShowcase = ({ prefersReducedMotion = false }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="py-0">
       <div className="container mx-auto max-w-7xl px-4">
@@ -50,20 +53,16 @@ const AlbatroveShowcase = ({ prefersReducedMotion = false }) => {
             
             {/* Description */}
             <p className="text-base sm:text-lg text-gray-300 mb-6 leading-relaxed">
-              AI-powered travel planning through natural conversation. Albatrove helps users plan their perfect trip by chatting with an AI trained specifically for travel recommendations.
+              {t('albatrove.description')}
             </p>
             
             {/* Business impact bullet points */}
             <div className="space-y-3 sm:space-y-4 text-gray-400 mb-8">
-              <p className="text-sm sm:text-base leading-relaxed">
-                • Innovative neural network architecture delivering personalized travel experiences with 93% user satisfaction in beta testing
-              </p>
-              <p className="text-sm sm:text-base leading-relaxed">
-                • Proprietary AI model trained on 4.5+ million travel data points for exceptional recommendation quality
-              </p>
-              <p className="text-sm sm:text-base leading-relaxed">
-                • Launching soon with proven 78% reduction in travel planning time during closed beta tests
-              </p>
+              {t('albatrove.features', { returnObjects: true }).map((feature, index) => (
+                <p key={index} className="text-sm sm:text-base leading-relaxed">
+                  • {feature}
+                </p>
+              ))}
             </div>
             
             {/* CTA Button */}
@@ -74,7 +73,7 @@ const AlbatroveShowcase = ({ prefersReducedMotion = false }) => {
                 rel="noopener noreferrer" 
                 className="inline-flex items-center justify-center px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300 text-center touch-manipulation"
               >
-                Visit Albatrove
+                {t('albatrove.cta')}
               </a>
             </div>
           </div>

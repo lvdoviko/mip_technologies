@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { values } from '../data/values';
 import ScrollFloat from '../components/animations/ScrollFloat';
 import RainbowScrollFloat from '../components/animations/RainbowScrollFloat';
 import DescriptedText from '../components/ui/DescriptedText';
 
 const About = () => {
+  const { t } = useTranslation();
   const [activeCard, setActiveCard] = useState(null);
   const [offset, setOffset] = useState(0);
   const cardsRef = useRef([]);
@@ -102,7 +104,7 @@ const About = () => {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-black border border-white/20 text-white px-4 py-2 rounded-none text-sm font-medium mb-8">
               <div className="w-2 h-2 bg-white"></div>
-              Our Mission
+              {t('about.badge')}
             </div>
             
             {/* Main Heading - Reduced spacing between title and subtitle */}
@@ -119,44 +121,44 @@ const About = () => {
                 noMargin={true}
                 preserveRainbow={false}
               >
-                Pioneering the
+                {t('about.title.line1')}
               </RainbowScrollFloat>
               
               {/* Testo arcobaleno senza margine superiore */}
               <div className="text-gradient-rainbow block mt-0 text-4xl md:text-5xl font-bold leading-tight">
-                AI Revolution
+                {t('about.title.line2')}
               </div>
             </div>
             
             {/* Enhanced Description with DescriptedText */}
             <div className="space-y-6 mt-6">
               <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
-                <span className="text-white font-semibold">MIP Technologies</span> is the catalyst for enterprise{' '}
+                <span className="text-white font-semibold">MIP Technologies</span> {t('about.description.paragraph1.part1')}{' '}
                 <DescriptedText 
-                  text="AI transformation" 
+                  text={t('about.description.paragraph1.highlight')} 
                   className="text-white font-semibold" 
                   animateOn="view" 
                   sequential={true}
                   speed={40}
                   revealDirection="center"
-                />. We don't just build technology—we architect the future of business intelligence.
+                />. {t('about.description.paragraph1.part2')}
               </p>
               
               <p className="text-gray-400 leading-relaxed">
-                Our team of AI visionaries and engineering experts partners with industry leaders to{' '}
+                {t('about.description.paragraph2.part1')}{' '}
                 <DescriptedText 
-                  text="unlock unprecedented value" 
+                  text={t('about.description.paragraph2.highlight')} 
                   className="text-white font-semibold"
                   animateOn="view"
                   sequential={true}
                   speed={30}
-                /> through intelligent automation, predictive analytics, and transformative AI solutions.
+                /> {t('about.description.paragraph2.part2')}
               </p>
               
               <div className="bg-black border border-white/20 rounded-none p-6 transition-all duration-300 hover:border-white/50">
                 <p className="text-gray-300 leading-relaxed italic">
                   <DescriptedText
-                    text={`"We believe AI is not just a tool - it's the strategic advantage that separates industry leaders from followers. Our mission is to make that advantage accessible to visionary organizations ready to shape their industry's future."`}
+                    text={t('about.quote')}
                     className="text-gray-300"
                     encryptedClassName="text-gray-500"
                     animateOn="view"
@@ -174,21 +176,21 @@ const About = () => {
                 href="#contact" 
                 className="px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300 text-center"
               >
-                Partner With Us
+                {t('about.cta.primaryButton')}
               </a>
               
               <a 
                 href="#solutions" 
                 className="px-6 py-3 bg-transparent border border-white/50 text-white rounded-none font-medium hover:border-white hover:bg-black/30 transition-all duration-300 text-center"
               >
-                Explore Solutions
+                {t('about.cta.secondaryButton')}
               </a>
             </div>
           </div>
           
           {/* Values Grid */}
           <div className="grid grid-cols-2 gap-6">
-            {values.map((value, index) => (
+            {t('about.values', { returnObjects: true }).map((value, index) => (
               <div
                 key={index}
                 ref={el => cardsRef.current[index] = el}
@@ -216,7 +218,7 @@ const About = () => {
                       : 'bg-black border border-white/30 text-white'
                     }
                   `}>
-                    {value.icon}
+                    <div dangerouslySetInnerHTML={{ __html: value.icon }} />
                   </div>
                   
                   {/* Content */}

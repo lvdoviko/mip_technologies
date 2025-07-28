@@ -1,0 +1,304 @@
+{
+  "navigation": {
+    "solutions": "Soluzioni",
+    "caseStudies": "Casi Studio",
+    "methodology": "Metodologia", 
+    "company": "Azienda",
+    "getStarted": "Inizia Subito",
+    "ariaLabels": {
+      "home": "MIP Technologies - Torna alla home",
+      "openMenu": "Apri menu",
+      "closeMenu": "Chiudi menu"
+    }
+  },
+  "hero": {
+    "badge": "Soluzioni AI Enterprise",
+    "title": "Sblocca il Potere del",
+    "typewriter": [
+      "AI per la Crescita",
+      "Automazione Intelligente", 
+      "Insights Data-Driven",
+      "Trasformazione Digitale",
+      "Vantaggio Competitivo"
+    ],
+    "subtitle": {
+      "line1": "Trasforma il tuo business con soluzioni AI all'avanguardia che generano crescita misurabile e vantaggio competitivo.",
+      "line2": "Dalla strategia all'implementazione, forniamo AI che alimenta il tuo successo."
+    },
+    "cta": "Inizia il Tuo Percorso AI"
+  },
+  "services": {
+    "badge": "Soluzioni AI Enterprise",
+    "title": {
+      "line1": "AI Trasformativa",
+      "line2": "Che Produce Risultati"
+    },
+    "subtitle": {
+      "part1": "Sfrutta il potere dell'",
+      "highlight": "intelligenza artificiale all'avanguardia",
+      "part2": "per guidare una crescita, efficienza e vantaggio competitivo senza precedenti nel tuo mercato."
+    },
+    "items": [
+      {
+        "title": "Integrazione AI per Applicazioni Web",
+        "description": "Aggiungi funzionalità intelligenti alle tue applicazioni web esistenti. Ti aiutiamo a integrare capacità AI che migliorano l'esperienza utente e automatizzano processi chiave.",
+        "features": [
+          "Integrazione Funzionalità Smart",
+          "Sviluppo API", 
+          "Ottimizzazione Performance",
+          "Architettura Scalabile"
+        ]
+      },
+      {
+        "title": "Sviluppo Applicazioni Web AI-First",
+        "description": "Costruiamo applicazioni web moderne progettate con l'AI al centro. Da interfacce intelligenti a workflow automatizzati, creiamo applicazioni che lavorano in modo più smart.",
+        "features": [
+          "Design AI-Driven",
+          "Esperienza Utente Intelligente",
+          "Tech Stack Moderno", 
+          "Design Responsive"
+        ]
+      },
+      {
+        "title": "Soluzioni AI Personalizzate",
+        "description": "Sviluppiamo modelli AI e soluzioni su misura per le tue specifiche esigenze di business. Lavoriamo con i tuoi dati e requisiti per creare sistemi intelligenti che risolvono problemi reali.",
+        "features": [
+          "Sviluppo Modelli Custom",
+          "Analisi Dati & Training",
+          "Soluzioni Business-Specific",
+          "Supporto Continuo"
+        ]
+      }
+    ],
+    "cta": {
+      "title": "Pronto a Guidare la Tua Industria con l'AI?",
+      "description": "Unisciti alle aziende visionarie che già sfruttano le nostre soluzioni AI per dominare i loro mercati. Programma la tua consulenza strategica oggi.",
+      "primaryButton": "Programma Consulenza Strategica",
+      "secondaryButton": "Visualizza Storie di Successo"
+    }
+  },
+  "projects": {
+    "title": "Storie di Successo Comprovate",
+    "subtitle": {
+      "part1": "Scopri come i leader del settore hanno ottenuto",
+      "highlight": "risultati trasformativi",
+      "part2": "attraverso le nostre soluzioni AI-powered"
+    },
+    "items": [
+      {
+        "title": "Motore di Revenue AI-Driven", 
+        "description": "Sistema di raccomandazione intelligente che ha generato 2,3M$ di ricavi aggiuntivi e aumentato i tassi di conversione del 187% per piattaforma e-commerce enterprise",
+        "category": "E-commerce"
+      },
+      {
+        "title": "Piattaforma Intelligence Multilingua",
+        "description": "AI conversazionale avanzata che riduce i costi del servizio clienti del 68% raggiungendo il 94% di soddisfazione clienti in 12 lingue", 
+        "category": "Customer Experience"
+      },
+      {
+        "title": "Motore Analytics Predittivo",
+        "description": "Piattaforma machine learning che offre il 91% di accuratezza nelle previsioni di mercato, abilitando 50M$ in investimenti strategici per leader fintech",
+        "category": "Servizi Finanziari"
+      },
+      {
+        "title": "Assistente Diagnostico Medico",
+        "description": "Sistema di supporto diagnostico AI che migliora i tassi di rilevamento precoce del 34% e riduce il carico di lavoro dei radiologi del 45%",
+        "category": "Sanità"
+      },
+      {
+        "title": "Ottimizzazione Supply Chain", 
+        "description": "Piattaforma logistica intelligente che riduce i costi operativi del 28% e migliora i tempi di consegna del 40% per produttore globale",
+        "category": "Operations"
+      },
+      {
+        "title": "Suite Content Intelligence",
+        "description": "Piattaforma di generazione contenuti AI che aumenta l'efficienza marketing del 300% e i tassi di engagement del 156%",
+        "category": "Marketing Technology"
+      }
+    ],
+    "cta": {
+      "title": "Pronto a Scrivere la Tua Storia di Successo?",
+      "description": "Unisciti a questi leader del settore e sblocca il potere trasformativo dell'AI per la tua organizzazione. Discutiamo come possiamo fornire risultati rivoluzionari simili per il tuo business.",
+      "primaryButton": "Inizia la Tua Trasformazione",
+      "secondaryButton": "Esplora la Nostra Metodologia"
+    }
+  },
+  "albatrove": {
+    "description": "Pianificazione viaggi AI-powered attraverso conversazioni naturali. Albatrove aiuta gli utenti a pianificare il loro viaggio perfetto chattando con un'AI addestrata specificamente per raccomandazioni di viaggio.",
+    "features": [
+      "Architettura di rete neurale innovativa che fornisce esperienze di viaggio personalizzate con 93% di soddisfazione utente nei test beta",
+      "Modello AI proprietario addestrato su oltre 4,5 milioni di punti dati di viaggio per qualità di raccomandazione eccezionale",
+      "Lancio imminente con provata riduzione del 78% del tempo di pianificazione viaggi durante i test beta chiusi"
+    ],
+    "cta": "Visita Albatrove"
+  },
+  "about": {
+    "badge": "La Nostra Missione",
+    "title": {
+      "line1": "Pionieri della",
+      "line2": "Rivoluzione AI"
+    },
+    "description": {
+      "paragraph1": {
+        "part1": "è il catalizzatore per la trasformazione AI",
+        "highlight": "trasformazione AI",
+        "part2": "Non costruiamo solo tecnologia—architettriamo il futuro dell'intelligenza business."
+      },
+      "paragraph2": {
+        "part1": "Il nostro team di visionari AI ed esperti ingegneristici collabora con leader del settore per",
+        "highlight": "sbloccare valore senza precedenti",
+        "part2": "attraverso automazione intelligente, analytics predittive e soluzioni AI trasformative."
+      }
+    },
+    "quote": "\"Crediamo che l'AI non sia solo uno strumento - è il vantaggio strategico che separa i leader del settore dai follower. La nostra missione è rendere quel vantaggio accessibile alle organizzazioni visionarie pronte a plasmare il futuro della loro industria.\"",
+    "cta": {
+      "primaryButton": "Collabora Con Noi",
+      "secondaryButton": "Esplora Soluzioni"
+    },
+    "values": [
+      {
+        "title": "Innovation First",
+        "description": "Rimaniamo all'avanguardia della tecnologia AI, esplorando continuamente nuove possibilità per risolvere sfide business complesse.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 2L2 7L12 12L22 7L12 2Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M2 17L12 22L22 17\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M2 12L12 17L22 12\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "title": "Orientati ai Risultati",
+        "description": "Ogni soluzione che sviluppiamo è progettata per fornire risultati business misurabili e vantaggi competitivi sostenibili.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M22 12H18L15 21L9 3L6 12H2\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "title": "Approccio Partnership", 
+        "description": "Lavoriamo a stretto contatto con il tuo team, garantendo trasferimento di conoscenza e successo a lungo termine oltre il completamento del progetto.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "title": "Eccellenza Tecnica",
+        "description": "Il nostro impegno per la qualità del codice, sicurezza e scalabilità garantisce che le tue soluzioni AI performino in modo affidabile a scala enterprise.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M9 12L11 14L15 10\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      }
+    ]
+  },
+  "process": {
+    "title": "La Nostra Metodologia Provata",
+    "subtitle": {
+      "part1": "Un approccio sistematico, orientato ai risultati che ha prodotto",
+      "highlight": "risultati trasformativi",
+      "part2": "per aziende Fortune 500 in tutto il mondo"
+    },
+    "steps": [
+      {
+        "number": "01",
+        "title": "Discovery & Strategia",
+        "description": "Analizziamo le tue esigenze business, il panorama dati e gli obiettivi di crescita per creare una strategia AI completa.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M16.2398 7.76001L14.1198 14.12L7.75977 16.24L9.87977 9.88001L16.2398 7.76001Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "number": "02",
+        "title": "Design della Soluzione",
+        "description": "I nostri esperti progettano soluzioni AI su misura che si integrano perfettamente con i tuoi sistemi e workflow esistenti.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M21 16V8.00002C20.9996 7.6493 20.9071 7.30483 20.7315 7.00119C20.556 6.69754 20.3037 6.44539 20 6.27002L13 2.27002C12.696 2.09449 12.3511 2.00208 12 2.00208C11.6489 2.00208 11.304 2.09449 11 2.27002L4 6.27002C3.69626 6.44539 3.44398 6.69754 3.26846 7.00119C3.09294 7.30483 3.00036 7.6493 3 8.00002V16C3.00036 16.3508 3.09294 16.6952 3.26846 16.9989C3.44398 17.3025 3.69626 17.5547 4 17.73L11 21.73C11.304 21.9056 11.6489 21.998 12 21.998C12.3511 21.998 12.696 21.9056 13 21.73L20 17.73C20.3037 17.5547 20.556 17.3025 20.7315 16.9989C20.9071 16.6952 20.9996 16.3508 21 16Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M3.27002 6.96L12 12.01L20.73 6.96\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M12 22.08V12\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "number": "03",
+        "title": "Sviluppo & Testing",
+        "description": "Costruiamo e testiamo rigorosamente la tua soluzione AI, garantendo affidabilità, performance e scalabilità.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 2L2 7L12 12L22 7L12 2Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M2 17L12 22L22 17\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M2 12L12 17L22 12\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "number": "04",
+        "title": "Deploy & Ottimizzazione",
+        "description": "Implementiamo la tua soluzione e ottimizziamo continuamente le sue performance basandoci su dati reali e feedback.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M9 12L11 14L15 10\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      }
+    ],
+    "cta": {
+      "title": "Pronto a Sperimentare Questa Metodologia?",
+      "description": "Il nostro approccio sistematico ha fornito risultati misurabili per aziende di ogni grande settore. Discutiamo come possiamo applicare questa metodologia provata per accelerare la tua trasformazione AI.",
+      "button": "Inizia il Tuo Percorso AI"
+    }
+  },
+  "contact": {
+    "title": "Costruiamo Qualcosa di Grande",
+    "subtitle": {
+      "part1": "Hai un'idea per un'applicazione web alimentata dall'AI? Vuoi aggiungere funzionalità intelligenti al tuo sito esistente?",
+      "highlight": "Parliamo di quello che possiamo creare insieme"
+    },
+    "intro": {
+      "title": "Pronto a Iniziare il Tuo Progetto?",
+      "description": "Amiamo lavorare con aziende che vogliono esplorare ciò che è possibile con l'AI. Che tu abbia una visione chiara o solo un problema interessante da risolvere, siamo qui per aiutarti a realizzarlo."
+    },
+    "info": [
+      {
+        "title": "Email",
+        "details": ["infomiptechnologies@gmail.com"],
+        "icon": "mail"
+      },
+      {
+        "title": "Telefono",
+        "details": ["+44 7551984083"],
+        "icon": "phone"
+      },
+      {
+        "title": "Sede Centrale",
+        "details": ["34 Lombard Road", "London, UK", "SW11 3RF"],
+        "icon": "map-pin"
+      },
+      {
+        "title": "Orari di Lavoro",
+        "details": ["Lun - Ven: 9:00 AM - 6:00 PM PST"],
+        "icon": "clock"
+      }
+    ],
+    "features": {
+      "title": "Cosa Portiamo al Tuo Progetto",
+      "items": [
+        "Prospettiva fresca sull'integrazione AI",
+        "Pratiche di sviluppo moderne e codice pulito",
+        "Comunicazione diretta durante tutto il progetto",
+        "Focus su soluzioni pratiche e user-friendly"
+      ]
+    },
+    "form": {
+      "title": "Raccontaci del Tuo Progetto",
+      "name": {
+        "label": "Il Tuo Nome *",
+        "placeholder": "Il tuo nome"
+      },
+      "email": {
+        "label": "Indirizzo Email *",
+        "placeholder": "tua@email.com"
+      },
+      "company": {
+        "label": "Azienda (Opzionale)",
+        "placeholder": "Nome della tua azienda"
+      },
+      "message": {
+        "label": "Raccontaci del Tuo Progetto *",
+        "placeholder": "Che tipo di funzionalità AI o applicazione web stai cercando di costruire? Parlaci dei tuoi obiettivi e di eventuali requisiti specifici..."
+      },
+      "submit": "Invia Messaggio",
+      "submitting": "Invio...",
+      "success": "Grazie per il tuo messaggio! Ti ricontatteremo entro 1-2 giorni lavorativi.",
+      "error": "Si è verificato un errore nell'invio del messaggio. Riprova o contattaci direttamente a infomiptechnologies@gmail.com"
+    }
+  },
+  "footer": {
+    "description": "Trasformare i business attraverso soluzioni AI intelligenti",
+    "rights": "© 2024 MIP Technologies. Tutti i diritti riservati.",
+    "links": {
+      "privacy": "Privacy Policy",
+      "terms": "Termini di Servizio"
+    }
+  },
+  "chatbot": {
+    "title": "MIP AI Assistant",
+    "placeholder": "Chiedimi qualsiasi cosa su MIP Tech",
+    "status": {
+      "connected": "Connesso",
+      "connecting": "Connessione...",
+      "disconnected": "Disconnesso",
+      "ready": "Pronto",
+      "failed": "Connessione fallita"
+    }
+  }
+}

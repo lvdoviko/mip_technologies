@@ -1,11 +1,13 @@
 // src/sections/Contact.jsx
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { contactInfo } from '../data/contactInfo';
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
 import DescriptedText from '../components/ui/DescriptedText';
 
 // Internal ContactForm component to avoid import issues
 const ContactForm = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -61,7 +63,7 @@ const ContactForm = () => {
       <div className="grid md:grid-cols-2 gap-6">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
-            Your Name *
+            {t('contact.form.name.label')}
           </label>
           <input
             type="text"
@@ -71,13 +73,13 @@ const ContactForm = () => {
             value={formData.name}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
-            placeholder="Your name"
+            placeholder={t('contact.form.name.placeholder')}
             disabled={isSubmitting}
           />
         </div>
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
-            Email Address *
+            {t('contact.form.email.label')}
           </label>
           <input
             type="email"
@@ -87,7 +89,7 @@ const ContactForm = () => {
             value={formData.email}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
-            placeholder="your@email.com"
+            placeholder={t('contact.form.email.placeholder')}
             disabled={isSubmitting}
           />
         </div>
@@ -95,7 +97,7 @@ const ContactForm = () => {
       
       <div>
         <label htmlFor="company" className="block text-sm font-medium text-white mb-2">
-          Company (Optional)
+          {t('contact.form.company.label')}
         </label>
         <input
           type="text"
@@ -104,14 +106,14 @@ const ContactForm = () => {
           value={formData.company}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all"
-          placeholder="Your company name"
+          placeholder={t('contact.form.company.placeholder')}
           disabled={isSubmitting}
         />
       </div>
       
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
-          Tell Us About Your Project *
+          {t('contact.form.message.label')}
         </label>
         <textarea
           id="message"
@@ -121,7 +123,7 @@ const ContactForm = () => {
           value={formData.message}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-black border border-white/50 rounded-none focus:border-white text-white placeholder-gray-500 transition-all resize-none"
-          placeholder="What kind of AI features or web application are you looking to build? Tell us about your goals and any specific requirements..."
+          placeholder={t('contact.form.message.placeholder')}
           disabled={isSubmitting}
         />
       </div>
@@ -135,18 +137,18 @@ const ContactForm = () => {
             : 'bg-black text-white border-white hover:bg-white hover:text-black'
         }`}
       >
-        {isSubmitting ? 'Sending...' : 'Send Message'}
+        {isSubmitting ? t('contact.form.submitting') : t('contact.form.submit')}
       </button>
       
       {submitStatus === 'success' && (
         <div className="mt-4 p-4 bg-green-900/20 border border-green-500/50 text-green-400 rounded-none">
-          Thank you for your message! We'll get back to you within 1-2 business days.
+          {t('contact.form.success')}
         </div>
       )}
       
       {submitStatus === 'error' && (
         <div className="mt-4 p-4 bg-red-900/20 border border-red-500/50 text-red-400 rounded-none">
-          There was an error sending your message. Please try again or contact us directly at infomiptechnologies@gmail.com
+          {t('contact.form.error')}
         </div>
       )}
     </form>
@@ -162,6 +164,7 @@ const iconComponents = {
 };
 
 const Contact = () => {
+  const { t } = useTranslation();
   const useScrollAnimation = () => {
     React.useEffect(() => {
       const observer = new IntersectionObserver(
@@ -188,10 +191,10 @@ const Contact = () => {
     <section id="contact" className="py-20 bg-black">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="text-center mb-16 animate-on-scroll">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Let's Build Something Great</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">{t('contact.title')}</h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             <DescriptedText
-              text="Have an idea for an AI-powered web application? Want to add intelligent features to your existing site?"
+              text={t('contact.subtitle.part1')}
               className="text-gray-400"
               encryptedClassName="text-gray-600"
               animateOn="view"
@@ -199,21 +202,21 @@ const Contact = () => {
               speed={20}
               maxIterations={15}
             />{' '}
-            <span className="text-white font-semibold">Let's talk about what we can create together</span>.
+            <span className="text-white font-semibold">{t('contact.subtitle.highlight')}</span>.
           </p>
         </div>
         
         <div className="grid lg:grid-cols-2 gap-16">
           <div className="space-y-8 animate-on-scroll">
             <div>
-              <h3 className="text-2xl font-bold mb-6 text-white">Ready to Start Your Project?</h3>
+              <h3 className="text-2xl font-bold mb-6 text-white">{t('contact.intro.title')}</h3>
               {/* Removed DescriptedText animation as requested */}
               <p className="text-gray-400 mb-8 leading-relaxed">
-                We love working with businesses who want to explore what's possible with AI. Whether you have a clear vision or just an interesting problem to solve, we're here to help make it happen.
+                {t('contact.intro.description')}
               </p>
             </div>
             
-            {contactInfo.map((info, index) => {
+            {t('contact.info', { returnObjects: true }).map((info, index) => {
               const IconComponent = iconComponents[info.icon];
               
               return (
@@ -236,19 +239,18 @@ const Contact = () => {
             })}
             
             <div className="bg-black border border-white/20 rounded-none p-6 mt-8">
-              <h4 className="font-semibold text-white mb-2">What We Bring to Your Project</h4>
+              <h4 className="font-semibold text-white mb-2">{t('contact.features.title')}</h4>
               <ul className="text-gray-400 space-y-2">
-                <li>• <DescriptedText text="Fresh perspective on AI integration" className="text-gray-400" animateOn="view" sequential={true} speed={15} /></li>
-                <li>• <DescriptedText text="Modern development practices and clean code" className="text-gray-400" animateOn="view" sequential={true} speed={15} /></li>
-                <li>• <DescriptedText text="Direct communication throughout the project" className="text-gray-400" animateOn="view" sequential={true} speed={15} /></li>
-                <li>• <DescriptedText text="Focus on practical, user-friendly solutions" className="text-gray-400" animateOn="view" sequential={true} speed={15} /></li>
+                {t('contact.features.items', { returnObjects: true }).map((item, idx) => (
+                  <li key={idx}>• <DescriptedText text={item} className="text-gray-400" animateOn="view" sequential={true} speed={15} /></li>
+                ))}
               </ul>
             </div>
           </div>
           
           <div className="animate-on-scroll" style={{ animationDelay: '100ms' }}>
             <div className="bg-black border border-white/20 rounded-none p-8">
-              <h3 className="text-xl font-bold mb-6 text-white">Tell Us About Your Project</h3>
+              <h3 className="text-xl font-bold mb-6 text-white">{t('contact.form.title')}</h3>
               <ContactForm />
             </div>
           </div>

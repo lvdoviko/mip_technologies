@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import RainbowGradientText from '../components/ui/RainbowGradientText';
 import RainbowScrollFloat from '../components/animations/RainbowScrollFloat';
 import DescriptedText from '../components/ui/DescriptedText';
@@ -41,6 +42,7 @@ const TypewriterCursor = ({ blinking = true, isMobile = false }) => {
 };
 
 const Hero = ({ prefersReducedMotion: propReducedMotion = false }) => {
+  const { t } = useTranslation();
   const [typedText, setTypedText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
@@ -77,7 +79,7 @@ const Hero = ({ prefersReducedMotion: propReducedMotion = false }) => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [propReducedMotion]);
 
-  // Store phrases array to avoid regeneration on each render
+  // Store phrases array to avoid regeneration on each render - Always in English
   const phrases = useMemo(() => [
     'AI-Powered Growth',
     'Intelligent Automation',
@@ -302,7 +304,7 @@ const Hero = ({ prefersReducedMotion: propReducedMotion = false }) => {
           }}
         >
           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-          Enterprise AI Solutions
+          {t('hero.badge')}
         </div>
         
         {/* Main Heading with MUCH tighter spacing on mobile */}
@@ -329,7 +331,7 @@ const Hero = ({ prefersReducedMotion: propReducedMotion = false }) => {
               lineHeight="leading-tight sm:leading-none"
               noMargin={true}
             >
-              Unlock the Power of
+              {t('hero.title')}
             </RainbowScrollFloat>
             
             {/* MUCH smaller fixed height container for mobile to eliminate gap */}
@@ -367,7 +369,7 @@ const Hero = ({ prefersReducedMotion: propReducedMotion = false }) => {
         >
           <div className="text-base sm:text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed space-y-2 sm:space-y-0">
             <DescriptedText
-              text="Transform your business with cutting-edge AI solutions that drive measurable growth and competitive advantage."
+              text={t('hero.subtitle.line1')}
               className="text-gray-300"
               encryptedClassName="text-gray-500"
               animateOn="view"
@@ -379,7 +381,7 @@ const Hero = ({ prefersReducedMotion: propReducedMotion = false }) => {
             />
             <br className="hidden sm:block" />
             <DescriptedText
-              text="From strategy to implementation, we deliver AI that powers your success."
+              text={t('hero.subtitle.line2')}
               className="text-gray-300"
               encryptedClassName="text-gray-500"
               animateOn="view"
@@ -420,7 +422,7 @@ const Hero = ({ prefersReducedMotion: propReducedMotion = false }) => {
               });
             }}
           >
-            Start Your AI Journey
+            {t('hero.cta')}
           </a>
         </div>
         

@@ -1,50 +1,35 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import RainbowGradientText from '../components/ui/RainbowGradientText';
 import ScrollFloat from '../components/animations/ScrollFloat';
 import RainbowScrollFloat from '../components/animations/RainbowScrollFloat';
 import DescriptedText from '../components/ui/DescriptedText';
 
-// Enhanced services data
-const servicesData = [
-  {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M16.2398 7.76001L14.1198 14.12L7.75977 16.24L9.87977 9.88001L16.2398 7.76001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    title: "AI-Powered Business Transformation",
-    description: "Revolutionize your operations with enterprise-grade AI integration. We transform legacy systems into intelligent powerhouses that drive exponential growth and operational excellence.",
-    features: ["Advanced ML Pipeline Integration", "Real-time Decision Intelligence", "Automated Process Optimization", "Enterprise-Scale Performance"],
-    color: "#0070F3"
-  },
-  {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21 16V8.00002C20.9996 7.6493 20.9071 7.30483 20.7315 7.00119C20.556 6.69754 20.3037 6.44539 20 6.27002L13 2.27002C12.696 2.09449 12.3511 2.00208 12 2.00208C11.6489 2.00208 11.304 2.09449 11 2.27002L4 6.27002C3.69626 6.44539 3.44398 6.69754 3.26846 7.00119C3.09294 7.30483 3.00036 7.6493 3 8.00002V16C3.00036 16.3508 3.09294 16.6952 3.26846 16.9989C3.44398 17.3025 3.69626 17.5547 4 17.73L11 21.73C11.304 21.9056 11.6489 21.998 12 21.998C12.3511 21.998 12.696 21.9056 13 21.73L20 17.73C20.3037 17.5547 20.556 17.3025 20.7315 16.9989C20.9071 16.6952 20.9996 16.3508 21 16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M3.27002 6.96L12 12.01L20.73 6.96" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M12 22.08V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    title: "Next-Generation Intelligent Applications",
-    description: "Build industry-defining applications with AI at their core. From intelligent user interfaces to predictive backends, we create solutions that anticipate and exceed user expectations.",
-    features: ["Cognitive Application Architecture", "Predictive User Experience", "Self-Optimizing Systems", "Intelligent Automation Framework"],
-    color: "#7928CA"
-  },
-  {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    title: "Proprietary AI Model Development",
-    description: "Develop your competitive edge with custom AI models that understand your unique business domain. Transform your data into proprietary intelligence that drives market leadership.",
-    features: ["Domain-Specific Model Training", "Proprietary Algorithm Development", "IP-Protected AI Assets", "Continuous Learning Architecture"],
-    color: "#FF0080"
-  }
+// Icons for services (kept static)
+const serviceIcons = [
+  (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M16.2398 7.76001L14.1198 14.12L7.75977 16.24L9.87977 9.88001L16.2398 7.76001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M21 16V8.00002C20.9996 7.6493 20.9071 7.30483 20.7315 7.00119C20.556 6.69754 20.3037 6.44539 20 6.27002L13 2.27002C12.696 2.09449 12.3511 2.00208 12 2.00208C11.6489 2.00208 11.304 2.09449 11 2.27002L4 6.27002C3.69626 6.44539 3.44398 6.69754 3.26846 7.00119C3.09294 7.30483 3.00036 7.6493 3 8.00002V16C3.00036 16.3508 3.09294 16.6952 3.26846 16.9989C3.44398 17.3025 3.69626 17.5547 4 17.73L11 21.73C11.304 21.9056 11.6489 21.998 12 21.998C12.3511 21.998 12.696 21.9056 13 21.73L20 17.73C20.3037 17.5547 20.556 17.3025 20.7315 16.9989C20.9071 16.6952 20.9996 16.3508 21 16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3.27002 6.96L12 12.01L20.73 6.96" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 22.08V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
 ];
+
+const serviceColors = ["#0070F3", "#7928CA", "#FF0080"];
 
 // Card Component
 const ServiceCard = ({ service, index, onMouseEnter, isActive }) => {
@@ -141,6 +126,7 @@ const ServiceCard = ({ service, index, onMouseEnter, isActive }) => {
 };
 
 const Services = () => {
+  const { t } = useTranslation();
   const [activeCard, setActiveCard] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const sectionRef = useRef(null);
@@ -205,7 +191,7 @@ const Services = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium mb-6 border border-white/10">
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            Enterprise AI Solutions
+            {t('services.badge')}
           </div>
           
           {/* Contenitore per i titoli con spaziatura ridotta */}
@@ -221,37 +207,41 @@ const Services = () => {
               stagger={0.03}
               preserveRainbow={false}
             >
-              Transformative AI
+              {t('services.title.line1')}
             </RainbowScrollFloat>
             
             {/* Il sottotitolo arcobaleno senza margine superiore */}
             <div className="mt-0">
               <RainbowGradientText large={true} className="block text-4xl md:text-5xl font-bold">
-                That Delivers Results
+                {t('services.title.line2')}
               </RainbowGradientText>
             </div>
           </div>
           
           {/* Una distanza prima del testo descrittivo */}
           <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed mt-4">
-            Harness the power of{' '}
+            {t('services.subtitle.part1')}{' '}
             <DescriptedText 
-              text="cutting-edge artificial intelligence" 
+              text={t('services.subtitle.highlight')} 
               className="text-white font-semibold"
               animateOn="view"
               sequential={true}
               speed={30}
             />{' '}
-            to drive unprecedented growth, efficiency, and competitive advantage in your market.
+            {t('services.subtitle.part2')}
           </p>
         </div>
         
         {/* Services Grid */}
         <div className="grid lg:grid-cols-3 gap-8 mb-16">
-          {servicesData.map((service, index) => (
+          {t('services.items', { returnObjects: true }).map((service, index) => (
             <ServiceCard
               key={index}
-              service={service}
+              service={{
+                ...service,
+                icon: serviceIcons[index],
+                color: serviceColors[index]
+              }}
               index={index}
               onMouseEnter={setActiveCard}
               isActive={activeCard === index}
@@ -280,12 +270,12 @@ const Services = () => {
             />
             
             <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white relative z-10">
-              Ready to Lead Your Industry with AI?
+              {t('services.cta.title')}
             </h3>
             
             <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto relative z-10">
               <DescriptedText
-                text="Join visionary companies already leveraging our AI solutions to dominate their markets. Schedule your strategic consultation today."
+                text={t('services.cta.description')}
                 className="text-gray-300"
                 encryptedClassName="text-gray-500"
                 animateOn="view"
@@ -306,7 +296,7 @@ const Services = () => {
                   border border-white text-center
                 "
               >
-                Schedule Strategic Consultation
+                {t('services.cta.primaryButton')}
               </a>
               
               <a
@@ -319,7 +309,7 @@ const Services = () => {
                   transition-all duration-300 text-center
                 "
               >
-                View Success Stories
+                {t('services.cta.secondaryButton')}
               </a>
             </div>
           </div>

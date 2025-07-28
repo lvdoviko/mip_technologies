@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { steps } from '../data/process';
 import ScrollFloat from '../components/animations/ScrollFloat'; 
 import DescriptedText from '../components/ui/DescriptedText';
 
 const Process = () => {
+  const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(null);
   const [offset, setOffset] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -98,8 +100,7 @@ const Process = () => {
           {isMobile ? (
             <div className="mb-4 sm:mb-6">
               <h2 className="text-3xl font-bold text-white leading-tight">
-                Our Proven<br />
-                Methodology
+                {t('process.title')}
               </h2>
             </div>
           ) : (
@@ -109,22 +110,22 @@ const Process = () => {
               scrollStart="top bottom"
               scrollEnd="center center"
             >
-              Our Proven Methodology
+              {t('process.title')}
             </ScrollFloat>
           )}
           
           {/* Mobile: Show static text, Desktop: Show animated text */}
           {isMobile ? (
             <p className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              A systematic, results-driven approach that has delivered{' '}
-              <span className="text-white font-semibold">transformational outcomes</span>{' '}
-              for Fortune 500 companies worldwide
+              {t('process.subtitle.part1')}{' '}
+              <span className="text-white font-semibold">{t('process.subtitle.highlight')}</span>{' '}
+              {t('process.subtitle.part2')}
             </p>
           ) : (
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              A systematic, results-driven approach that has delivered{' '}
+              {t('process.subtitle.part1')}{' '}
               <DescriptedText
-                text="transformational outcomes"
+                text={t('process.subtitle.highlight')}
                 className="text-white font-semibold"
                 encryptedClassName="text-gray-500"
                 animateOn="view"
@@ -132,7 +133,7 @@ const Process = () => {
                 speed={30}
                 maxIterations={15}
               />{' '}
-              for Fortune 500 companies worldwide
+              {t('process.subtitle.part2')}
             </p>
           )}
         </div>
@@ -141,7 +142,7 @@ const Process = () => {
           {/* Horizontal timeline - hidden on mobile */}
           <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-px bg-white/10 transform -translate-y-1/2 z-0"></div>
           
-          {steps.map((step, index) => (
+          {t('process.steps', { returnObjects: true }).map((step, index) => (
             <div
               key={index}
               ref={el => cardsRef.current[index] = el}
@@ -169,7 +170,7 @@ const Process = () => {
                     transition-all duration-300
                     ${activeStep === index ? 'border-white text-white' : 'border-white/30 text-white/70'}
                   `}>
-                    {step.icon}
+                    <div dangerouslySetInnerHTML={{ __html: step.icon }} />
                   </div>
                   
                   {/* Step Number */}
@@ -220,7 +221,7 @@ const Process = () => {
                 
                 {/* Progress Indicator */}
                 <div className="flex items-center gap-1 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/10">
-                  {[...Array(steps.length)].map((_, i) => (
+                  {[...Array(t('process.steps', { returnObjects: true }).length)].map((_, i) => (
                     <div
                       key={i}
                       className={`
@@ -238,7 +239,7 @@ const Process = () => {
               </div>
 
               {/* Connection Line - Only on desktop */}
-              {index < steps.length - 1 && index % 3 !== 2 && (
+              {index < t('process.steps', { returnObjects: true }).length - 1 && index % 3 !== 2 && (
                 <div className="hidden lg:block absolute top-1/2 right-0 transform translate-x-4 -translate-y-1/2 z-10">
                   <div className="w-8 h-px bg-white/20"></div>
                 </div>
@@ -251,14 +252,14 @@ const Process = () => {
         <div className="text-center mt-12 sm:mt-16">
           <div className="max-w-3xl mx-auto bg-black border border-white/10 rounded-xl p-6 sm:p-8 md:p-12">
             <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 text-white">
-              Ready to Experience This Methodology?
+              {t('process.cta.title')}
             </h3>
             <div className="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base leading-relaxed">
               {isMobile ? (
-                "Our systematic approach has delivered measurable results for companies across every major industry. Let's discuss how we can apply this proven methodology to accelerate your AI transformation."
+                t('process.cta.description')
               ) : (
                 <DescriptedText
-                  text="Our systematic approach has delivered measurable results for companies across every major industry. Let's discuss how we can apply this proven methodology to accelerate your AI transformation."
+                  text={t('process.cta.description')}
                   className="text-gray-400"
                   encryptedClassName="text-gray-600"
                   animateOn="view"
@@ -271,7 +272,7 @@ const Process = () => {
               href="#contact" 
               className="inline-flex items-center justify-center px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300 touch-manipulation"
             >
-              Begin Your AI Journey
+              {t('process.cta.button')}
             </a>
           </div>
         </div>

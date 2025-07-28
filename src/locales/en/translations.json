@@ -1,0 +1,304 @@
+{
+  "navigation": {
+    "solutions": "Solutions",
+    "caseStudies": "Case Studies",
+    "methodology": "Methodology", 
+    "company": "Company",
+    "getStarted": "Get Started",
+    "ariaLabels": {
+      "home": "MIP Technologies - Go to home",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
+    }
+  },
+  "hero": {
+    "badge": "Enterprise AI Solutions",
+    "title": "Unlock the Power of",
+    "typewriter": [
+      "AI-Powered Growth",
+      "Intelligent Automation", 
+      "Data-Driven Insights",
+      "Business Transformation",
+      "Competitive Advantage"
+    ],
+    "subtitle": {
+      "line1": "Transform your business with cutting-edge AI solutions that drive measurable growth and competitive advantage.",
+      "line2": "From strategy to implementation, we deliver AI that powers your success."
+    },
+    "cta": "Start Your AI Journey"
+  },
+  "services": {
+    "badge": "Enterprise AI Solutions",
+    "title": {
+      "line1": "Transformative AI",
+      "line2": "That Delivers Results"
+    },
+    "subtitle": {
+      "part1": "Harness the power of",
+      "highlight": "cutting-edge artificial intelligence",
+      "part2": "to drive unprecedented growth, efficiency, and competitive advantage in your market."
+    },
+    "items": [
+      {
+        "title": "AI Integration for Web Applications",
+        "description": "Add intelligent features to your existing web applications. We help you integrate AI capabilities that enhance user experience and automate key processes.",
+        "features": [
+          "Smart Feature Integration",
+          "API Development", 
+          "Performance Optimization",
+          "Scalable Architecture"
+        ]
+      },
+      {
+        "title": "AI-First Web Application Development",
+        "description": "Build modern web applications designed with AI at their core. From intelligent interfaces to automated workflows, we create applications that work smarter.",
+        "features": [
+          "AI-Driven Design",
+          "Intelligent User Experience",
+          "Modern Tech Stack", 
+          "Responsive Design"
+        ]
+      },
+      {
+        "title": "Custom AI Solutions",
+        "description": "Develop AI models and solutions tailored to your specific business needs. We work with your data and requirements to create intelligent systems that solve real problems.",
+        "features": [
+          "Custom Model Development",
+          "Data Analysis & Training",
+          "Business-Specific Solutions",
+          "Ongoing Support"
+        ]
+      }
+    ],
+    "cta": {
+      "title": "Ready to Lead Your Industry with AI?",
+      "description": "Join visionary companies already leveraging our AI solutions to dominate their markets. Schedule your strategic consultation today.",
+      "primaryButton": "Schedule Strategic Consultation",
+      "secondaryButton": "View Success Stories"
+    }
+  },
+  "projects": {
+    "title": "Proven Success Stories",
+    "subtitle": {
+      "part1": "Discover how industry leaders achieved",
+      "highlight": "transformational results",
+      "part2": "through our AI-powered solutions"
+    },
+    "items": [
+      {
+        "title": "AI-Driven Revenue Engine", 
+        "description": "Intelligent recommendation system that generated $2.3M additional revenue and increased conversion rates by 187% for enterprise e-commerce platform",
+        "category": "E-commerce"
+      },
+      {
+        "title": "Multilingual Intelligence Platform",
+        "description": "Advanced conversational AI reducing customer service costs by 68% while achieving 94% customer satisfaction across 12 languages", 
+        "category": "Customer Experience"
+      },
+      {
+        "title": "Predictive Analytics Engine",
+        "description": "Machine learning platform delivering 91% accuracy in market predictions, enabling $50M in strategic investments for fintech leader",
+        "category": "Financial Services"
+      },
+      {
+        "title": "Medical Diagnostic Assistant",
+        "description": "AI-powered diagnostic support system improving early detection rates by 34% and reducing radiologist workload by 45%",
+        "category": "Healthcare"
+      },
+      {
+        "title": "Supply Chain Optimization", 
+        "description": "Intelligent logistics platform reducing operational costs by 28% and improving delivery times by 40% for global manufacturer",
+        "category": "Operations"
+      },
+      {
+        "title": "Content Intelligence Suite",
+        "description": "AI-powered content generation platform increasing marketing efficiency by 300% and engagement rates by 156%",
+        "category": "Marketing Technology"
+      }
+    ],
+    "cta": {
+      "title": "Ready to Write Your Success Story?",
+      "description": "Join these industry leaders and unlock the transformative power of AI for your organization. Let's discuss how we can deliver similar breakthrough results for your business.",
+      "primaryButton": "Start Your Transformation",
+      "secondaryButton": "Explore Our Methodology"
+    }
+  },
+  "albatrove": {
+    "description": "AI-powered travel planning through natural conversation. Albatrove helps users plan their perfect trip by chatting with an AI trained specifically for travel recommendations.",
+    "features": [
+      "Innovative neural network architecture delivering personalized travel experiences with 93% user satisfaction in beta testing",
+      "Proprietary AI model trained on 4.5+ million travel data points for exceptional recommendation quality",
+      "Launching soon with proven 78% reduction in travel planning time during closed beta tests"
+    ],
+    "cta": "Visit Albatrove"
+  },
+  "about": {
+    "badge": "Our Mission",
+    "title": {
+      "line1": "Pioneering the",
+      "line2": "AI Revolution"
+    },
+    "description": {
+      "paragraph1": {
+        "part1": "is the catalyst for enterprise",
+        "highlight": "AI transformation",
+        "part2": "We don't just build technology—we architect the future of business intelligence."
+      },
+      "paragraph2": {
+        "part1": "Our team of AI visionaries and engineering experts partners with industry leaders to",
+        "highlight": "unlock unprecedented value",
+        "part2": "through intelligent automation, predictive analytics, and transformative AI solutions."
+      }
+    },
+    "quote": "\"We believe AI is not just a tool - it's the strategic advantage that separates industry leaders from followers. Our mission is to make that advantage accessible to visionary organizations ready to shape their industry's future.\"",
+    "cta": {
+      "primaryButton": "Partner With Us",
+      "secondaryButton": "Explore Solutions"
+    },
+    "values": [
+      {
+        "title": "Innovation First",
+        "description": "We stay at the forefront of AI technology, continuously exploring new possibilities to solve complex business challenges.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 2L2 7L12 12L22 7L12 2Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M2 17L12 22L22 17\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M2 12L12 17L22 12\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "title": "Results-Driven",
+        "description": "Every solution we develop is designed to deliver measurable business outcomes and sustainable competitive advantages.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M22 12H18L15 21L9 3L6 12H2\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "title": "Partnership Approach", 
+        "description": "We work closely with your team, ensuring knowledge transfer and long-term success beyond project completion.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "title": "Technical Excellence",
+        "description": "Our commitment to code quality, security, and scalability ensures your AI solutions perform reliably at enterprise scale.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M9 12L11 14L15 10\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      }
+    ]
+  },
+  "process": {
+    "title": "Our Proven Methodology",
+    "subtitle": {
+      "part1": "A systematic, results-driven approach that has delivered",
+      "highlight": "transformational outcomes",
+      "part2": "for Fortune 500 companies worldwide"
+    },
+    "steps": [
+      {
+        "number": "01",
+        "title": "Discovery & Strategy",
+        "description": "We analyze your business needs, data landscape, and growth objectives to create a comprehensive AI strategy.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M16.2398 7.76001L14.1198 14.12L7.75977 16.24L9.87977 9.88001L16.2398 7.76001Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "number": "02",
+        "title": "Solution Design",
+        "description": "Our experts design tailored AI solutions that integrate seamlessly with your existing systems and workflows.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M21 16V8.00002C20.9996 7.6493 20.9071 7.30483 20.7315 7.00119C20.556 6.69754 20.3037 6.44539 20 6.27002L13 2.27002C12.696 2.09449 12.3511 2.00208 12 2.00208C11.6489 2.00208 11.304 2.09449 11 2.27002L4 6.27002C3.69626 6.44539 3.44398 6.69754 3.26846 7.00119C3.09294 7.30483 3.00036 7.6493 3 8.00002V16C3.00036 16.3508 3.09294 16.6952 3.26846 16.9989C3.44398 17.3025 3.69626 17.5547 4 17.73L11 21.73C11.304 21.9056 11.6489 21.998 12 21.998C12.3511 21.998 12.696 21.9056 13 21.73L20 17.73C20.3037 17.5547 20.556 17.3025 20.7315 16.9989C20.9071 16.6952 20.9996 16.3508 21 16Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M3.27002 6.96L12 12.01L20.73 6.96\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M12 22.08V12\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "number": "03",
+        "title": "Development & Testing",
+        "description": "We build and rigorously test your AI solution, ensuring reliability, performance, and scalability.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 2L2 7L12 12L22 7L12 2Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M2 17L12 22L22 17\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M2 12L12 17L22 12\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "number": "04",
+        "title": "Deployment & Optimization",
+        "description": "We deploy your solution and continuously optimize its performance based on real-world data and feedback.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M9 12L11 14L15 10\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      }
+    ],
+    "cta": {
+      "title": "Ready to Experience This Methodology?",
+      "description": "Our systematic approach has delivered measurable results for companies across every major industry. Let's discuss how we can apply this proven methodology to accelerate your AI transformation.",
+      "button": "Begin Your AI Journey"
+    }
+  },
+  "contact": {
+    "title": "Let's Build Something Great",
+    "subtitle": {
+      "part1": "Have an idea for an AI-powered web application? Want to add intelligent features to your existing site?",
+      "highlight": "Let's talk about what we can create together"
+    },
+    "intro": {
+      "title": "Ready to Start Your Project?",
+      "description": "We love working with businesses who want to explore what's possible with AI. Whether you have a clear vision or just an interesting problem to solve, we're here to help make it happen."
+    },
+    "info": [
+      {
+        "title": "Email",
+        "details": ["infomiptechnologies@gmail.com"],
+        "icon": "mail"
+      },
+      {
+        "title": "Phone",
+        "details": ["+44 7551984083"],
+        "icon": "phone"
+      },
+      {
+        "title": "Headquarters",
+        "details": ["34 Lombard Road", "London, UK", "SW11 3RF"],
+        "icon": "map-pin"
+      },
+      {
+        "title": "Business Hours",
+        "details": ["Mon - Fri: 9:00 AM - 6:00 PM PST"],
+        "icon": "clock"
+      }
+    ],
+    "features": {
+      "title": "What We Bring to Your Project",
+      "items": [
+        "Fresh perspective on AI integration",
+        "Modern development practices and clean code",
+        "Direct communication throughout the project",
+        "Focus on practical, user-friendly solutions"
+      ]
+    },
+    "form": {
+      "title": "Tell Us About Your Project",
+      "name": {
+        "label": "Your Name *",
+        "placeholder": "Your name"
+      },
+      "email": {
+        "label": "Email Address *",
+        "placeholder": "your@email.com"
+      },
+      "company": {
+        "label": "Company (Optional)",
+        "placeholder": "Your company name"
+      },
+      "message": {
+        "label": "Tell Us About Your Project *",
+        "placeholder": "What kind of AI features or web application are you looking to build? Tell us about your goals and any specific requirements..."
+      },
+      "submit": "Send Message",
+      "submitting": "Sending...",
+      "success": "Thank you for your message! We'll get back to you within 1-2 business days.",
+      "error": "There was an error sending your message. Please try again or contact us directly at infomiptechnologies@gmail.com"
+    }
+  },
+  "footer": {
+    "description": "Transforming businesses through intelligent AI solutions",
+    "rights": "© 2024 MIP Technologies. All rights reserved.",
+    "links": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    }
+  },
+  "chatbot": {
+    "title": "MIP AI Assistant",
+    "placeholder": "Ask me anything about MIP Tech",
+    "status": {
+      "connected": "Connected",
+      "connecting": "Connecting...",
+      "disconnected": "Disconnected",
+      "ready": "Ready",
+      "failed": "Connection failed"
+    }
+  }
+}

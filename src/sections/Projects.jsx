@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import ProjectCard from '../components/ui/ProjectCard';
 import { projects } from '../data/projects';
@@ -6,6 +7,7 @@ import ScrollFloat from '../components/animations/ScrollFloat';
 import AlbatroveShowcase from '../components/showcase/AlbatroveShowcase';
 
 const Projects = ({ prefersReducedMotion = false }) => {
+  const { t } = useTranslation();
   useScrollAnimation();
   const [offset, setOffset] = useState(0);
 
@@ -51,13 +53,13 @@ const Projects = ({ prefersReducedMotion = false }) => {
             scrollStart="top bottom"
             scrollEnd="center center"
           >
-            Proven Success Stories
+            {t('projects.title')}
           </ScrollFloat>
           
           <p className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-            Discover how industry leaders achieved{' '}
-            <span className="text-white font-semibold">transformational results</span>{' '}
-            through our AI-powered solutions
+            {t('projects.subtitle.part1')}{' '}
+            <span className="text-white font-semibold">{t('projects.subtitle.highlight')}</span>{' '}
+            {t('projects.subtitle.part2')}
           </p>
         </div>
         
@@ -81,24 +83,23 @@ const Projects = ({ prefersReducedMotion = false }) => {
         <div className="text-center animate-on-scroll">
           <div className="bg-black rounded-none p-6 sm:p-8 md:p-12 max-w-4xl mx-auto border border-white/10">
             <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 text-white">
-              Ready to Write Your Success Story?
+              {t('projects.cta.title')}
             </h3>
             <p className="text-base sm:text-lg text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
-              Join these industry leaders and unlock the transformative power of AI for your organization. 
-              Let's discuss how we can deliver similar breakthrough results for your business.
+              {t('projects.cta.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
                 href="#contact" 
                 className="px-6 py-3 bg-black border border-white text-white rounded-none font-medium hover:bg-white hover:text-black transition-all duration-300 touch-manipulation"
               >
-                Start Your Transformation
+                {t('projects.cta.primaryButton')}
               </a>
               <a 
                 href="#methodology" 
                 className="px-6 py-3 bg-transparent border border-white/50 text-white rounded-none font-medium hover:border-white hover:bg-black/30 transition-all duration-300 touch-manipulation"
               >
-                Explore Our Methodology
+                {t('projects.cta.secondaryButton')}
               </a>
             </div>
           </div>

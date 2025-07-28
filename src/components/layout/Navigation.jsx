@@ -1,10 +1,13 @@
 // src/components/layout/Navigation.jsx
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useScrollDetection } from '../../hooks/useScrollDetection';
 import Logo from '../ui/Logo';
+import LanguageSelector from '../ui/LanguageSelector';
 import { navItems } from '../../data/navItems';
 
 const Navigation = () => {
+  const { t } = useTranslation();
   const isScrolled = useScrollDetection(50);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('');
@@ -83,9 +86,15 @@ const Navigation = () => {
       { threshold: 0.3 }
     );
 
-    const menuItems = navItems.filter(item => item.label !== "Get Started");
+    // Create translated menu items for observer
+    const observerMenuItems = [
+      { href: '#solutions' },
+      { href: '#case-studies' },
+      { href: '#methodology' },
+      { href: '#company' }
+    ];
 
-    menuItems.forEach((item) => {
+    observerMenuItems.forEach((item) => {
       const sectionId = item.href.slice(1);
       const element = document.getElementById(sectionId);
       if (element) observerRef.current.observe(element);
@@ -128,7 +137,15 @@ const Navigation = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const menuItems = navItems.filter(item => item.label !== "Get Started");
+  // Create translated menu items
+  const getMenuItems = () => [
+    { href: '#solutions', label: t('navigation.solutions') },
+    { href: '#case-studies', label: t('navigation.caseStudies') },
+    { href: '#methodology', label: t('navigation.methodology') },
+    { href: '#company', label: t('navigation.company') }
+  ];
+
+  const menuItems = getMenuItems();
 
   return (
     <nav 
@@ -138,7 +155,7 @@ const Navigation = () => {
           : 'bg-black/30 backdrop-blur-md'
       }`}
       role="navigation"
-      aria-label="Menu principale"
+      aria-label="Main navigation"
     >
       <div className="container mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
@@ -146,7 +163,7 @@ const Navigation = () => {
           <a 
             href="#"
             className="flex items-baseline gap-1 cursor-pointer group"
-            aria-label="MIP Technologies - Torna alla home"
+            aria-label={t('navigation.ariaLabels.home')}
             onClick={(e) => handleSmoothScroll(e, '')}
           >
             <div className="transition-transform duration-300 group-hover:scale-105">
@@ -188,15 +205,20 @@ const Navigation = () => {
             })}
           </div>
           
+          {/* Language Selector Desktop */}
+          <div className="hidden lg:flex items-center">
+            <LanguageSelector />
+          </div>
+          
           {/* CTA Button Desktop - Updated style to match form button */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center ml-4">
             <a
               href="#contact"
               onClick={(e) => handleSmoothScroll(e, 'contact')}
               className="px-7 py-3 rounded-none font-medium border border-white bg-black text-white hover:bg-white hover:text-black transition-colors duration-300"
-              aria-label="Inizia subito - Contattaci"
+              aria-label={t('navigation.getStarted')}
             >
-              Get Started
+              {t('navigation.getStarted')}
             </a>
           </div>
           
@@ -207,7 +229,7 @@ const Navigation = () => {
               onClick={toggleMobileMenu}
               className="p-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
               aria-expanded={isMobileMenuOpen}
-              aria-label={isMobileMenuOpen ? "Chiudi menu" : "Apri menu"}
+              aria-label={isMobileMenuOpen ? t('navigation.ariaLabels.closeMenu') : t('navigation.ariaLabels.openMenu')}
               aria-controls="mobile-menu"
             >
               <svg
@@ -275,6 +297,11 @@ const Navigation = () => {
               );
             })}
             
+            {/* Mobile Language Selector */}
+            <div className="px-6 py-4 border-t border-white/10">
+              <LanguageSelector className="w-full justify-center" />
+            </div>
+            
             {/* Mobile CTA - Updated style to match form button */}
             <div className="p-6 border-t border-white/10">
               <a
@@ -283,7 +310,7 @@ const Navigation = () => {
                 className="block w-full px-6 py-4 rounded-none font-medium border border-white bg-black text-white hover:bg-white hover:text-black transition-colors duration-300"
                 role="menuitem"
               >
-                Get Started
+                {t('navigation.getStarted')}
               </a>
             </div>
           </div>

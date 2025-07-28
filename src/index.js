@@ -2,6 +2,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
+// Initialize i18n
+import './i18n/config';
+
 // Importazione del nuovo componente MainApp anziché App
 import MainApp from './MainApp.jsx';
 
