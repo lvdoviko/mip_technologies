@@ -46,7 +46,7 @@
 .message-tail-right::after {
   content: '';
   position: absolute;
-  bottom: -8px;
+  bottom: 2px;
   right: -8px;
   width: 0;
   height: 0;
