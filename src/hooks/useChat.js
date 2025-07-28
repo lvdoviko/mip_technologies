@@ -2526,13 +2526,13 @@ export const useChat = (config = {}) => {
   }); // ✅ DEBUG: Remove all dependencies to force re-execution on every mount
   */
   
-  // ✅ DEBUG: Log when no-dependency useEffect runs  
-  useEffect(() => {
-    console.log('🔍 [Chat] No-dependency useEffect executed (should run on every render):', {
-      mountCount: mountCountRef.current,
-      timestamp: Date.now()
-    });
-  }); // No dependencies - runs on every render
+  // ✅ DEBUG: Log when no-dependency useEffect runs - DISABLED to reduce noise
+  // useEffect(() => {
+  //   console.log('🔍 [Chat] No-dependency useEffect executed (should run on every render):', {
+  //     mountCount: mountCountRef.current,
+  //     timestamp: Date.now()
+  //   });
+  // }); // No dependencies - runs on every render
   
   /**
    * Auto-initialize chat if enabled

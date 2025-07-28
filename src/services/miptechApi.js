@@ -1,7 +1,10 @@
 // src/services/miptechApi.js
 class MIPTechApiClient {
   constructor(options = {}) {
-    this.baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8001';
+    let baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8001';
+    // Strip /api/v1 if present at the end to prevent double path
+    this.baseUrl = baseUrl.replace(/\/api\/v1\/?$/, '');
+    
     this.tenantId = options.tenantId || process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
     // ✅ FIX: Store apiKey options but read from env dynamically to avoid caching issues
     this.apiKeyOptions = options.apiKey;
@@ -13,7 +16,10 @@ class MIPTechApiClient {
     
     // Development-specific settings
     this.developmentTimeout = this.isDevelopment ? 60000 : 30000; // Longer timeout in dev
-    this.enableRequestLogging = this.isDevelopment || this.isDebugMode;
+    // Enable request logging in production if ?debugApi=true
+    this.enableRequestLogging = this.isDevelopment || 
+      this.isDebugMode || 
+      (typeof window !== 'undefined' && window.location.search.includes('debugApi'));
     this.enableDetailedErrors = this.isDevelopment || this.isDebugMode;
   }
 
@@ -36,8 +42,8 @@ class MIPTechApiClient {
   }
 
   async request(endpoint, options = {}) {
-    // Simple fix: endpoints already include /api/v1, just concatenate
-    const url = `${this.baseUrl}${endpoint}`;
+    // Now we can safely add /api/v1 without duplication
+    const url = `${this.baseUrl}/api/${this.version}${endpoint}`;
     
     if (this.enableRequestLogging) {
       console.log('🔗 [API] Request URL:', url);
