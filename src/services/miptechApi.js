@@ -67,11 +67,63 @@ class MIPTechApiClient {
       });
     }
 
+    // ✅ FORCE LOGGING: Always log pre-request details for createChat
+    if (endpoint === '/chat') {
+      console.log('🚀 [API] Pre-request validation for createChat:', {
+        finalUrl: url,
+        method: config.method || 'GET',
+        contentType: config.headers['Content-Type'],
+        authorization: config.headers['Authorization'] ? 'Bearer ***' : 'MISSING',
+        tenantHeaders: {
+          'X-Tenant-ID': config.headers['X-Tenant-ID'],
+          'X-Tenant': config.headers['X-Tenant'],
+          'Tenant-ID': config.headers['Tenant-ID']
+        },
+        bodyLength: config.body ? config.body.length : 0,
+        hasTimeout: !!config.signal,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     try {
       const response = await fetch(url, config);
 
+      // ✅ FORCE LOGGING: Always log response details for createChat regardless of environment
+      if (endpoint === '/chat' || this.enableRequestLogging) {
+        console.log('📥 [API] Raw HTTP response:', {
+          endpoint,
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          url: response.url,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+      }
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        // ✅ ENHANCED ERROR LOGGING: Get raw response text before parsing
+        const responseText = await response.text();
+        
+        // Force logging for createChat errors
+        if (endpoint === '/chat' || this.enableRequestLogging) {
+          console.error('❌ [API] HTTP request failed:', {
+            endpoint,
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url,
+            rawResponse: responseText,
+            requestBody: config.body
+          });
+        }
+        
+        // Try to parse as JSON, fallback to empty object
+        let errorData = {};
+        try {
+          errorData = responseText ? JSON.parse(responseText) : {};
+        } catch (parseError) {
+          console.error('❌ [API] Failed to parse error response as JSON:', parseError);
+          errorData = { detail: responseText || response.statusText };
+        }
         
         if (response.status === 422) {
           // Parse platform validation errors
@@ -90,7 +142,18 @@ class MIPTechApiClient {
         throw apiError;
       }
 
-      return await response.json();
+      const responseData = await response.json();
+      
+      // ✅ FORCE LOGGING: Always log successful response data for createChat
+      if (endpoint === '/chat' || this.enableRequestLogging) {
+        console.log('✅ [API] Successful HTTP response:', {
+          endpoint,
+          status: response.status,
+          data: responseData
+        });
+      }
+      
+      return responseData;
     } catch (error) {
       // ✅ ENHANCEMENT: Environment-specific error handling
       if (this.enableDetailedErrors) {
@@ -191,6 +254,17 @@ class MIPTechApiClient {
     };
     
     console.log('🔍 [API] Creating chat with validated data:', requestData);
+    
+    // ✅ FORCE LOGGING: Always log createChat request details regardless of environment
+    const apiKeyMasked = (this.apiKeyOptions || process.env.REACT_APP_MIPTECH_API_KEY)?.substring(0, 20) + '...';
+    console.log('🌐 [API] createChat() request details:', {
+      url: `${this.baseUrl}/api/${this.version}/chat`,
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: requestData,
+      apiKey: apiKeyMasked,
+      tenantId: this.tenantId
+    });
     
     return this.request('/chat', {
       method: 'POST',
