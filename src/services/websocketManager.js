@@ -77,14 +77,21 @@ class MIPTechWebSocketManager {
 
   /**
    * Build WebSocket URL with chat_id parameter (MVP requirement)
+   * ✅ ENHANCED: Handle null chatId gracefully for degraded mode
    */
   buildWebSocketUrlWithChatId(chatId) {
     const params = new URLSearchParams();
     
     // Required parameters
     params.set('tenant_id', this.tenantId);
-    if (chatId) {
+    
+    // ✅ CRITICAL FIX: Only add chat_id if it exists
+    // Server will use tenant fallback mode when chat_id is missing
+    if (chatId && chatId !== 'null') {
       params.set('chat_id', chatId);
+      console.log('🎯 [WebSocket] Using chat-specific connection:', chatId);
+    } else {
+      console.log('🌐 [WebSocket] Using tenant fallback connection (no chat session)');
     }
     
     // Optional parameters
@@ -132,9 +139,16 @@ class MIPTechWebSocketManager {
         if (!url.searchParams.get('tenant_id')) {
           throw new Error('Missing tenant_id parameter - check environment configuration');
         }
-        // ✅ CRITICAL: Validate chat_id for platform routing
-        if (chatId && !url.searchParams.get('chat_id')) {
+        // ✅ ENHANCED: Handle optional chat_id for degraded mode
+        if (chatId && chatId !== 'null' && !url.searchParams.get('chat_id')) {
           throw new Error('Missing chat_id parameter - required for platform message routing');
+        }
+        
+        // Log connection mode for debugging
+        if (url.searchParams.get('chat_id')) {
+          console.log('🎯 [WebSocket] Connecting in full-feature mode with chat session');
+        } else {
+          console.log('🌐 [WebSocket] Connecting in tenant fallback mode (degraded)');
         }
       } catch (urlError) {
         console.error('❌ [WebSocket] Invalid URL format:', urlError);
@@ -799,11 +813,21 @@ class MIPTechWebSocketManager {
 
   // Chat-specific methods
   sendChatMessage(message, chatId = null) {
-    this.sendMessage('chat_message', {
+    // ✅ ENHANCED: Handle null chatId gracefully - server will use tenant fallback
+    const messageData = {
       message,
-      chat_id: chatId,
       tenant_id: this.tenantId
-    });
+    };
+    
+    // Only include chat_id if it exists and is valid
+    if (chatId && chatId !== 'null') {
+      messageData.chat_id = chatId;
+      console.log('📤 [WebSocket] Sending chat message to specific chat:', chatId);
+    } else {
+      console.log('📤 [WebSocket] Sending chat message via tenant fallback (no chat session)');
+    }
+    
+    this.sendMessage('chat_message', messageData);
   }
 
   createNewChat() {
@@ -828,25 +852,37 @@ class MIPTechWebSocketManager {
   // Typing indicator methods (required by useChat hook)
   sendTyping(chatId, isTyping) {
     const eventType = isTyping ? 'typing_start' : 'typing_stop';
-    this.sendMessage(eventType, {
-      chat_id: chatId,
-      tenant_id: this.tenantId
-    });
+    const typingData = { tenant_id: this.tenantId };
+    
+    // ✅ ENHANCED: Handle null chatId gracefully
+    if (chatId && chatId !== 'null') {
+      typingData.chat_id = chatId;
+    }
+    
+    this.sendMessage(eventType, typingData);
   }
 
   // New dedicated methods for clarity
   sendTypingStart(chatId) {
-    this.sendMessage('typing_start', {
-      chat_id: chatId,
-      tenant_id: this.tenantId
-    });
+    const typingData = { tenant_id: this.tenantId };
+    
+    // ✅ ENHANCED: Handle null chatId gracefully
+    if (chatId && chatId !== 'null') {
+      typingData.chat_id = chatId;
+    }
+    
+    this.sendMessage('typing_start', typingData);
   }
 
   sendTypingStop(chatId) {
-    this.sendMessage('typing_stop', {
-      chat_id: chatId,
-      tenant_id: this.tenantId
-    });
+    const typingData = { tenant_id: this.tenantId };
+    
+    // ✅ ENHANCED: Handle null chatId gracefully
+    if (chatId && chatId !== 'null') {
+      typingData.chat_id = chatId;
+    }
+    
+    this.sendMessage('typing_stop', typingData);
   }
 
   // ✅ FE-02: Event handling with single-listener guard

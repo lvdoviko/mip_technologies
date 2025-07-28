@@ -349,10 +349,14 @@ export const useChat = (config = {}) => {
   /**
    * Create chat session via REST API (MVP requirement)
    * Platform requires chat session before WebSocket connection
+   * ✅ ENHANCED: Graceful error handling to prevent WebSocket disconnection
    */
-  const createChatSession = useCallback(async (tenantId) => {
+  const createChatSession = useCallback(async (tenantId, retryCount = 0) => {
+    const maxRetries = 3;
+    const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Exponential backoff, max 5s
+    
     try {
-      console.log('💬 [Platform] Creating chat session via REST API for tenant:', tenantId);
+      console.log(`💬 [Platform] Creating chat session via REST API for tenant: ${tenantId} (attempt ${retryCount + 1}/${maxRetries + 1})`);
       
       // ✅ CRITICAL: Generate required session and visitor IDs (CLIENT-FIX-REPORT.md lines 537-538)
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
@@ -379,10 +383,42 @@ export const useChat = (config = {}) => {
 
       const chatId = chatData.chat_id || chatData.id;
       console.log('✅ [Platform] Chat session created with ID:', chatId);
-      return chatData.chat_id || chatData.id;
+      return { success: true, chatId, data: chatData };
+      
     } catch (error) {
-      console.error('❌ [Platform] Failed to create chat session:', error);
-      throw error;
+      console.error(`❌ [Platform] Failed to create chat session (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
+      
+      // Check if this is a retryable error (HTTP 500, 503, network issues)
+      const isRetryableError = (
+        error.status === 500 || 
+        error.status === 503 || 
+        error.message?.includes('relation') || // Database schema issues
+        error.message?.includes('Network') ||
+        error.message?.includes('timeout') ||
+        !error.status // Network/connection errors
+      );
+      
+      // Retry logic for temporary issues
+      if (isRetryableError && retryCount < maxRetries) {
+        console.log(`🔄 [Platform] Retrying createChatSession in ${retryDelay}ms (retryable error: ${error.message})`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        return createChatSession(tenantId, retryCount + 1);
+      }
+      
+      // For non-retryable errors or max retries reached, return graceful failure
+      console.error('🛑 [Platform] createChatSession failed permanently:', {
+        error: error.message,
+        status: error.status,
+        isRetryable: isRetryableError,
+        attempts: retryCount + 1
+      });
+      
+      return { 
+        success: false, 
+        error: error.message, 
+        status: error.status,
+        canContinueWithoutChat: true // ✅ KEY: Allow WebSocket connection without chat session
+      };
     }
   }, []);
 
@@ -595,8 +631,29 @@ export const useChat = (config = {}) => {
       // Step 2: Create chat session via REST API
       const tenantId = process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
       console.log('🔍 [INIT] STEP 2: createChatSession() - Creating chat session for tenant:', tenantId);
-      const chatId = await createChatSession(tenantId);
-      console.log('✅ [INIT] STEP 2 COMPLETED: createChatSession() returned chatId:', chatId);
+      const chatResult = await createChatSession(tenantId);
+      console.log('✅ [INIT] STEP 2 COMPLETED: createChatSession() returned:', chatResult);
+      
+      // ✅ CRITICAL FIX: Handle graceful failures without disconnecting WebSocket
+      let chatId = null;
+      let canProceedWithWebSocket = true;
+      
+      if (chatResult.success) {
+        chatId = chatResult.chatId;
+        console.log('✅ [INIT] Chat session created successfully, proceeding with full functionality');
+      } else if (chatResult.canContinueWithoutChat) {
+        console.warn('⚠️ [INIT] Chat session creation failed, but continuing with WebSocket-only mode:', {
+          error: chatResult.error,
+          status: chatResult.status
+        });
+        // Set error state to inform user, but don't fail initialization
+        setError(new Error(`Chat creation temporarily unavailable: ${chatResult.error}`));
+        canProceedWithWebSocket = true;
+      } else {
+        console.error('❌ [INIT] Chat session creation failed permanently, cannot proceed');
+        canProceedWithWebSocket = false;
+        throw new Error(`Chat initialization failed: ${chatResult.error}`);
+      }
       
       // Small delay to let React refs stabilize after async operation
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -610,18 +667,25 @@ export const useChat = (config = {}) => {
         console.log('🔄 [INIT] Component unmounted after chat creation but allowing due to StrictMode/development');
       }
       
-      // Store chat info for WebSocket connection
-      const chat = {
+      // Store chat info for WebSocket connection (handle null chatId gracefully)
+      const chat = chatId ? {
         id: chatId,
         tenant_id: tenantId,
         title: options.title || 'Website Chat',
         created_at: new Date().toISOString()
+      } : {
+        id: null, // WebSocket will operate without specific chat session
+        tenant_id: tenantId,
+        title: options.title || 'WebSocket-Only Connection',
+        created_at: new Date().toISOString(),
+        degraded_mode: true // Flag to indicate limited functionality
       };
       
-      console.log('💬 [INIT] Chat session created successfully:', {
+      console.log('💬 [INIT] Chat session prepared:', {
         chatId: chat.id,
         tenantId: chat.tenant_id,
         title: chat.title,
+        degradedMode: !!chat.degraded_mode,
         timestamp: chat.created_at
       });
       
@@ -648,9 +712,31 @@ export const useChat = (config = {}) => {
       }
       
       // Step 4: Connect WebSocket with chat_id parameter (MVP requirement)
-      console.log('🔍 [INIT] STEP 4: connectWebSocket() - Connecting WebSocket with chat_id:', chat.id);
-      await connectWebSocket(chat.id);
-      console.log('✅ [INIT] STEP 4 COMPLETED: connectWebSocket() succeeded');
+      // ✅ ENHANCED: Handle null chatId gracefully for degraded mode
+      const websocketChatId = chat.id; // May be null for degraded mode
+      console.log('🔍 [INIT] STEP 4: connectWebSocket() - Connecting WebSocket:', {
+        chatId: websocketChatId,
+        degradedMode: !!chat.degraded_mode,
+        willUseTenantFallback: !websocketChatId
+      });
+      
+      try {
+        await connectWebSocket(websocketChatId);
+        console.log('✅ [INIT] STEP 4 COMPLETED: connectWebSocket() succeeded');
+        
+        // Clear any previous errors if WebSocket connection succeeds
+        if (websocketChatId) {
+          setError(null); // Full functionality restored
+        } else {
+          // Keep the degraded mode warning but indicate WebSocket is working
+          console.log('⚠️ [INIT] WebSocket connected in degraded mode (no chat session)');
+        }
+      } catch (wsError) {
+        console.error('❌ [INIT] WebSocket connection failed:', wsError);
+        // Don't throw here - let user know WebSocket failed but don't crash initialization
+        setError(new Error(`WebSocket connection failed: ${wsError.message}`));
+        // Continue with initialization to show error state to user
+      }
       
       // Track performance
       if (chatConfig.enablePerformanceTracking) {
@@ -1060,6 +1146,47 @@ export const useChat = (config = {}) => {
     setError(null);
     stopTyping();
   }, [stopTyping]);
+
+  /**
+   * ✅ NEW: Retry chat creation for failed attempts
+   * Allows users to retry after HTTP 500 errors without reconnecting WebSocket
+   */
+  const retryChatCreation = useCallback(async () => {
+    if (!currentChat || !currentChat.degraded_mode) {
+      console.log('⚠️ [Retry] No retry needed - chat already exists or not in degraded mode');
+      return false;
+    }
+
+    console.log('🔄 [Retry] Attempting to create chat session while maintaining WebSocket connection');
+    setError(null); // Clear previous error
+    
+    try {
+      const tenantId = process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
+      const chatResult = await createChatSession(tenantId);
+      
+      if (chatResult.success) {
+        // Update chat with real session data
+        const updatedChat = {
+          ...currentChat,
+          id: chatResult.chatId,
+          title: 'Website Chat',
+          degraded_mode: false
+        };
+        
+        setCurrentChat(updatedChat);
+        console.log('✅ [Retry] Chat creation successful, upgraded to full functionality');
+        return true;
+      } else {
+        setError(new Error(`Chat creation still failing: ${chatResult.error}`));
+        console.log('❌ [Retry] Chat creation still failing, remaining in degraded mode');
+        return false;
+      }
+    } catch (error) {
+      setError(new Error(`Retry failed: ${error.message}`));
+      console.error('❌ [Retry] Exception during chat creation retry:', error);
+      return false;
+    }
+  }, [currentChat, createChatSession]);
   
   /**
    * WebSocket event handlers
@@ -1656,6 +1783,7 @@ export const useChat = (config = {}) => {
     clearMessages,
     retryMessage,
     disconnect,
+    retryChatCreation, // ✅ NEW: Allow manual retry of chat creation
     
     // Utilities
     sessionData,

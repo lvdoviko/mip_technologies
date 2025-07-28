@@ -152,6 +152,18 @@ class MIPTechApiClient {
           }
         }
         
+        // ✅ ENHANCED: Provide better error messages for database issues
+        if (response.status === 500) {
+          if (errorData.detail?.includes('relation') || errorData.detail?.includes('does not exist')) {
+            // Database schema issue
+            const dbError = new Error('Database schema temporarily unavailable - this usually resolves automatically');
+            dbError.status = 503; // Treat as service unavailable
+            dbError.isRetryable = true;
+            dbError.data = errorData;
+            throw dbError;
+          }
+        }
+        
         const apiError = new Error(`API Error ${response.status}: ${errorData.detail || response.statusText}`);
         apiError.status = response.status;
         apiError.data = errorData;
