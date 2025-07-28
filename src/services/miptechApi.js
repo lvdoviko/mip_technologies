@@ -194,7 +194,7 @@ class MIPTechApiClient {
 
   // Health check
   async health() {
-    return this.request('/healthz');
+    return this.request('/healthz/');
   }
 
   // Healthz endpoint (working endpoint)
@@ -264,11 +264,11 @@ class MIPTechApiClient {
 
   // Chat endpoints
   async getChatConfig() {
-    return this.request('/chat/config');
+    return this.request('/chat/config/');
   }
 
   async getChats() {
-    return this.request('/chat/list');
+    return this.request('/chat/list/');
   }
 
   async getChat(chatId) {
@@ -340,7 +340,7 @@ class MIPTechApiClient {
       tenantId: this.tenantId
     });
     
-    return this.request('/chat', {
+    return this.request('/chat/', {
       method: 'POST',
       body: JSON.stringify(requestData)
     });
@@ -359,11 +359,11 @@ class MIPTechApiClient {
 
   // Admin endpoints (if needed)
   async getTenantInfo() {
-    return this.request('/admin/tenant');
+    return this.request('/admin/tenant/');
   }
 
   async getStats() {
-    return this.request('/admin/stats');
+    return this.request('/admin/stats/');
   }
 }
 
