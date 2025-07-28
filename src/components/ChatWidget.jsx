@@ -530,13 +530,16 @@ const ChatInput = ({
             placeholder={getSmartPlaceholder()}
             disabled={isDisabled}
             rows={1}
+            style={{
+              outline: 'none !important',
+              boxShadow: 'none !important'
+            }}
             className={`
               w-full px-4 py-3 pr-16 text-sm border rounded-none resize-none font-inter h-12
               bg-transparent backdrop-blur-sm text-white placeholder-gray-400
-              focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-white
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-300
-              ${isOverLimit ? 'border-accent-500' : 'border-white/50 hover:border-white hover:bg-black/30'}
+              ${isOverLimit ? 'border-accent-500' : 'border-white/50 hover:border-white hover:bg-black/30 focus:border-white'}
             `}
           />
           
