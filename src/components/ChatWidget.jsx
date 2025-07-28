@@ -531,9 +531,10 @@ const ChatInput = ({
             disabled={isDisabled}
             rows={1}
             style={{
-              lineHeight: '48px', // Matches h-12 (48px) to center placeholder vertically
-              paddingTop: '0',
-              paddingBottom: '0'
+              lineHeight: 'normal',
+              paddingTop: '12px',
+              paddingBottom: '12px',
+              overflow: 'hidden'
             }}
             className={`
               chat-input-textarea
@@ -560,7 +561,7 @@ const ChatInput = ({
             p-3 rounded-none transition-all duration-300 border font-inter h-12 flex items-center justify-center
             ${(!inputValue.trim() || isDisabled || isOverLimit)
               ? 'bg-transparent border-white/20 text-gray-500 cursor-not-allowed'
-              : 'bg-transparent border-white/50 hover:border-white text-white hover:bg-black/30 shadow-sm hover:shadow-md'
+              : 'bg-transparent border-white/50 hover:border-white text-white hover:bg-white hover:text-black shadow-sm hover:shadow-md'
             }
           `}
           aria-label="Send message"
@@ -948,18 +949,21 @@ const ChatWidget = ({
               
               <button
                 onClick={handleMinimize}
-                className="p-1 hover:bg-white/10 rounded-none transition-colors border border-white/30"
+                className="p-1 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
                 aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
               >
-                {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+                {isMinimized ? 
+                  <Maximize2 className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" /> : 
+                  <Minimize2 className="w-4 h-4 transition-transform duration-300 group-hover:scale-90" />
+                }
               </button>
               
               <button
                 onClick={handleToggle}
-                className="p-1 hover:bg-white/10 rounded-none transition-colors border border-white/30"
+                className="p-1 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
                 aria-label="Close chat"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" />
               </button>
             </div>
           </div>
