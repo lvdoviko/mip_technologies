@@ -344,8 +344,8 @@ export const useChat = (config = {}) => {
       console.log('💬 [Platform] Creating chat session via REST API...');
       
       // ✅ CRITICAL: Generate required session and visitor IDs (CLIENT-FIX-REPORT.md lines 537-538)
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+      const visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
       // ✅ FIX: Use API client instead of direct fetch to avoid double path issue
       const chatData = await apiRef.current.createChat(sessionId, visitorId, {
@@ -486,67 +486,74 @@ export const useChat = (config = {}) => {
    */
   const performInitializationInternal = useCallback(async (options = {}) => {
     const startTime = Date.now();
-    console.log('🚀 [DEBUG] performInitializationInternal START', new Date().toISOString());
-    console.log('🔍 [DEBUG] isUnmountedRef.current at START:', isUnmountedRef.current);
-    console.log('🔍 [DEBUG] isStrictModeRef.current at START:', isStrictModeRef.current);
+    console.log('🚀 [INIT] === performInitializationInternal START ===', new Date().toISOString());
+    console.log('🔍 [INIT] Environment:', {
+      NODE_ENV: process.env.NODE_ENV,
+      isUnmountedRef: isUnmountedRef.current,
+      isStrictModeRef: isStrictModeRef.current,
+      componentMounted: componentMountedRef.current,
+      options,
+      timestamp: new Date().toISOString()
+    });
     
     // Enhanced unmount checking with development mode awareness  
     if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
-      console.log('❌ [DEBUG] Component unmounted - early return (production only)');
+      console.log('❌ [INIT] Component unmounted - early return (production only)');
       return;
     }
     
     if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
-      console.log('🔄 [StrictMode/Dev] Component unmounted but allowing due to StrictMode/development mode');
+      console.log('🔄 [INIT] Component unmounted but allowing due to StrictMode/development mode');
     }
     
-    console.log('🚀 [DEBUG] Starting WebSocket connection process');
+    console.log('🚀 [INIT] Starting WebSocket connection process');
     
     try {
+      console.log('🔧 [INIT] Step 0: Setting initial state');
       setIsLoading(true);
       setError(null);
       debugSetConnectionState(CHAT_STATES.CONNECTING);
       
-      console.log('📊 [DEBUG] Connection state set to CONNECTING');
+      console.log('📊 [INIT] Connection state set to CONNECTING');
       
       // Start performance tracking
       if (chatConfig.enablePerformanceTracking) {
         performanceRef.current.startTimer('chat_initialization');
-        console.log('📊 [DEBUG] Performance tracking started');
+        console.log('📊 [INIT] Performance tracking started');
       }
       
       // MVP: Platform Architecture Implementation
       // Step 1: Wait for platform AI services to be ready
-      console.log('🔍 [Platform] Step 1: Checking platform readiness...');
+      console.log('🔍 [INIT] Step 1: Checking platform readiness...');
       await waitForPlatformReady();
       
       // Small delay to let React refs stabilize after async operation
       await new Promise(resolve => setTimeout(resolve, 10));
       
-      console.log('🔍 [DEBUG] isUnmountedRef.current AFTER platform check:', isUnmountedRef.current, 'at', new Date().toISOString());
+      console.log('🔍 [INIT] isUnmountedRef.current AFTER platform check:', isUnmountedRef.current, 'at', new Date().toISOString());
       if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
-        console.log('❌ [DEBUG] Component unmounted after platform check - early return (production only)');
+        console.log('❌ [INIT] Component unmounted after platform check - early return (production only)');
         return;
       }
       if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
-        console.log('🔄 [StrictMode/Dev] Component unmounted after platform check but allowing due to StrictMode/development');
+        console.log('🔄 [INIT] Component unmounted after platform check but allowing due to StrictMode/development');
       }
       
       // Step 2: Create chat session via REST API
       const tenantId = process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
-      console.log('💬 [Platform] Step 2: Creating chat session...');
+      console.log('💬 [INIT] Step 2: Creating chat session for tenant:', tenantId);
       const chatId = await createChatSession(tenantId);
       
       // Small delay to let React refs stabilize after async operation
       await new Promise(resolve => setTimeout(resolve, 10));
       
-      console.log('🔍 [DEBUG] isUnmountedRef.current AFTER chat creation:', isUnmountedRef.current, 'at', new Date().toISOString());
+      console.log('🔍 [INIT] isUnmountedRef.current AFTER chat creation:', isUnmountedRef.current, 'at', new Date().toISOString());
       if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
-        console.log('❌ [DEBUG] Component unmounted after chat creation - early return (production only)');
+        console.log('❌ [INIT] Component unmounted after chat creation - early return (production only)');
         return;
       }
       if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
-        console.log('🔄 [StrictMode/Dev] Component unmounted after chat creation but allowing due to StrictMode/development');
+        console.log('🔄 [INIT] Component unmounted after chat creation but allowing due to StrictMode/development');
       }
       
       // Store chat info for WebSocket connection
@@ -557,47 +564,54 @@ export const useChat = (config = {}) => {
         created_at: new Date().toISOString()
       };
       
-      console.log('💬 [DEBUG] Chat session created successfully:', chat.id);
+      console.log('💬 [INIT] Chat session created successfully:', {
+        chatId: chat.id,
+        tenantId: chat.tenant_id,
+        title: chat.title,
+        timestamp: chat.created_at
+      });
       
-      console.log('🔍 [DEBUG] isUnmountedRef.current BEFORE WebSocket setup:', isUnmountedRef.current, 'at', new Date().toISOString());
+      console.log('🔍 [INIT] isUnmountedRef.current BEFORE WebSocket setup:', isUnmountedRef.current, 'at', new Date().toISOString());
       if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
-        console.log('❌ [DEBUG] Component unmounted before WebSocket setup - early return (production only)');
+        console.log('❌ [INIT] Component unmounted before WebSocket setup - early return (production only)');
         return;
       }
       if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
-        console.log('🔄 [StrictMode/Dev] Component unmounted before WebSocket setup but allowing due to StrictMode/development');
+        console.log('🔄 [INIT] Component unmounted before WebSocket setup but allowing due to StrictMode/development');
       }
       
       setCurrentChat(chat);
-      console.log('💾 [DEBUG] Chat stored in state');
+      console.log('💾 [INIT] Chat stored in state');
       
       // MVP: Chat history loading disabled for initial implementation
       // Load chat history if persistence is enabled
       if (chatConfig.enablePersistence && false) { // MVP: Disabled for first implementation
-        console.log('📚 [DEBUG] Loading chat history...');
+        console.log('📚 [INIT] Loading chat history...');
         await loadChatHistory(chat.id);
-        console.log('📚 [DEBUG] Chat history loaded');
+        console.log('📚 [INIT] Chat history loaded');
       } else {
-        console.log('📚 [DEBUG] Chat history loading disabled for MVP implementation');
+        console.log('📚 [INIT] Chat history loading disabled for MVP implementation');
       }
       
       // Step 3: Connect WebSocket with chat_id parameter (MVP requirement)
-      console.log('🔗 [Platform] Step 3: Connecting WebSocket with chat_id...');
+      console.log('🔗 [INIT] Step 3: Connecting WebSocket with chat_id:', chat.id);
       await connectWebSocket(chat.id);
-      console.log('✅ [DEBUG] connectWebSocket completed');
+      console.log('✅ [INIT] connectWebSocket completed successfully');
       
       // Track performance
       if (chatConfig.enablePerformanceTracking) {
         const duration = performanceRef.current.endTimer('chat_initialization');
         performanceRef.current.trackChatWidget('initialized', duration?.duration);
+        console.log('📊 [INIT] Performance tracking completed:', duration);
       }
       
       debugSetConnectionState(CHAT_STATES.CONNECTED);
+      console.log('🔧 [INIT] Connection state set to CONNECTED');
       
       // Set connection timeout (10 seconds for ready state)
       connectionTimeoutRef.current = setTimeout(() => {
         if (!isUnmountedRef.current && !isConnectionReady) {
-          console.warn('[Chat] Connection ready timeout - platform did not signal ready state');
+          console.warn('⚠️ [INIT] Connection ready timeout - platform did not signal ready state');
           setError(new MIPTechError(
             'Connection ready timeout',
             ERROR_TYPES.WEBSOCKET,
@@ -610,14 +624,25 @@ export const useChat = (config = {}) => {
       
       retryCountRef.current = 0;
       
+      const totalDuration = Date.now() - startTime;
+      console.log(`✅ [INIT] === Initialization COMPLETED in ${totalDuration}ms ===`);
+      
       return chat;
       
     } catch (err) {
-      console.error('❌ [DEBUG] Error in performInitializationInternal:', err);
-      console.error('❌ [DEBUG] Error stack:', err.stack);
+      const totalDuration = Date.now() - startTime;
+      console.error(`❌ [INIT] Error in performInitializationInternal after ${totalDuration}ms:`, err);
+      console.error('❌ [INIT] Error stack:', err.stack);
+      console.error('❌ [INIT] Error details:', {
+        message: err.message,
+        name: err.name,
+        type: err.type,
+        status: err.status,
+        endpoint: err.endpoint
+      });
       
       if (isUnmountedRef.current) {
-        console.log('[DEBUG] Component unmounted during error handling');
+        console.log('🔍 [INIT] Component unmounted during error handling');
         return;
       }
       
@@ -626,7 +651,7 @@ export const useChat = (config = {}) => {
         options 
       });
       
-      console.log('❌ [DEBUG] Setting error state:', chatError.message);
+      console.log('❌ [INIT] Setting error state:', chatError.message);
       setError(chatError);
       setConnectionState(CHAT_STATES.FAILED);
       
@@ -1371,1169 +1396,7 @@ export const useChat = (config = {}) => {
     };
   }, []); // No dependencies to ensure it runs once
   
-  /* TEMPORARILY COMMENTED OUT FOR SYNTAX ERROR DEBUGGING
-  useEffect(() => {
-    try {
-      // ✅ DEBUG: Critical - log useEffect execution
-      console.log('🚀 [Chat] WebSocket event handlers useEffect EXECUTING', {
-        timestamp: Date.now(),
-        mountCount: mountCountRef.current,
-        isUnmounted: isUnmountedRef.current,
-        wsManagerExists: !!websocketRef.current
-      });
-      
-      const wsManager = websocketRef.current;
-      
-      // ✅ DEBUG: Check if wsManager exists
-      if (!wsManager) {
-        console.error('❌ [Chat] WebSocket manager is null/undefined, cannot register handlers');
-        return;
-      }
-      
-      console.log('✅ [Chat] WebSocket manager exists, proceeding with handler registration');
-    
-    const handleConnected = () => {
-      if (isUnmountedRef.current) return;
-      debugSetConnectionState(CHAT_STATES.CONNECTED);
-      setError(null);
-    };
-    
-    const handleDisconnected = () => {
-      if (isUnmountedRef.current) return;
-      debugSetConnectionState(CHAT_STATES.DISCONNECTED);
-      debugSetIsConnectionReady(false);
-      
-      // Clear connection timeout
-      if (connectionTimeoutRef.current) {
-        clearTimeout(connectionTimeoutRef.current);
-        connectionTimeoutRef.current = null;
-      }
-    };
-    
-    const handleReconnecting = () => {
-      if (isUnmountedRef.current) return;
-      debugSetConnectionState(CHAT_STATES.RECONNECTING);
-    };
-    
-    const handleReady = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      console.log('[Chat] Legacy ready signal received - using unified handler');
-      // Delegate to unified connection ready handler
-      handleConnectionReady(data);
-    };
-    
-    const handleConnectionEstablished = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      console.log('✅ [Chat] Platform connection established, waiting for ready signal');
-      setCanSendMessages(false);  // Wait for connection_ready
-      debugSetConnectionState(CHAT_STATES.CONNECTED);
-      setError(null);
-      
-      if (chatConfig.enablePerformanceTracking) {
-        performanceRef.current.trackChatWidget('connection_established');
-      }
-    };
 
-    const handleInitializationProgress = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      console.log(`⏳ [Chat] Platform initializing: ${data.phase || 'unknown'} - ${data.message || 'Initializing services'}`);
-      setInitializationStatus(data);
-    };
-
-    const handleConnectionReady = (data) => {
-      // ✅ CRITICAL FIX: Less aggressive guard for connection_ready - this is essential for chat functionality
-      if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
-        console.warn('⚠️ [Chat] Skipping connection_ready due to component unmount (production only)');
-        return;
-      }
-      
-      // Allow connection_ready in development and StrictMode scenarios
-      if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
-        console.log('🔄 [Chat] Processing connection_ready despite unmount (StrictMode/Development)');
-      }
-      
-      try {
-        console.log('✅ [Chat] Unified connection ready handler - Platform ready for messages');
-        console.log('🔍 [DEBUG] connection_ready data:', data);
-        console.log('🔍 [DEBUG] Current states:', {
-          connectionState,
-          isConnectionReady,
-          isUnmountedRef: isUnmountedRef.current,
-          isStrictMode: isStrictModeRef.current,
-          componentMounted: componentMountedRef.current
-        });
-        
-        // Clear connection timeout
-        if (connectionTimeoutRef.current) {
-          clearTimeout(connectionTimeoutRef.current);
-          connectionTimeoutRef.current = null;
-          console.log('✅ [Chat] Connection timeout cleared');
-        }
-        
-        // ✅ CRITICAL: Update all connection ready states
-        setCanSendMessages(true);  // Enable message sending
-        debugSetIsConnectionReady(true); // Critical for isReady calculation
-        debugSetConnectionState(CHAT_STATES.READY); // Transition to READY state
-        setIsLoading(false); // ✅ FIX: Clear loading state when connection is ready
-        setError(null);
-        
-        console.log('✅ [Chat] State updated - Chat should now be READY');
-        
-        if (chatConfig.enablePerformanceTracking) {
-          performanceRef.current.trackChatWidget('connection_ready');
-        }
-      } catch (error) {
-        console.error('❌ [Chat] Critical error in handleConnectionReady:', error);
-        console.error('❌ [Chat] Error stack:', error.stack);
-        // Don't crash the application but ensure we know about this
-      }
-    };
-    
-    const handleReadyTimeout = () => {
-      if (isUnmountedRef.current) return;
-      
-      console.warn('[Chat] Connection ready timeout from WebSocket manager');
-      setError(new MIPTechError(
-        'Platform initialization timeout',
-        ERROR_TYPES.WEBSOCKET,
-        ERROR_SEVERITY.MEDIUM,
-        { timeout: 10000 }
-      ));
-      debugSetConnectionState(CHAT_STATES.ERROR);
-    };
-    
-    const handleMessage = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      // Handle both chat_message and chat_response types
-      if (data.type === 'chat_message' || data.type === 'chat_response') {
-        const message = {
-          ...data.message,
-          content: sanitizeInput(data.message.content),
-          status: MESSAGE_STATUS.RECEIVED
-        };
-        
-        setMessages(prev => [...prev, message]);
-        
-        // Persist message
-        if (chatConfig.enablePersistence) {
-          sessionRef.current.addChatMessage(message);
-        }
-        
-        // Track performance
-        if (chatConfig.enablePerformanceTracking) {
-          performanceRef.current.trackChatWidget('message_received');
-        }
-      }
-    };
-    
-    const handleTyping = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      if (data.type === 'typing') {
-        setTypingUsers(prev => {
-          const userId = data.data.user_id;
-          return prev.includes(userId) ? prev : [...prev, userId];
-        });
-      } else if (data.type === 'stop_typing') {
-        setTypingUsers(prev => prev.filter(id => id !== data.data.user_id));
-      }
-    };
-    
-    const handleError = (error) => {
-      if (isUnmountedRef.current) return;
-      
-      // Guard against isolated errors (like health check failures) affecting WebSocket connection
-      if (error.details?.skipGlobalErrorHandler || 
-          error.details?.isolated || 
-          error.message?.includes('Health endpoint') ||
-          error.message?.includes('health circuit breaker')) {
-        
-        if (process.env.REACT_APP_DEBUG_API === 'true') {
-          console.log('[Chat] Ignoring isolated health check error - not affecting WebSocket:', error.message);
-        }
-        return; // Don't handle health check errors in chat context
-      }
-      
-      const wsError = handleWebSocketError(error);
-      setError(wsError);
-      
-      // Set connection error
-      setErrorState(prev => ({
-        ...prev,
-        connectionError: wsError
-      }));
-      
-      // Track error
-      if (chatConfig.enablePerformanceTracking) {
-        setPerformanceMetrics(prev => ({
-          ...prev,
-          errorCount: prev.errorCount + 1
-        }));
-      }
-    };
-    
-    // ✅ NEW: Handle specific AI processing errors
-    const handleAiProcessingError = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      console.error('🤖 [Chat] AI Processing Error:', data);
-      
-      // Clear processing timeout
-      if (processingTimeoutRef.current) {
-        clearTimeout(processingTimeoutRef.current);
-        processingTimeoutRef.current = null;
-      }
-      
-      // Reset processing state
-      setAiProcessingState({
-        isProcessing: false,
-        messageId: null,
-        startTime: null,
-        processingTimeout: null
-      });
-      
-      setIsLoading(false);
-      
-      // Set processing error
-      setErrorState(prev => ({
-        ...prev,
-        processingError: {
-          type: 'ai_processing_error',
-          message: data.message || 'AI processing failed',
-          details: data.details,
-          messageId: data.messageId,
-          timestamp: data.timestamp
-        }
-      }));
-      
-      // Update message status if we have the message ID
-      if (data.messageId) {
-        setMessages(prev => prev.map(msg => 
-          msg.id === data.messageId 
-            ? { ...msg, status: MESSAGE_STATUS.FAILED, error: data }
-            : msg
-        ));
-      }
-    };
-    
-    // ✅ NEW: Handle rate limit errors
-    const handleRateLimitError = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      console.error('🚦 [Chat] Rate Limit Error:', data);
-      
-      setErrorState(prev => ({
-        ...prev,
-        rateLimitError: {
-          type: 'rate_limit_error',
-          message: data.message || 'Rate limit exceeded',
-          retryAfter: data.retry_after,
-          timestamp: data.timestamp
-        }
-      }));
-    };
-    
-    // ✅ NEW: Handle message validation errors
-    const handleMessageValidationError = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      console.error('📝 [Chat] Message Validation Error:', data);
-      
-      setErrorState(prev => ({
-        ...prev,
-        validationError: {
-          type: 'message_validation_error',
-          message: data.message || 'Message validation failed',
-          details: data.details,
-          messageId: data.messageId,
-          timestamp: data.timestamp
-        }
-      }));
-      
-      // Update message status if we have the message ID
-      if (data.messageId) {
-        setMessages(prev => prev.map(msg => 
-          msg.id === data.messageId 
-            ? { ...msg, status: MESSAGE_STATUS.FAILED, error: data }
-            : msg
-        ));
-      }
-    };
-    
-    const handleFailed = () => {
-      if (isUnmountedRef.current) return;
-      setConnectionState(CHAT_STATES.FAILED);
-    };
-    
-    const handleResponseStart = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      // ✅ FE-01: Normalize event data
-      const normalizedData = eventNormalizerRef.current.normalize(data);
-      const messageId = normalizedData.messageId || normalizedData.message_id;
-      
-      if (!messageId) {
-        console.warn('⚠️ [Chat] response_start missing messageId, skipping', normalizedData);
-        return;
-      }
-
-      // ✅ FE-02: Check for duplicate events
-      const eventKey = `response_start_${messageId}_${normalizedData.__normalizedAt || Date.now()}`;
-      if (wsEventsRef.current.has(eventKey)) {
-        console.log('🔄 [Chat] Skipping duplicate response_start event:', eventKey);
-        return;
-      }
-      wsEventsRef.current.add(eventKey);
-      
-      console.log('🎬 [Chat] Response streaming started for:', messageId);
-      
-      // ✅ FE-04: Check if we have this message in registry (for reconciliation)
-      let assistantMessage;
-      const existingRecord = messageRegistryRef.current.getMessage(messageId);
-      
-      if (existingRecord) {
-        // Update existing registered message
-        messageRegistryRef.current.updateMessageState(messageId, 'processing', {
-          streaming: true,
-          streamStartTime: Date.now()
-        });
-        assistantMessage = {
-          ...existingRecord.message,
-          content: '',
-          role: 'assistant',
-          status: MESSAGE_STATUS.STREAMING,
-          metadata: { ...existingRecord.message.metadata, streaming: true, streamStarted: true }
-        };
-      } else {
-        // Create new message for assistant response
-        assistantMessage = {
-          id: messageId,
-          content: '',
-          role: 'assistant', 
-          timestamp: new Date().toISOString(),
-          status: MESSAGE_STATUS.STREAMING,
-          metadata: { streaming: true, streamStarted: true }
-        };
-        
-        // Register new assistant message
-        messageRegistryRef.current.registerMessage(assistantMessage, {
-          streaming: true,
-          streamStartTime: Date.now(),
-          assistantResponse: true
-        });
-      }
-      
-      // ✅ FE-05: Set up streaming state with live typing
-      setStreamingResponse({
-        isStreaming: true,
-        messageId: messageId,
-        content: '',
-        chunks: [],
-        startTime: Date.now(),
-        metadata: normalizedData
-      });
-      
-      // ✅ FE-03: Show AI typing indicator during streaming
-      if (typingHandlerRef.current) {
-        typingHandlerRef.current.startTyping();
-      }
-      
-      // Add/update message in UI
-      setMessages(prev => {
-        const existingIndex = prev.findIndex(msg => msg.id === messageId);
-        if (existingIndex >= 0) {
-          // Update existing message
-          const updatedMessages = [...prev];
-          updatedMessages[existingIndex] = assistantMessage;
-          return updatedMessages;
-        } else {
-          // Add new streaming message
-          return [...prev, assistantMessage];
-        }
-      });
-      
-      // Performance tracking
-      if (chatConfig.enablePerformanceTracking) {
-        performanceRef.current.startTimer(`streaming_${messageId}`);
-      }
-    };
-    
-    const handleResponseChunk = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      // ✅ FE-01: Normalize event data
-      const normalizedData = eventNormalizerRef.current.normalize(data);
-      const messageId = normalizedData.messageId || normalizedData.message_id;
-      const content = normalizedData.content || normalizedData.chunk || '';
-      
-      if (!messageId) {
-        console.warn('⚠️ [Chat] response_chunk missing messageId, skipping', normalizedData);
-        return;
-      }
-      
-      // ✅ FE-02: Generate event key for deduplication (include content hash for chunks)
-      const contentHash = btoa(content).substring(0, 8); // Short content hash
-      const eventKey = `response_chunk_${messageId}_${contentHash}_${normalizedData.__normalizedAt || Date.now()}`;
-      
-      if (wsEventsRef.current.has(eventKey)) {
-        console.log('🔄 [Chat] Skipping duplicate response_chunk event:', eventKey);
-        return;
-      }
-      wsEventsRef.current.add(eventKey);
-      
-      console.log('📝 [Chat] Response chunk received for:', messageId, `(${content.length} chars)`);
-      
-      // ✅ FE-04: Update message registry state
-      const messageRecord = messageRegistryRef.current.getMessage(messageId);
-      if (messageRecord) {
-        messageRegistryRef.current.updateMessageState(messageId, 'processing', {
-          streaming: true,
-          lastChunkTime: Date.now(),
-          chunksReceived: (messageRecord.metadata.chunksReceived || 0) + 1,
-          contentLength: (messageRecord.message.content?.length || 0) + content.length
-        });
-      }
-      
-      // ✅ FE-05: Update streaming state with live chunk tracking
-      setStreamingResponse(prev => {
-        if (!prev.isStreaming || prev.messageId !== messageId) {
-          console.warn('⚠️ [Chat] Received chunk for non-streaming message:', messageId);
-          return prev;
-        }
-        
-        return {
-          ...prev,
-          content: prev.content + content,
-          chunks: [...prev.chunks, {
-            content,
-            timestamp: Date.now(),
-            size: content.length,
-            sequence: prev.chunks.length + 1
-          }],
-          lastChunkTime: Date.now(),
-          totalChunks: prev.chunks.length + 1,
-          totalSize: (prev.content?.length || 0) + content.length
-        };
-      });
-      
-      // ✅ FE-03: Keep AI typing indicator alive during chunking
-      if (typingHandlerRef.current) {
-        typingHandlerRef.current.startTyping(); // Reset timeout
-      }
-      
-      // Update streaming message content incrementally
-      setMessages(prev => prev.map(msg => {
-        if (msg.id === messageId && msg.metadata?.streaming) {
-          return {
-            ...msg,
-            content: msg.content + content,
-            status: MESSAGE_STATUS.STREAMING,
-            metadata: {
-              ...msg.metadata,
-              lastUpdate: Date.now(),
-              chunksReceived: (msg.metadata.chunksReceived || 0) + 1,
-              streamingActive: true
-            }
-          };
-        }
-        return msg;
-      }));
-      
-      // Performance tracking for chunk processing
-      if (chatConfig.enablePerformanceTracking && content.length > 0) {
-        performanceRef.current.trackChatWidget('streaming_chunk_processed', {
-          messageId,
-          chunkSize: content.length,
-          totalSize: (messageRecord?.message?.content?.length || 0) + content.length
-        });
-      }
-    };
-    
-    const handleResponseComplete = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      // ✅ DEBUG: Unique identifier to confirm this is the right handler
-      console.log('🎯 [Chat] MY HANDLER CALLED - handleResponseComplete (UNIQUE ID: useChat_v2)', {
-        handlerConfirmation: 'THIS_IS_THE_CORRECT_HANDLER',
-        timestamp: Date.now()
-      });
-      
-      // ✅ DEBUG: Log complete event structure for analysis
-      console.log('🎉 [Chat] handleResponseComplete called with FULL DATA:', {
-        completeEventData: data,
-        dataStructure: JSON.stringify(data, null, 2),
-        type: data.type,
-        hasData: !!data.data,
-        dataKeys: data.data ? Object.keys(data.data) : [],
-        dataPath: {
-          'data.data': data.data,
-          'data.data.message': data.data?.message,
-          'data.data.content': data.data?.content,
-          'data.message': data.message,
-          'data.content': data.content
-        },
-        timestamp: data.timestamp
-      });
-      
-      // ✅ FE-01: Normalize event data
-      const normalizedData = eventNormalizerRef.current.normalize(data);
-      const messageId = normalizedData.messageId || normalizedData.message_id || data.data?.message_id;
-      
-      if (!messageId) {
-        console.warn('⚠️ [Chat] response_complete missing messageId, skipping', {
-          normalizedData,
-          originalData: data
-        });
-        return;
-      }
-      
-      // ✅ FIX: Improved deduplication with content-based key
-      const contentSnippet = data.data?.content ? data.data.content.substring(0, 50) : '';
-      const eventKey = `response_complete_${messageId}_${contentSnippet}_${data.data?.created_at || normalizedData.__normalizedAt || Date.now()}`;
-      
-      if (wsEventsRef.current.has(eventKey)) {
-        console.log('🔄 [Chat] Skipping duplicate response_complete event:', {
-          eventKey: eventKey.substring(0, 80) + '...',
-          messageId,
-          reason: 'identical_event_signature'
-        });
-        return;
-      }
-      wsEventsRef.current.add(eventKey);
-      
-      // ✅ DETECTION: Check if this is streaming or non-streaming response
-      const isStreamingResponse = !!messages.find(msg => msg.id === messageId && msg.metadata?.streaming);
-      const hasBackendData = !!(data.data && (data.data.content || data.data.message));
-      
-      console.log('🏁 [Chat] Response complete analysis:', {
-        messageId,
-        isStreamingResponse,
-        hasBackendData,
-        contentLength: data.data?.content?.length || 0,
-        processingType: isStreamingResponse ? 'streaming' : 'non-streaming'
-      });
-      
-      // ✅ FE-03: Stop AI typing indicator
-      if (typingHandlerRef.current) {
-        typingHandlerRef.current.stopTyping();
-      }
-      
-      // ✅ UNIFIED HANDLER: Process non-streaming backend responses
-      if (!isStreamingResponse && hasBackendData) {
-        console.log('📝 [Chat] Processing non-streaming response from backend');
-        
-        // Clear any processing states
-        setAiProcessingState({
-          isProcessing: false,
-          messageId: null,
-          startTime: null,
-          processingTimeout: null
-        });
-        setIsLoading(false);
-        
-        // Extract message data
-        const serverMessageId = data.data?.message_id || data.data?.id;
-        const messageContent = data.data?.content || data.data?.message?.content || data.data?.message;
-        
-        if (serverMessageId && messageContent) {
-          // Check if message already exists
-          const existingMessage = messages.find(msg => msg.id === serverMessageId);
-          
-          console.log('📝 [Chat] Creating/updating non-streaming AI message:', {
-            messageId: serverMessageId,
-            existingMessage: !!existingMessage,
-            action: existingMessage ? 'update' : 'create',
-            contentLength: messageContent.length
-          });
-          
-          if (existingMessage) {
-            // Update existing message
-            setMessages(prev => prev.map(msg => 
-              msg.id === serverMessageId 
-                ? { 
-                    ...msg, 
-                    status: MESSAGE_STATUS.RECEIVED,
-                    content: messageContent,
-                    metadata: {
-                      ...msg.metadata,
-                      streaming: false,
-                      totalTokens: data.data.total_tokens || (data.data.prompt_tokens + data.data.completion_tokens),
-                      responseTime: data.data.response_time_ms,
-                      model: data.data.llm_model,
-                      costEstimate: data.data.cost_estimate || 0,
-                      sources: data.data.sources || [],
-                      promptTokens: data.data.prompt_tokens,
-                      completionTokens: data.data.completion_tokens
-                    }
-                  }
-                : msg
-            ));
-          } else {
-            // Create new message
-            const aiMessage = {
-              id: serverMessageId,
-              content: messageContent,
-              role: 'assistant',
-              timestamp: data.data.created_at ? new Date(data.data.created_at * 1000).toISOString() : new Date().toISOString(),
-              status: MESSAGE_STATUS.RECEIVED,
-              metadata: {
-                streaming: false,
-                totalTokens: data.data.total_tokens || (data.data.prompt_tokens + data.data.completion_tokens),
-                responseTime: data.data.response_time_ms,
-                model: data.data.llm_model,
-                costEstimate: data.data.cost_estimate || 0,
-                sources: data.data.sources || [],
-                promptTokens: data.data.prompt_tokens,
-                completionTokens: data.data.completion_tokens
-              }
-            };
-            
-            console.log('📝 [Chat] Adding NEW non-streaming AI message to UI:', {
-              messageId: aiMessage.id,
-              contentLength: aiMessage.content.length,
-              role: aiMessage.role,
-              status: aiMessage.status,
-              totalMessagesAfter: messages.length + 1
-            });
-            
-            setMessages(prev => {
-              const newMessages = [...prev, aiMessage];
-              console.log('✅ [Chat] Messages updated - total count:', newMessages.length);
-              return newMessages;
-            });
-          }
-          
-          // Performance tracking
-          if (chatConfig.enablePerformanceTracking) {
-            performanceRef.current.trackChatWidget('ai_response_received', data.data.response_time_ms);
-          }
-          
-          // Early return for non-streaming responses
-          return;
-        } else {
-          console.error('❌ [Chat] Missing data in non-streaming response:', {
-            hasMessageId: !!serverMessageId,
-            hasContent: !!messageContent,
-            dataStructure: Object.keys(data.data || {})
-          });
-        }
-      }
-      
-      // ✅ STREAMING HANDLER: Process streaming response completion (original logic)
-      console.log('📝 [Chat] Processing streaming response completion');
-      
-      // ✅ FE-04: Update message registry with completion
-      const messageRecord = messageRegistryRef.current.getMessage(messageId);
-      if (messageRecord) {
-        messageRegistryRef.current.updateMessageState(messageId, 'reconciled', {
-          streaming: false,
-          completedAt: Date.now(),
-          streamDuration: Date.now() - (messageRecord.metadata.streamStartTime || Date.now()),
-          totalTokens: normalizedData.totalTokens || normalizedData.total_tokens,
-          costEstimate: normalizedData.costEstimate || normalizedData.cost_estimate,
-          finalContent: normalizedData.content || messageRecord.message.content
-        });
-      }
-      
-      // ✅ FE-05: Finalize streaming state
-      setStreamingResponse(prev => {
-        if (prev.messageId === messageId) {
-          const streamDuration = Date.now() - prev.startTime;
-          
-          return {
-            ...prev,
-            isStreaming: false,
-            completed: true,
-            endTime: Date.now(),
-            streamDuration,
-            finalMetadata: normalizedData
-          };
-        }
-        return prev;
-      });
-      
-      // Update final message with complete metadata and status
-      setMessages(prev => prev.map(msg => {
-        if (msg.id === messageId) {
-          return {
-            ...msg,
-            status: MESSAGE_STATUS.RECEIVED,
-            metadata: {
-              ...msg.metadata,
-              streaming: false,
-              streamCompleted: true,
-              completedAt: Date.now(),
-              totalTokens: normalizedData.totalTokens || normalizedData.total_tokens,
-              costEstimate: normalizedData.costEstimate || normalizedData.cost_estimate,
-              sources: normalizedData.sources,
-              finalContent: normalizedData.content || msg.content,
-              streamingStats: {
-                chunksReceived: msg.metadata?.chunksReceived || 0,
-                finalSize: msg.content?.length || 0,
-                streamDuration: Date.now() - (msg.metadata?.streamStartTime || Date.now())
-              }
-            }
-          };
-        }
-        return msg;
-      }));
-      
-      // Performance tracking for completed stream
-      if (chatConfig.enablePerformanceTracking) {
-        const streamDuration = performanceRef.current.endTimer(`streaming_${messageId}`);
-        performanceRef.current.trackChatWidget('streaming_completed', {
-          messageId,
-          duration: streamDuration?.duration,
-          totalTokens: normalizedData.totalTokens || normalizedData.total_tokens,
-          chunksProcessed: messageRecord?.metadata?.chunksReceived || 0,
-          contentSize: messageRecord?.message?.content?.length || 0
-        });
-      }
-      
-      // Clear old streaming state after a delay (cleanup)
-      setTimeout(() => {
-        setStreamingResponse(prev => 
-          prev.messageId === messageId 
-            ? { isStreaming: false, messageId: null, content: '', chunks: [] }
-            : prev
-        );
-      }, 2000); // Keep state briefly for any UI animations
-    };
-
-    // ✅ NEW: Handle AI response complete from backend REST-WebSocket integration
-    const handleAiResponseComplete = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      // ✅ DEBUG: Log received response data for troubleshooting
-      console.log('🎉 [Chat] AI response complete received:', {
-        type: data.type,
-        hasData: !!data.data,
-        messageId: data.data?.message_id,
-        hasContent: !!data.data?.content,
-        contentLength: data.data?.content?.length,
-        timestamp: data.timestamp
-      });
-      
-      // ✅ FIX: Improved deduplication with content-based key to prevent blocking valid messages
-      const messageId = data.data?.message_id;
-      const contentSnippet = data.data?.content ? data.data.content.substring(0, 50) : '';
-      const eventKey = `${data.type}_${messageId}_${contentSnippet}_${data.data?.created_at || data.timestamp || Date.now()}`;
-      
-      if (processedEventsRef.current.has(eventKey)) {
-        console.log('🔄 [Chat] Skipping duplicate response_complete event:', {
-          eventKey: eventKey.substring(0, 80) + '...',
-          messageId,
-          reason: 'identical_event_signature'
-        });
-        return;
-      }
-      processedEventsRef.current.add(eventKey);
-      
-      // ✅ CLEANUP: Limit cache size to prevent memory issues
-      if (processedEventsRef.current.size > 500) {
-        const cacheArray = Array.from(processedEventsRef.current);
-        processedEventsRef.current.clear();
-        // Keep only the most recent 250 entries
-        cacheArray.slice(-250).forEach(key => processedEventsRef.current.add(key));
-        console.log('🧹 [Chat] Trimmed deduplication cache to prevent memory issues');
-      }
-      
-      // ✅ FIX: More sophisticated duplicate detection for React double processing
-      const dataSignature = JSON.stringify({
-        message_id: data.data?.message_id,
-        content: data.data?.content,
-        created_at: data.data?.created_at
-      });
-      if (lastResponseDataRef.current === dataSignature) {
-        console.log('🔄 [Chat] Skipping identical response data (React double render):', {
-          messageId,
-          reason: 'react_double_processing'
-        });
-        return;
-      }
-      lastResponseDataRef.current = dataSignature;
-      
-      console.log('✅ [Chat] Processing AI response complete:', {
-        messageId,
-        contentPreview: contentSnippet || 'no_content',
-        eventProcessed: true
-      });
-      
-      // ✅ VALIDATION: Check if response data has required fields
-      if (!data.data) {
-        console.error('❌ [Chat] Missing data in response_complete event:', data);
-        return;
-      }
-      
-      // ✅ IMPROVED: Check for content in multiple possible locations
-      const hasContent = !!(data.data.content || 
-                            data.data.message?.content || 
-                            data.data.message ||
-                            (typeof data.data.message === 'string' && data.data.message.length > 0));
-      
-      if (!hasContent) {
-        console.error('❌ [Chat] Missing content in response_complete (checked multiple locations):', {
-          dataKeys: Object.keys(data.data),
-          hasDirectContent: !!data.data.content,
-          hasMessageContent: !!data.data.message?.content,
-          hasMessageString: typeof data.data.message === 'string',
-          messageValue: data.data.message,
-          fullData: data.data
-        });
-        return;
-      }
-      
-      console.log('🔍 [DEBUG] Response complete data structure validation passed:', {
-        type: data.type,
-        timestamp: data.timestamp,
-        dataKeys: Object.keys(data.data || {}),
-        messageIdPresent: !!messageId,
-        contentPresent: !!data.data.content,
-        contentLength: data.data.content?.length
-      });
-      
-      // Clear processing timeout
-      if (processingTimeoutRef.current) {
-        clearTimeout(processingTimeoutRef.current);
-        processingTimeoutRef.current = null;
-      }
-      
-      // Reset AI processing state
-      const processingDuration = aiProcessingState.startTime 
-        ? Date.now() - aiProcessingState.startTime 
-        : null;
-      
-      setAiProcessingState({
-        isProcessing: false,
-        messageId: null,
-        startTime: null,
-        processingTimeout: null
-      });
-      
-      setIsLoading(false);
-      
-      // Clear any processing errors
-      setErrorState(prev => ({
-        ...prev,
-        processingError: null
-      }));
-      
-      // ✅ FE-04: Try to reconcile with temporary message if available  
-      // ✅ COMPATIBILITY: Handle different backend response structures
-      const serverMessageId = data.data?.message_id || data.data?.id;
-      const messageContent = data.data?.content || data.data?.message?.content || data.data?.message;
-      
-      console.log('🔍 [Chat] Extracting message data:', {
-        serverMessageId,
-        hasContent: !!messageContent,
-        contentType: typeof messageContent,
-        dataStructure: Object.keys(data.data || {}),
-        rawDataSample: data.data
-      });
-      
-      // Try to find and reconcile temporary message
-      if (serverMessageId && messageContent) {
-        const reconciled = messageRegistryRef.current.reconcileByContent(
-          messageContent,
-          serverMessageId,
-          data.data,
-          0.7 // 70% similarity threshold
-        );
-        
-        if (reconciled) {
-          console.log(`🔄 [Chat] Reconciled temp message with server response: ${reconciled.tempId} -> ${serverMessageId}`);
-          
-          // Update existing temporary message in UI
-          setMessages(prev => prev.map(msg => 
-            msg.id === reconciled.tempId 
-              ? { 
-                  ...reconciled.message,
-                  status: MESSAGE_STATUS.RECEIVED,
-                  content: sanitizeInput(messageContent),
-                  metadata: {
-                    ...msg.metadata,
-                    totalTokens: data.data.total_tokens || (data.data.prompt_tokens + data.data.completion_tokens),
-                    responseTime: data.data.response_time_ms,
-                    model: data.data.llm_model,
-                    costEstimate: data.data.cost_estimate || 0,
-                    sources: data.data.sources || [],
-                    totalChunks: data.data.total_chunks || 0,
-                    processingDuration: processingDuration,
-                    promptTokens: data.data.prompt_tokens,
-                    completionTokens: data.data.completion_tokens,
-                    reconciled: true
-                  }
-                }
-              : msg
-          ));
-          
-          // Skip creating new message since we reconciled
-          return;
-        }
-      }
-      
-      // Create AI response message from backend data (flexible structure handling)
-      if (data.data && messageContent) {
-        // Check if message already exists (streaming case)
-        const existingMessage = messages.find(msg => msg.id === serverMessageId);
-        
-        console.log('📝 [Chat] Creating/updating AI message:', {
-          messageId: serverMessageId,
-          existingMessage: !!existingMessage,
-          action: existingMessage ? 'update' : 'create',
-          contentLength: messageContent.length
-        });
-        
-        if (existingMessage) {
-          console.log('📝 [Chat] Updating existing message (streaming case)');
-          // Update existing message metadata for streaming case
-          setMessages(prev => prev.map(msg => 
-            msg.id === serverMessageId 
-              ? { 
-                  ...msg, 
-                  status: MESSAGE_STATUS.RECEIVED,
-                  metadata: {
-                    ...msg.metadata,
-                    streaming: false,
-                    totalTokens: data.data.total_tokens || (data.data.prompt_tokens + data.data.completion_tokens),
-                    responseTime: data.data.response_time_ms,
-                    model: data.data.llm_model,
-                    costEstimate: data.data.cost_estimate || 0, // Default if missing
-                    sources: data.data.sources || [], // Default if missing
-                    totalChunks: data.data.total_chunks || 0, // Default if missing
-                    processingDuration: processingDuration,
-                    promptTokens: data.data.prompt_tokens,
-                    completionTokens: data.data.completion_tokens
-                  }
-                }
-              : msg
-          ));
-        } else {
-          console.log('📝 [Chat] Creating new message (non-streaming case)');
-          // Create new message for non-streaming case
-          const aiMessage = {
-            id: serverMessageId,
-            content: sanitizeInput(messageContent),
-            role: 'assistant',
-            timestamp: data.data.created_at ? new Date(data.data.created_at * 1000).toISOString() : new Date().toISOString(),
-            status: MESSAGE_STATUS.RECEIVED,
-            metadata: {
-              streaming: false,
-              totalTokens: data.data.total_tokens || (data.data.prompt_tokens + data.data.completion_tokens),
-              responseTime: data.data.response_time_ms,
-              model: data.data.llm_model,
-              costEstimate: data.data.cost_estimate || 0, // Default if missing
-              sources: data.data.sources || [], // Default if missing
-              totalChunks: data.data.total_chunks || 0, // Default if missing  
-              processingDuration: processingDuration,
-              promptTokens: data.data.prompt_tokens,
-              completionTokens: data.data.completion_tokens
-            }
-          };
-          
-          console.log('📝 [Chat] Adding NEW AI message to UI:', {
-            messageId: aiMessage.id,
-            contentLength: aiMessage.content.length,
-            role: aiMessage.role,
-            status: aiMessage.status,
-            totalMessagesAfter: messages.length + 1
-          });
-          
-          setMessages(prev => {
-            const newMessages = [...prev, aiMessage];
-            console.log('✅ [Chat] Messages updated - total count:', newMessages.length);
-            return newMessages;
-          });
-          
-          // Persist message if enabled
-          if (chatConfig.enablePersistence) {
-            sessionRef.current.addChatMessage(aiMessage);
-          }
-        }
-        
-        // Track performance
-        if (chatConfig.enablePerformanceTracking) {
-          performanceRef.current.trackChatWidget('ai_response_received', data.data.response_time_ms);
-        }
-      } else {
-        console.warn('⚠️ [Chat] Invalid response_complete data structure:', data);
-      }
-    };
-
-    // ✅ NEW: Handle processing started
-    const handleProcessingStarted = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      console.log('⚙️ [Chat] AI processing started', data);
-      
-      // ✅ FIX: Get messageId from correct location in backend data structure
-      const messageId = data.data?.message_id || data.messageId;
-      
-      // ✅ FIX: Don't start timeout if messageId is undefined
-      if (!messageId) {
-        console.warn('⚠️ [Chat] Processing event missing messageId, cannot track timeout');
-        console.warn('⚠️ [DEBUG] Processing data structure:', data);
-        return;
-      }
-      
-      const processingStartTime = data.processingStartTime || Date.now();
-      
-      // Set AI processing state
-      setAiProcessingState({
-        isProcessing: true,
-        messageId: messageId,
-        startTime: processingStartTime,
-        processingTimeout: null
-      });
-      
-      setIsLoading(true);
-      
-      // Set processing timeout (30 seconds)
-      processingTimeoutRef.current = setTimeout(() => {
-        if (!isUnmountedRef.current) {
-          console.warn('⏰ [Chat] AI processing timeout for messageId:', messageId);
-          setErrorState(prev => ({
-            ...prev,
-            processingError: {
-              type: 'processing_timeout',
-              message: 'AI processing is taking longer than expected',
-              messageId: messageId,
-              timeout: 30000
-            }
-          }));
-          setAiProcessingState(prev => ({ ...prev, isProcessing: false }));
-          setIsLoading(false);
-        }
-      }, 30000); // 30 second timeout
-      
-      // Update message status if we have the message
-      setMessages(prev => prev.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, status: 'processing', processingStarted: processingStartTime }
-          : msg
-      ));
-    };
-
-    // ✅ NEW: Handle message received confirmation
-    const handleMessageReceived = (data) => {
-      if (isUnmountedRef.current) return;
-      
-      console.log('✅ [Chat] Message received confirmation', data);
-      
-      // Update message status to confirmed/delivered if we have the message ID
-      if (data.data && data.data.message_id) {
-        setMessages(prev => prev.map(msg => 
-          msg.id === data.data.message_id 
-            ? { ...msg, status: MESSAGE_STATUS.DELIVERED }
-            : msg
-        ));
-      }
-    };
-    
-    // Add event listeners
-    wsManager.on('connected', handleConnected);
-    wsManager.on('ready', handleReady);
-    wsManager.on('connection_established', handleConnectionEstablished);
-    wsManager.on('initialization_progress', handleInitializationProgress);
-    wsManager.on('connection_ready', handleConnectionReady);
-    wsManager.on('ready_timeout', handleReadyTimeout);
-    wsManager.on('response_start', handleResponseStart);
-    wsManager.on('response_chunk', handleResponseChunk);
-    // ✅ DEBUG: Add identification to handler registration
-    console.log('🔗 [Chat] Registering handleResponseComplete for response_complete event', {
-      handlerName: 'handleResponseComplete',
-      handlerType: typeof handleResponseComplete,
-      timestamp: Date.now()
-    });
-    wsManager.on('response_complete', handleResponseComplete);
-    wsManager.on('chatResponse', handleMessage); // ✅ CRITICAL: Add chat response handler
-    wsManager.on('chat_response', handleMessage); // ✅ CRITICAL: Add platform event handler
-    wsManager.on('chatResponseStreaming', handleResponseChunk); // ✅ CRITICAL: Add streaming handler
-    wsManager.on('chat_response_streaming', handleResponseChunk); // ✅ CRITICAL: Add platform streaming handler
-    // ✅ REMOVED: Duplicate handler - now handled by unified handleResponseComplete
-    // wsManager.on('response_complete', handleAiResponseComplete); // REMOVED: Causing conflicts
-    wsManager.on('processing', handleProcessingStarted); // AI processing started
-    wsManager.on('aiProcessingStarted', handleProcessingStarted); // Alternative name
-    wsManager.on('ai_processing_started', handleProcessingStarted); // Backend event name
-    wsManager.on('messageReceived', handleMessageReceived); // Message received confirmation
-    wsManager.on('message_received', handleMessageReceived); // Alternative name
-    // ✅ NEW: Enhanced error handling
-    wsManager.on('aiProcessingError', handleAiProcessingError); // AI processing errors
-    wsManager.on('ai_processing_error', handleAiProcessingError); // Backend event name
-    wsManager.on('rateLimitError', handleRateLimitError); // Rate limit errors
-    wsManager.on('rate_limit_error', handleRateLimitError); // Backend event name
-    wsManager.on('messageValidationError', handleMessageValidationError); // Validation errors
-    wsManager.on('message_validation_error', handleMessageValidationError); // Backend event name
-    wsManager.on('disconnected', handleDisconnected);
-    wsManager.on('reconnecting', handleReconnecting);
-    wsManager.on('message', handleMessage);
-    wsManager.on('typing', handleTyping);
-    wsManager.on('stop_typing', handleTyping);
-    wsManager.on('typingIndicator', handleTyping); // ✅ CRITICAL: Add typing indicator handler
-    wsManager.on('typing_indicator', handleTyping); // ✅ CRITICAL: Add platform typing handler
-    wsManager.on('error', handleError);
-    wsManager.on('failed', handleFailed);
-    
-    return () => {
-      if (wsManager && wsManager.off) {
-        wsManager.off('connected', handleConnected);
-        wsManager.off('ready', handleReady);
-        wsManager.off('connection_established', handleConnectionEstablished);
-        wsManager.off('initialization_progress', handleInitializationProgress);
-        wsManager.off('connection_ready', handleConnectionReady);
-        wsManager.off('ready_timeout', handleReadyTimeout);
-        wsManager.off('response_start', handleResponseStart);
-        wsManager.off('response_chunk', handleResponseChunk);
-        wsManager.off('response_complete', handleResponseComplete);
-        wsManager.off('chatResponse', handleMessage); // ✅ CRITICAL: Remove chat response handler
-        wsManager.off('chat_response', handleMessage); // ✅ CRITICAL: Remove platform event handler
-        wsManager.off('chatResponseStreaming', handleResponseChunk); // ✅ CRITICAL: Remove streaming handler
-        wsManager.off('chat_response_streaming', handleResponseChunk); // ✅ CRITICAL: Remove platform streaming handler
-        // ✅ REMOVED: Duplicate handler removal - now handled by unified handleResponseComplete
-        // wsManager.off('response_complete', handleAiResponseComplete); // REMOVED: Causing conflicts
-        wsManager.off('processing', handleProcessingStarted);
-        wsManager.off('aiProcessingStarted', handleProcessingStarted);
-        wsManager.off('ai_processing_started', handleProcessingStarted);
-        wsManager.off('messageReceived', handleMessageReceived);
-        wsManager.off('message_received', handleMessageReceived);
-        // ✅ NEW: Remove enhanced error handling events
-        wsManager.off('aiProcessingError', handleAiProcessingError);
-        wsManager.off('ai_processing_error', handleAiProcessingError);
-        wsManager.off('rateLimitError', handleRateLimitError);
-        wsManager.off('rate_limit_error', handleRateLimitError);
-        wsManager.off('messageValidationError', handleMessageValidationError);
-        wsManager.off('message_validation_error', handleMessageValidationError);
-        wsManager.off('disconnected', handleDisconnected);
-        wsManager.off('reconnecting', handleReconnecting);
-        wsManager.off('message', handleMessage);
-        wsManager.off('typing', handleTyping);
-        wsManager.off('stop_typing', handleTyping);
-        wsManager.off('typingIndicator', handleTyping); // ✅ CRITICAL: Remove typing indicator handler
-        wsManager.off('typing_indicator', handleTyping); // ✅ CRITICAL: Remove platform typing handler
-        wsManager.off('error', handleError);
-        wsManager.off('failed', handleFailed);
-      }
-    };
-    
-    } catch (error) {
-      console.error('❌ [Chat] Error in WebSocket event handlers useEffect:', error);
-      console.error('❌ [Chat] Error stack:', error.stack);
-    }
-  }); // ✅ DEBUG: Remove all dependencies to force re-execution on every mount
-  */
-  
-  // ✅ DEBUG: Log when no-dependency useEffect runs - DISABLED to reduce noise
-  // useEffect(() => {
-  //   console.log('🔍 [Chat] No-dependency useEffect executed (should run on every render):', {
-  //     mountCount: mountCountRef.current,
-  //     timestamp: Date.now()
-  //   });
-  // }); // No dependencies - runs on every render
-  
   /**
    * Auto-initialize chat if enabled
    */

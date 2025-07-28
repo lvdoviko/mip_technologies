@@ -704,6 +704,14 @@ const ChatWidget = ({
     }
   }, [messages, prefersReducedMotion]);
   
+  // ✅ IMMEDIATE INITIALIZATION: Call initializeChat when ChatWidget opens
+  useEffect(() => {
+    if (isOpen && !currentChat && connectionState === CHAT_STATES.DISCONNECTED) {
+      console.log('🚀 [ChatWidget] Opening chat → calling initializeChat()');
+      initializeChat().catch(err => console.error('🔴 initializeChat error:', err));
+    }
+  }, [isOpen, currentChat, connectionState, initializeChat]);
+
   // Initialize chat when user demonstrates intent (lazy connection strategy)
   useEffect(() => {
     console.log(`🔍 [ChatWidget] useEffect triggered - isOpen: ${isOpen}, currentChat: ${!!currentChat}, hasTriggered: ${hasTriggeredConnection}`);
