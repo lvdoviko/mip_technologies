@@ -2632,9 +2632,7 @@ export const useChat = (config = {}) => {
       // Enhanced WebSocket disconnect logic for StrictMode handling
       const wsManager = websocketRef.current;
       const shouldDisconnectWebSocket = wsManager && wsManager.disconnect && 
-        !strictModeCleanupRef.current && 
-        !isStrictModeRef.current && 
-        process.env.NODE_ENV !== 'development';
+        isUnmountedRef.current;  // Only disconnect when truly unmounting
       
       if (shouldDisconnectWebSocket) {
         console.log('🔌 [Chat] Disconnecting WebSocket due to component cleanup');
@@ -2649,7 +2647,7 @@ export const useChat = (config = {}) => {
         }
       }
     }
-  }, [forceStopTyping]);
+  }, []);  // Only run cleanup on true unmount
   
   // ✅ CRITICAL DEBUG: Calculate isReady with detailed logging
   const calculatedIsReady = connectionState === CHAT_STATES.READY && isConnectionReady;
