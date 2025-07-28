@@ -18,6 +18,13 @@ class MIPTechApiClient {
       this.isDebugMode || 
       (typeof window !== 'undefined' && window.location.search.includes('debugApi'));
     this.enableDetailedErrors = this.isDevelopment || this.isDebugMode;
+    
+    // 🔧 CRITICAL FIX: Bind methods that use `this` to preserve context
+    this.createChat = this.createChat.bind(this);
+    this.healthz = this.healthz.bind(this);
+    this.request = this.request.bind(this);
+    this.getHeaders = this.getHeaders.bind(this);
+    this.validateChatCreateData = this.validateChatCreateData.bind(this);
   }
 
   getHeaders() {

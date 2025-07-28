@@ -350,6 +350,17 @@ export const useChat = (config = {}) => {
       const visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       console.log('🎲 [Platform] Generated IDs:', { sessionId, visitorId });
 
+      // ✅ PHASE 1: Diagnostic logging to verify binding issue
+      console.log('🔍 [DEBUG] Pre-call state verification:', {
+        hasApiRef: !!apiRef.current,
+        apiRefType: typeof apiRef.current,
+        hasCreateChat: !!apiRef.current?.createChat,
+        createChatType: typeof apiRef.current?.createChat,
+        isCreateChatOwnProperty: apiRef.current?.hasOwnProperty('createChat'),
+        tenantId: apiRef.current?.tenantId,
+        baseUrl: apiRef.current?.baseUrl
+      });
+      
       // ✅ FIX: Use API client instead of direct fetch to avoid double path issue
       console.log('🌐 [Platform] Calling apiRef.current.createChat()...');
       const chatData = await apiRef.current.createChat(sessionId, visitorId, {
