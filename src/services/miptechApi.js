@@ -242,9 +242,26 @@ class MIPTechApiClient {
     const finalSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const finalVisitorId = visitorId || `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     
-    // Validate input before making request
-    this.validateChatCreateData(finalSessionId, finalVisitorId, options);
+    // ✅ ADD: Pre-validation logging to pinpoint exact failure
+    console.log('🔍 [API] createChat() PRE-VALIDATION:', {
+      finalSessionId,
+      finalVisitorId,
+      options,
+      tenantId: this.tenantId,
+      sessionIdLength: finalSessionId.length,
+      sessionIdType: typeof finalSessionId,
+      visitorIdLength: finalVisitorId.length,
+      visitorIdType: typeof finalVisitorId,
+      regexTest: /^[a-zA-Z0-9_-]+$/.test(finalSessionId),
+      visitorRegexTest: /^[a-zA-Z0-9_-]+$/.test(finalVisitorId)
+    });
     
+    // Validate input before making request
+    console.log('🔍 [API] About to call validateChatCreateData()...');
+    this.validateChatCreateData(finalSessionId, finalVisitorId, options);
+    console.log('✅ [API] validateChatCreateData() passed successfully');
+    
+    console.log('🔍 [API] Creating requestData object...');
     const requestData = {
       session_id: finalSessionId,           // ✅ REQUIRED
       visitor_id: finalVisitorId,           // ✅ REQUIRED
@@ -252,6 +269,7 @@ class MIPTechApiClient {
       context: options.context || {},
       tenant_id: this.tenantId              // ✅ CRITICAL: Add tenant_id to body
     };
+    console.log('✅ [API] requestData object created successfully');
     
     console.log('🔍 [API] Creating chat with validated data:', requestData);
     
