@@ -750,15 +750,24 @@ export const useChat = (config = {}) => {
       
       // Set connection timeout (10 seconds for ready state)
       connectionTimeoutRef.current = setTimeout(() => {
-        if (!isUnmountedRef.current && !isConnectionReady) {
-          console.warn('⚠️ [INIT] Connection ready timeout - platform did not signal ready state');
+        // ✅ FIX: Check if timeout was cleared (meaning connection_ready was received)
+        if (connectionTimeoutRef.current === null) {
+          console.log('✅ [INIT] Connection timeout was cleared - connection_ready received');
+          return;
+        }
+        
+        if (!isUnmountedRef.current) {
+          console.warn('⚠️ [INIT] Connection ready timeout - platform did not signal ready state within 10 seconds');
           setError(new MIPTechError(
-            'Connection ready timeout',
+            'Connection ready timeout - platform may be overloaded',
             ERROR_TYPES.WEBSOCKET,
             ERROR_SEVERITY.MEDIUM,
             { timeout: 10000 }
           ));
-          setConnectionState(CHAT_STATES.ERROR);
+          debugSetConnectionState(CHAT_STATES.FAILED);
+          
+          // Clear the timeout ref since we're handling the timeout
+          connectionTimeoutRef.current = null;
         }
       }, 10000);
       
@@ -1243,11 +1252,19 @@ export const useChat = (config = {}) => {
       setIsLoading(false); // ✅ CRITICAL: Stop loading so textarea gets enabled
       setError(null);
       
+      // ✅ CRITICAL FIX: Clear connection timeout since we received connection_ready
+      if (connectionTimeoutRef.current) {
+        console.log('🔧 [Chat] Clearing connection timeout - platform is ready');
+        clearTimeout(connectionTimeoutRef.current);
+        connectionTimeoutRef.current = null;
+      }
+      
       console.log('🔧 [Chat] State after connection_ready:', {
         isConnectionReady: true,
         canSendMessages: true,
         connectionState: 'ready',
         isLoading: false,
+        timeoutCleared: true,
         timestamp: new Date().toISOString()
       });
       
