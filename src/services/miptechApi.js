@@ -115,7 +115,32 @@ class MIPTechApiClient {
 
   // Health check
   async health() {
-    return this.request('/health');
+    return this.request('/healthz');
+  }
+
+  // Healthz endpoint (working endpoint)
+  async healthz() {
+    const url = `${this.baseUrl}/healthz`;
+    if (this.enableRequestLogging) {
+      console.log('🔗 [API] healthz URL:', url);
+    }
+    
+    const config = {
+      headers: this.getHeaders(),
+      signal: AbortSignal.timeout(this.developmentTimeout)
+    };
+    
+    const response = await fetch(url, config);
+    if (!response.ok) {
+      throw new Error(`Healthz check failed (${response.status})`);
+    }
+    
+    const result = await response.json();
+    if (this.enableRequestLogging) {
+      console.log('✅ [API] healthz response:', result);
+    }
+    
+    return result; // { status: "healthy", version: "0.1.0" }
   }
 
   // Chat endpoints
@@ -151,8 +176,8 @@ class MIPTechApiClient {
 
   async createChat(sessionId = null, visitorId = null, options = {}) {
     // Generate IDs if not provided (for MVP implementation)
-    const finalSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const finalVisitorId = visitorId || `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const finalSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    const finalVisitorId = visitorId || `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     
     // Validate input before making request
     this.validateChatCreateData(finalSessionId, finalVisitorId, options);
