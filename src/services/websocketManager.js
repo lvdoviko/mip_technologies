@@ -1012,6 +1012,122 @@ class MIPTechWebSocketManager {
   ping() {
     this.sendMessage('ping', { timestamp: Date.now() });
   }
+
+  /**
+   * ✅ Message queuing methods for reconnection handling
+   */
+  
+  shouldQueueMessage(type) {
+    // Queue important message types during reconnection
+    const queueableTypes = [
+      'chat_message',
+      'typing_start',
+      'typing_stop',
+      'new_chat',
+      'load_chat'
+    ];
+    return queueableTypes.includes(type);
+  }
+
+  queueMessage(type, data) {
+    if (this.messageQueue.length >= this.maxQueueSize) {
+      console.warn('⚠️ [WebSocket] Message queue full, dropping oldest message');
+      this.messageQueue.shift(); // Remove oldest message
+    }
+
+    const queuedMessage = {
+      type,
+      data,
+      timestamp: Date.now(),
+      id: `queued_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+    };
+
+    this.messageQueue.push(queuedMessage);
+    
+    console.log(`📦 [WebSocket] Message queued: ${type}`, {
+      queueSize: this.messageQueue.length,
+      messageId: queuedMessage.id,
+      isReconnecting: this.isReconnecting
+    });
+  }
+
+  processMessageQueue() {
+    if (this.messageQueue.length === 0) {
+      console.log('📦 [WebSocket] No queued messages to process');
+      return;
+    }
+
+    console.log(`📦 [WebSocket] Processing ${this.messageQueue.length} queued messages`);
+    
+    // Create a copy of the queue and clear the original
+    const messagesToProcess = [...this.messageQueue];
+    this.messageQueue = [];
+
+    // Process each queued message
+    messagesToProcess.forEach((queuedMessage, index) => {
+      try {
+        console.log(`📤 [WebSocket] Sending queued message ${index + 1}/${messagesToProcess.length}: ${queuedMessage.type}`);
+        
+        // Send the message directly (bypass queue check)
+        this.sendMessageDirectly(queuedMessage.type, queuedMessage.data);
+        
+      } catch (error) {
+        console.error(`❌ [WebSocket] Failed to send queued message ${queuedMessage.id}:`, error);
+        
+        // Re-queue the message if it's still valid and we have space
+        if (this.messageQueue.length < this.maxQueueSize) {
+          console.log(`🔄 [WebSocket] Re-queueing failed message: ${queuedMessage.id}`);
+          this.messageQueue.push(queuedMessage);
+        }
+      }
+    });
+
+    console.log(`✅ [WebSocket] Finished processing queued messages. Remaining in queue: ${this.messageQueue.length}`);
+  }
+
+  sendMessageDirectly(type, data = {}) {
+    // Direct message sending without queue checks (for processing queued messages)
+    if (!this.isConnected) {
+      throw new Error('WebSocket not connected');
+    }
+
+    if (!this.isReady && type !== 'ping') {
+      throw new Error('WebSocket connection not ready');
+    }
+
+    const message = {
+      type,
+      data,
+      timestamp: Date.now(),
+      clientId: this.serverClientId || this.customClientId
+    };
+
+    // ✅ FE-01: Normalize outgoing event with central event normalizer
+    const normalizedMessage = eventNormalizer.normalizeOutgoingEvent(message);
+    
+    console.log('📤 [WebSocket] Sending (direct):', type, normalizedMessage);
+    
+    this.ws.send(JSON.stringify(normalizedMessage));
+  }
+
+  clearMessageQueue() {
+    if (this.messageQueue.length > 0) {
+      console.log(`🗑️ [WebSocket] Clearing message queue (${this.messageQueue.length} messages)`);
+      this.messageQueue = [];
+    }
+  }
+
+  getQueueStatus() {
+    return {
+      queueSize: this.messageQueue.length,
+      maxQueueSize: this.maxQueueSize,
+      isReconnecting: this.isReconnecting,
+      oldestMessage: this.messageQueue.length > 0 ? {
+        type: this.messageQueue[0].type,
+        age: Date.now() - this.messageQueue[0].timestamp
+      } : null
+    };
+  }
   
   /**
    * ✅ FE-02: Get deduplication statistics for debugging
