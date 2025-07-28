@@ -59,8 +59,17 @@ class MIPTechApiClient {
         ...this.getHeaders(),
         ...options.headers
       },
-      // ✅ ENHANCEMENT: Environment-specific timeout
-      signal: AbortSignal.timeout(options.timeout || this.developmentTimeout)
+      // ✅ ENHANCEMENT: Browser-compatible timeout implementation
+      signal: (() => {
+        // Check if AbortSignal.timeout is available (newer browsers)
+        if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+          return AbortSignal.timeout(options.timeout || this.developmentTimeout);
+        }
+        // Fallback for older browsers
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), options.timeout || this.developmentTimeout);
+        return controller.signal;
+      })()
     };
 
     // ✅ ENHANCEMENT: Conditional request logging based on environment
@@ -195,22 +204,42 @@ class MIPTechApiClient {
       console.log('🔗 [API] healthz URL:', url);
     }
     
-    const config = {
-      headers: this.getHeaders(),
-      signal: AbortSignal.timeout(this.developmentTimeout)
-    };
-    
-    const response = await fetch(url, config);
-    if (!response.ok) {
-      throw new Error(`Healthz check failed (${response.status})`);
+    try {
+      // 🔧 CRITICAL FIX: Browser-compatible timeout implementation
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, this.developmentTimeout);
+      
+      const config = {
+        headers: this.getHeaders(),
+        signal: controller.signal
+      };
+      
+      const response = await fetch(url, config);
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const error = new Error(`Healthz check failed`);
+        error.response = { status: response.status, statusText: response.statusText };
+        throw error;
+      }
+      
+      const result = await response.json();
+      if (this.enableRequestLogging) {
+        console.log('✅ [API] healthz response:', result);
+      }
+      
+      return result; // { status: "healthy", version: "0.1.0" }
+    } catch (error) {
+      // Enhance error for proper handling
+      if (error.name === 'AbortError') {
+        const timeoutError = new Error(`Healthz timeout after ${this.developmentTimeout}ms`);
+        timeoutError.code = 'TIMEOUT';
+        throw timeoutError;
+      }
+      throw error;
     }
-    
-    const result = await response.json();
-    if (this.enableRequestLogging) {
-      console.log('✅ [API] healthz response:', result);
-    }
-    
-    return result; // { status: "healthy", version: "0.1.0" }
   }
 
   // Chat endpoints
