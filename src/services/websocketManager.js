@@ -303,6 +303,13 @@ class MIPTechWebSocketManager {
         case 'connection_ready':
           console.log('🚀 [WebSocket] Connection ready for messages');
           this.isReady = true;
+          
+          // Process any queued messages when connection becomes ready
+          if (this.messageQueue.length > 0) {
+            console.log('📦 [WebSocket] Connection ready - processing queued messages');
+            setTimeout(() => this.processMessageQueue(), 100); // Small delay to ensure stability
+          }
+          
           this.emit('ready', data);
           this.emit('connection_ready', data); // ✅ CRITICAL: Emit event for useChat hook
           break;
