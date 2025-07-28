@@ -67,17 +67,17 @@ const ConnectionStatus = ({ connectionState, isConnected }) => {
   const statusConfig = useMemo(() => {
     switch (connectionState) {
       case CHAT_STATES.CONNECTED:
-        return { color: 'bg-primary-500', text: 'Connesso', pulse: false };
+        return { color: 'bg-primary-500', text: 'Connected', pulse: false };
       case CHAT_STATES.READY:
-        return { color: 'bg-primary-600', text: 'Pronto', pulse: false };
+        return { color: 'bg-primary-600', text: 'Ready', pulse: false };
       case CHAT_STATES.CONNECTING:
-        return { color: 'bg-secondary-400', text: 'Connessione...', pulse: true };
+        return { color: 'bg-secondary-400', text: 'Connecting...', pulse: true };
       case CHAT_STATES.RECONNECTING:
-        return { color: 'bg-secondary-500', text: 'Riconnessione...', pulse: true };
+        return { color: 'bg-secondary-500', text: 'Reconnecting...', pulse: true };
       case CHAT_STATES.FAILED:
-        return { color: 'bg-accent-500', text: 'Connessione fallita', pulse: false };
+        return { color: 'bg-accent-500', text: 'Connection failed', pulse: false };
       default:
-        return { color: 'bg-gray-500', text: 'Disconnesso', pulse: false };
+        return { color: 'bg-gray-500', text: 'Disconnected', pulse: false };
     }
   }, [connectionState]);
 
@@ -182,19 +182,20 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
       <div className={`max-w-[85%] ${isUser ? 'order-2' : 'order-1'}`}>
         <div
           className={`
-            px-4 py-3 rounded-none shadow-lg backdrop-blur-sm font-inter
+            relative px-4 py-3 rounded-none shadow-lg backdrop-blur-sm font-inter
             ${isUser 
-              ? 'bg-transparent border border-white/50 text-white hover:bg-black/30' 
-              : 'bg-transparent border border-white/50 text-gray-100 hover:bg-black/30'
+              ? 'bg-white border border-white text-black hover:bg-gray-100' 
+              : 'bg-black border border-white/50 text-gray-100 hover:bg-black/30'
             }
             ${message.status === MESSAGE_STATUS.SENDING ? 'opacity-70' : ''}
             ${message.status === MESSAGE_STATUS.FAILED ? 'border-2 border-accent-500' : ''}
+            ${isUser ? 'message-tail-right' : 'message-tail-left'}
           `}
         >
           <p className="text-sm leading-relaxed break-words font-mono tracking-wide">{message.content}</p>
           
           {/* Message metadata */}
-          <div className={`flex items-center justify-between mt-2 ${isUser ? 'text-white/70' : 'text-gray-400'}`}>
+          <div className={`flex items-center justify-between mt-2 ${isUser ? 'text-black/70' : 'text-gray-400'}`}>
             <span className="text-xs font-inter font-light">
               {new Date(message.timestamp).toLocaleTimeString([], { 
                 hour: '2-digit', 
@@ -502,13 +503,13 @@ const ChatInput = ({
   // Smart placeholder based on connection state
   const getSmartPlaceholder = () => {
     if (isConnecting) {
-      return "Connessione...";
+      return "Connecting...";
     }
     if (!isConnected && connectionState === 'disconnected') {
-      return "Inizia a scrivere...";
+      return "Start typing...";
     }
     if (isConnected && !isReady) {
-      return "Inizializzazione...";
+      return "Initializing...";
     }
     if (isConnected && isReady) {
       return placeholder;
@@ -582,7 +583,7 @@ const ChatWidget = ({
   theme = 'auto',
   primaryColor = '#2563eb',
   title = 'MIP AI Assistant',
-  placeholder = 'Scrivi il tuo messaggio...',
+  placeholder = 'Type your message...',
   className = '',
   enableSounds = false,
   enableNotifications = false,
@@ -988,14 +989,14 @@ const ChatWidget = ({
                   <div className="text-center py-4">
                     <div className="text-gray-500 dark:text-gray-400 text-sm">
                       {isConnecting ? 
-                        'Inizializzazione...' : 
-                        isConnectionTriggered ? 'Connessione in corso...' :
-                        'Pronto per chattare'
+                        'Initializing...' : 
+                        isConnectionTriggered ? 'Connecting...' :
+                        'Ready to chat'
                       }
                     </div>
                     {!isConnecting && !isConnectionTriggered && (
                       <div className="text-xs text-gray-500 font-inter font-light mt-1">
-                        Inizia a scrivere per iniziare
+                        Start typing to begin
                       </div>
                     )}
                   </div>

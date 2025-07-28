@@ -42,6 +42,31 @@
   margin: 0 !important;
 }
 
+/* Speech bubble tails for messages - square style */
+.message-tail-right::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  right: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid white;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.message-tail-left::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border-right: 8px solid black;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('./enhanced.css');
 
