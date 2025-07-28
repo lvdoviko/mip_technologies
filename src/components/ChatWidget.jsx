@@ -539,7 +539,7 @@ const ChatInput = ({
               bg-transparent backdrop-blur-sm text-white placeholder-gray-400
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-300
-              ${isOverLimit ? 'border-accent-500' : 'border-white/50 hover:border-white hover:bg-black/30 focus:border-white'}
+              ${isOverLimit ? 'border-accent-500' : 'border-white/50 hover:border-white hover:bg-black/30 !focus:border-white focus:outline-none focus:ring-0'}
             `}
           />
           
