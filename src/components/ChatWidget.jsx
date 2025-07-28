@@ -192,18 +192,11 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
             ${isUser ? 'message-tail-right' : 'message-tail-left'}
           `}
         >
-          <p className="text-sm leading-relaxed break-words font-mono tracking-wide">{message.content}</p>
-          
-          {/* Message metadata */}
-          <div className={`flex items-center justify-between mt-2 ${isUser ? 'text-black/70' : 'text-gray-400'}`}>
-            <span className="text-xs font-inter font-light">
-              {new Date(message.timestamp).toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
-            </span>
+          <div className="flex items-end gap-2">
+            <p className="text-sm leading-relaxed break-words font-mono tracking-wide flex-1">{message.content}</p>
             
-            <div className="flex items-center space-x-1">
+            {/* Status icon inline with last line */}
+            <div className="flex items-center space-x-1 flex-shrink-0">
               <MessageStatusIcon status={message.status} />
               
               {message.status === MESSAGE_STATUS.FAILED && (

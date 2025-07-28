@@ -47,12 +47,12 @@
   content: '';
   position: absolute;
   bottom: -8px;
-  right: 10px;
+  right: -8px;
   width: 0;
   height: 0;
-  border-top: 8px solid white;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
+  border-left: 8px solid white;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
 }
 
 .message-tail-left::after {
