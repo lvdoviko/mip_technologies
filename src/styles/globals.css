@@ -29,6 +29,71 @@ body {
   line-height: 1.6;
 }
 
+/* Font utilities for consistent Inter usage */
+.font-inter {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ChatWidget specific dark theme integration */
+.chat-widget-dark {
+  --chat-bg-primary: #0a0a0a;
+  --chat-bg-secondary: #1a1a1a;
+  --chat-bg-tertiary: #222222;
+  --chat-border: rgba(255, 255, 255, 0.1);
+  --chat-text-primary: #ffffff;
+  --chat-text-secondary: #a0a0a0;
+}
+
+/* Enhanced glassmorphism effects for chat widget */
+.chat-glass {
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Smooth animations matching site's cubic-bezier timing */
+.chat-transition {
+  transition: all 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+/* Custom scrollbar for chat messages */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(63, 131, 248, 0.4), rgba(144, 97, 249, 0.4));
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(63, 131, 248, 0.6), rgba(144, 97, 249, 0.6));
+}
+
+/* Enhanced message entrance animation */
+@keyframes messageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.message-entrance {
+  animation: messageSlideIn 0.3s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
 * {
   box-sizing: border-box;
 }

@@ -10,7 +10,6 @@ import {
   AlertCircle, 
   RefreshCw,
   Loader2,
-  Shield,
   CheckCircle,
   XCircle,
   Clock,
@@ -26,10 +25,10 @@ import { sanitizeInput } from '../utils/errorHandler';
  * Widget positions
  */
 const WIDGET_POSITIONS = {
-  'bottom-right': 'bottom-4 right-4',
-  'bottom-left': 'bottom-4 left-4',
-  'top-right': 'top-4 right-4',
-  'top-left': 'top-4 left-4'
+  'bottom-right': 'bottom-3 right-3 sm:bottom-4 sm:right-4',
+  'bottom-left': 'bottom-3 left-3 sm:bottom-4 sm:left-4',
+  'top-right': 'top-3 right-3 sm:top-4 sm:right-4',
+  'top-left': 'top-3 left-3 sm:top-4 sm:left-4'
 };
 
 /**
@@ -47,15 +46,15 @@ const WIDGET_SIZES = {
 const MessageStatusIcon = ({ status }) => {
   switch (status) {
     case MESSAGE_STATUS.SENDING:
-      return <Loader2 className="w-3 h-3 animate-spin text-blue-400" />;
+      return <Loader2 className="w-3 h-3 animate-spin text-primary-400" />;
     case MESSAGE_STATUS.SENT:
-      return <CheckCircle className="w-3 h-3 text-green-400" />;
+      return <CheckCircle className="w-3 h-3 text-primary-500" />;
     case MESSAGE_STATUS.DELIVERED:
-      return <CheckCircle className="w-3 h-3 text-green-500" />;
+      return <CheckCircle className="w-3 h-3 text-primary-600" />;
     case 'processing':
-      return <Clock className="w-3 h-3 text-orange-400 animate-pulse" />;
+      return <Clock className="w-3 h-3 text-secondary-400 animate-pulse" />;
     case MESSAGE_STATUS.FAILED:
-      return <XCircle className="w-3 h-3 text-red-400" />;
+      return <XCircle className="w-3 h-3 text-accent-400" />;
     default:
       return null;
   }
@@ -68,24 +67,24 @@ const ConnectionStatus = ({ connectionState, isConnected }) => {
   const statusConfig = useMemo(() => {
     switch (connectionState) {
       case CHAT_STATES.CONNECTED:
-        return { color: 'bg-green-400', text: 'Connected', pulse: false };
+        return { color: 'bg-primary-500', text: 'Connesso', pulse: false };
       case CHAT_STATES.READY:
-        return { color: 'bg-green-500', text: 'Ready', pulse: false };
+        return { color: 'bg-primary-600', text: 'Pronto', pulse: false };
       case CHAT_STATES.CONNECTING:
-        return { color: 'bg-yellow-400', text: 'Connecting...', pulse: true };
+        return { color: 'bg-secondary-400', text: 'Connessione...', pulse: true };
       case CHAT_STATES.RECONNECTING:
-        return { color: 'bg-orange-400', text: 'Reconnecting...', pulse: true };
+        return { color: 'bg-secondary-500', text: 'Riconnessione...', pulse: true };
       case CHAT_STATES.FAILED:
-        return { color: 'bg-red-400', text: 'Connection failed', pulse: false };
+        return { color: 'bg-accent-500', text: 'Connessione fallita', pulse: false };
       default:
-        return { color: 'bg-gray-400', text: 'Disconnected', pulse: false };
+        return { color: 'bg-gray-500', text: 'Disconnesso', pulse: false };
     }
   }, [connectionState]);
 
   return (
     <div className="flex items-center space-x-2">
-      <div className={`w-2 h-2 rounded-full ${statusConfig.color} ${statusConfig.pulse ? 'animate-pulse' : ''}`} />
-      <span className="text-xs font-medium">{statusConfig.text}</span>
+      <div className={`w-2 h-2 rounded-none ${statusConfig.color} ${statusConfig.pulse ? 'animate-pulse' : ''}`} />
+      <span className="text-xs font-medium font-inter">{statusConfig.text}</span>
     </div>
   );
 };
@@ -98,18 +97,18 @@ const TypingIndicator = ({ isVisible, prefersReducedMotion }) => {
   
   return (
     <div className="flex justify-start mb-2">
-      <div className="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-2xl max-w-xs">
+      <div className="bg-transparent backdrop-blur-sm border border-white/50 px-4 py-2 rounded-none max-w-xs">
         <div className="flex space-x-1">
           <div 
-            className={`w-2 h-2 bg-gray-400 rounded-full ${prefersReducedMotion ? '' : 'animate-bounce'}`}
+            className={`w-2 h-2 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-none ${prefersReducedMotion ? '' : 'animate-bounce'}`}
             style={{ animationDelay: '0ms' }}
           />
           <div 
-            className={`w-2 h-2 bg-gray-400 rounded-full ${prefersReducedMotion ? '' : 'animate-bounce'}`}
+            className={`w-2 h-2 bg-gradient-to-r from-secondary-400 to-accent-400 rounded-none ${prefersReducedMotion ? '' : 'animate-bounce'}`}
             style={{ animationDelay: '150ms' }}
           />
           <div 
-            className={`w-2 h-2 bg-gray-400 rounded-full ${prefersReducedMotion ? '' : 'animate-bounce'}`}
+            className={`w-2 h-2 bg-gradient-to-r from-accent-400 to-primary-400 rounded-none ${prefersReducedMotion ? '' : 'animate-bounce'}`}
             style={{ animationDelay: '300ms' }}
           />
         </div>
@@ -140,10 +139,10 @@ const AiProcessingIndicator = ({ isVisible, startTime, prefersReducedMotion }) =
   
   return (
     <div className="flex justify-center mb-2">
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-3 py-2 rounded-full">
-        <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+      <div className="bg-transparent backdrop-blur-sm border border-white/50 px-3 py-2 rounded-none">
+        <div className="flex items-center space-x-2 text-primary-400">
           <Zap className={`w-4 h-4 ${prefersReducedMotion ? '' : 'animate-pulse'}`} />
-          <span className="text-xs font-medium">
+          <span className="text-xs font-medium font-inter">
             AI is processing{seconds > 0 ? ` (${seconds}s)` : '...'}
           </span>
         </div>
@@ -183,20 +182,20 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
       <div className={`max-w-[85%] ${isUser ? 'order-2' : 'order-1'}`}>
         <div
           className={`
-            px-4 py-2 rounded-2xl shadow-sm
+            px-4 py-3 rounded-none shadow-lg backdrop-blur-sm font-inter
             ${isUser 
-              ? 'bg-blue-600 text-white rounded-br-sm' 
-              : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm'
+              ? 'bg-transparent border border-white/50 text-white hover:bg-black/30' 
+              : 'bg-transparent border border-white/50 text-gray-100 hover:bg-black/30'
             }
             ${message.status === MESSAGE_STATUS.SENDING ? 'opacity-70' : ''}
-            ${message.status === MESSAGE_STATUS.FAILED ? 'border-2 border-red-300' : ''}
+            ${message.status === MESSAGE_STATUS.FAILED ? 'border-2 border-accent-500' : ''}
           `}
         >
-          <p className="text-sm leading-relaxed break-words">{message.content}</p>
+          <p className="text-sm leading-relaxed break-words font-inter font-normal">{message.content}</p>
           
           {/* Message metadata */}
-          <div className={`flex items-center justify-between mt-1 ${isUser ? 'text-blue-100' : 'text-gray-500'}`}>
-            <span className="text-xs">
+          <div className={`flex items-center justify-between mt-2 ${isUser ? 'text-white/70' : 'text-gray-400'}`}>
+            <span className="text-xs font-inter font-light">
               {new Date(message.timestamp).toLocaleTimeString([], { 
                 hour: '2-digit', 
                 minute: '2-digit' 
@@ -209,10 +208,10 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
               {message.status === MESSAGE_STATUS.FAILED && (
                 <button
                   onClick={handleRetry}
-                  className="ml-1 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
+                  className="ml-1 p-1 rounded-none hover:bg-white/10 transition-colors border border-white/30"
                   title="Retry message"
                 >
-                  <RefreshCw className="w-3 h-3 text-red-500" />
+                  <RefreshCw className="w-3 h-3 text-accent-400" />
                 </button>
               )}
             </div>
@@ -220,8 +219,8 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
           
           {/* Performance info for AI responses */}
           {showPerformanceInfo && message.metadata && !isUser && (
-            <div className="mt-1 pt-1 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-xs text-gray-400 dark:text-gray-500 space-y-1">
+            <div className="mt-1 pt-1 border-t border-white/10">
+              <div className="text-xs text-gray-400 space-y-1 font-inter font-light">
                 {message.metadata.responseTime && (
                   <div>Response: {message.metadata.responseTime}ms</div>
                 )}
@@ -255,7 +254,7 @@ const ErrorDisplay = ({ error, errorState, onRetry, onDismiss }) => {
     if (!errorData) return null;
     
     return (
-      <div className={`${bgColor} border ${borderColor} rounded-lg p-3 mb-2`}>
+      <div className={`bg-transparent backdrop-blur-sm border border-white/50 rounded-none p-3 mb-2`}>
         <div className="flex items-start space-x-2">
           {icon}
           <div className="flex-1">
@@ -277,7 +276,7 @@ const ErrorDisplay = ({ error, errorState, onRetry, onDismiss }) => {
             {onRetry && (
               <button
                 onClick={() => onRetry(errorData)}
-                className={`p-1 rounded-full hover:bg-opacity-20 hover:bg-gray-500 transition-colors`}
+                className={`p-1 rounded-none hover:bg-white/10 transition-colors border border-white/30`}
                 title="Retry"
               >
                 <RefreshCw className="w-3 h-3" />
@@ -286,7 +285,7 @@ const ErrorDisplay = ({ error, errorState, onRetry, onDismiss }) => {
             {onDismiss && (
               <button
                 onClick={() => onDismiss(type)}
-                className={`p-1 rounded-full hover:bg-opacity-20 hover:bg-gray-500 transition-colors`}
+                className={`p-1 rounded-none hover:bg-white/10 transition-colors border border-white/30`}
                 title="Dismiss"
               >
                 <X className="w-3 h-3" />
@@ -306,40 +305,40 @@ const ErrorDisplay = ({ error, errorState, onRetry, onDismiss }) => {
         {renderError(
           errorState.connectionError,
           'connection',
-          'bg-red-50 dark:bg-red-900/20',
-          'border-red-200 dark:border-red-800',
-          'text-red-800 dark:text-red-200',
-          <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+          'bg-transparent backdrop-blur-sm',
+          'border-white/50',
+          'text-accent-100',
+          <AlertCircle className="w-4 h-4 text-accent-400 mt-0.5 flex-shrink-0" />
         )}
         
         {/* AI Processing errors */}
         {renderError(
           errorState.processingError,
           'processing',
-          'bg-orange-50 dark:bg-orange-900/20',
-          'border-orange-200 dark:border-orange-800',
-          'text-orange-800 dark:text-orange-200',
-          <Zap className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+          'bg-transparent backdrop-blur-sm',
+          'border-white/50',
+          'text-secondary-100',
+          <Zap className="w-4 h-4 text-secondary-400 mt-0.5 flex-shrink-0" />
         )}
         
         {/* Rate limit errors */}
         {renderError(
           errorState.rateLimitError,
           'rate_limit',
-          'bg-yellow-50 dark:bg-yellow-900/20',
-          'border-yellow-200 dark:border-yellow-800',
-          'text-yellow-800 dark:text-yellow-200',
-          <Clock className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+          'bg-transparent backdrop-blur-sm',
+          'border-white/50',
+          'text-secondary-200',
+          <Clock className="w-4 h-4 text-secondary-400 mt-0.5 flex-shrink-0" />
         )}
         
         {/* Validation errors */}
         {renderError(
           errorState.validationError,
           'validation',
-          'bg-purple-50 dark:bg-purple-900/20',
-          'border-purple-200 dark:border-purple-800',
-          'text-purple-800 dark:text-purple-200',
-          <AlertTriangle className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
+          'bg-transparent backdrop-blur-sm',
+          'border-white/50',
+          'text-primary-200',
+          <AlertTriangle className="w-4 h-4 text-primary-400 mt-0.5 flex-shrink-0" />
         )}
       </div>
     );
@@ -349,15 +348,15 @@ const ErrorDisplay = ({ error, errorState, onRetry, onDismiss }) => {
   if (!error) return null;
   
   return (
-    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-3">
+    <div className="bg-transparent backdrop-blur-sm border border-white/50 rounded-none p-3 mb-3">
       <div className="flex items-start space-x-2">
-        <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+        <AlertCircle className="w-4 h-4 text-accent-400 mt-0.5 flex-shrink-0" />
         <div className="flex-1">
-          <p className="text-sm text-red-800 dark:text-red-200">
+          <p className="text-sm text-accent-100 font-inter">
             {error.message || 'An error occurred'}
           </p>
           {error.type && (
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+            <p className="text-xs text-accent-200 font-inter font-light mt-1">
               Error type: {error.type}
             </p>
           )}
@@ -366,7 +365,7 @@ const ErrorDisplay = ({ error, errorState, onRetry, onDismiss }) => {
           {onRetry && (
             <button
               onClick={onRetry}
-              className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
+              className="p-1 rounded-none hover:bg-white/10 transition-colors border border-white/30"
               title="Retry"
             >
               <RefreshCw className="w-3 h-3 text-red-500" />
@@ -374,7 +373,7 @@ const ErrorDisplay = ({ error, errorState, onRetry, onDismiss }) => {
           )}
           <button
             onClick={onDismiss}
-            className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
+            className="p-1 rounded-none hover:bg-white/10 transition-colors border border-white/30"
             title="Dismiss"
           >
             <X className="w-3 h-3 text-red-500" />
@@ -503,13 +502,13 @@ const ChatInput = ({
   // Smart placeholder based on connection state
   const getSmartPlaceholder = () => {
     if (isConnecting) {
-      return "Connecting...";
+      return "Connessione...";
     }
     if (!isConnected && connectionState === 'disconnected') {
-      return "Start typing to connect...";
+      return "Inizia a scrivere...";
     }
     if (isConnected && !isReady) {
-      return "Platform initializing...";
+      return "Inizializzazione...";
     }
     if (isConnected && isReady) {
       return placeholder;
@@ -518,8 +517,8 @@ const ChatInput = ({
   };
   
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-      <div className="flex items-end space-x-2">
+    <div className="border-t border-white/10 bg-black/60 backdrop-blur-sm p-4">
+      <div className="flex items-stretch space-x-2">
         <div className="flex-1 relative">
           <textarea
             ref={inputRef}
@@ -532,23 +531,19 @@ const ChatInput = ({
             disabled={isDisabled}
             rows={1}
             className={`
-              w-full px-3 py-2 pr-16 text-sm border rounded-lg resize-none
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+              w-full px-4 py-3 pr-16 text-sm border rounded-none resize-none font-inter h-12
+              bg-transparent backdrop-blur-sm text-white placeholder-gray-400
+              focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white
               disabled:opacity-50 disabled:cursor-not-allowed
-              dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400
-              ${isOverLimit ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}
+              transition-all duration-300
+              ${isOverLimit ? 'border-accent-500 focus:ring-accent-500' : 'border-white/50 hover:border-white hover:bg-black/30'}
             `}
-            style={{ 
-              minHeight: '40px',
-              maxHeight: '120px',
-              overflowY: inputValue.length > 100 ? 'auto' : 'hidden'
-            }}
           />
           
           {/* Character count */}
           <div className={`
-            absolute bottom-1 right-1 text-xs
-            ${isOverLimit ? 'text-red-500' : 'text-gray-400'}
+            absolute bottom-1 right-1 text-xs font-inter font-light
+            ${isOverLimit ? 'text-accent-400' : 'text-gray-500'}
           `}>
             {characterCount}/{maxLength}
           </div>
@@ -558,10 +553,10 @@ const ChatInput = ({
           onClick={handleSubmit}
           disabled={!inputValue.trim() || isDisabled || isOverLimit}
           className={`
-            p-2 rounded-lg transition-all duration-200
+            p-3 rounded-none transition-all duration-300 border font-inter h-12 flex items-center justify-center
             ${(!inputValue.trim() || isDisabled || isOverLimit)
-              ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md'
+              ? 'bg-transparent border-white/20 text-gray-500 cursor-not-allowed'
+              : 'bg-transparent border-white/50 hover:border-white text-white hover:bg-black/30 shadow-sm hover:shadow-md'
             }
           `}
           aria-label="Send message"
@@ -581,8 +576,8 @@ const ChatWidget = ({
   size = 'medium',
   theme = 'auto',
   primaryColor = '#2563eb',
-  title = 'MIPTech AI Assistant',
-  placeholder = 'Type your message...',
+  title = 'MIP AI Assistant',
+  placeholder = 'Scrivi il tuo messaggio...',
   className = '',
   enableSounds = false,
   enableNotifications = false,
@@ -598,7 +593,6 @@ const ChatWidget = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [hasTriggeredConnection, setHasTriggeredConnection] = useState(false);
   
   const prefersReducedMotion = useReducedMotion();
   
@@ -620,7 +614,6 @@ const ChatWidget = ({
     error,
     // isTyping: isUserTyping, // Available but not used in current UI
     typingUsers,
-    performanceMetrics,
     initializeChat,
     sendMessage,
     startTyping,
@@ -704,48 +697,25 @@ const ChatWidget = ({
     }
   }, [messages, prefersReducedMotion]);
   
-  // ✅ IMMEDIATE INITIALIZATION: Call initializeChat when ChatWidget opens
-  useEffect(() => {
-    if (isOpen && !currentChat && connectionState === CHAT_STATES.DISCONNECTED) {
-      console.log('🚀 [ChatWidget] Opening chat → calling initializeChat()');
-      initializeChat().catch(err => {
-        // Don't swallow internal logs - re-throw so we can see the real failure point
-        console.error('🔴 [ChatWidget] initializeChat caught error:', err);
-        console.error('🔴 [ChatWidget] Error stack:', err.stack);
-        console.error('🔴 [ChatWidget] Error details:', {
-          message: err.message,
-          name: err.name,
-          type: err.type,
-          status: err.status,
-          endpoint: err.endpoint
-        });
-        // Re-throw to surface internal logs during debugging
-        throw err;
-      });
-    }
-  }, [isOpen, currentChat, connectionState, initializeChat]);
-
   // Initialize chat when user demonstrates intent (lazy connection strategy)
   useEffect(() => {
-    console.log(`🔍 [ChatWidget] useEffect triggered - isOpen: ${isOpen}, currentChat: ${!!currentChat}, hasTriggered: ${hasTriggeredConnection}`);
+    console.log(`🔍 [ChatWidget] useEffect triggered - isOpen: ${isOpen}, currentChat: ${!!currentChat}`);
     
     // ✅ LAZY CONNECTION: Only connect when user actually wants to chat
     // Connection will be triggered by:
     // 1. User starts typing (primary trigger)
     // 2. User clicks send (fallback trigger)
-    // 3. Chat open + 3 second delay (safety trigger - ONE TIME ONLY)
+    // 3. Chat open + 3 second delay (safety trigger)
     
-    if (isOpen && !currentChat && !isConnecting && !hasTriggeredConnection) {
+    if (isOpen && !currentChat && !isConnecting) {
       console.log('🔄 [ChatWidget] Chat opened - ready for user interaction (no auto-connect)');
       onChatOpen?.();
       
-      // One-shot safety trigger: Auto-connect after 3 seconds if user hasn't interacted
+      // Safety trigger: Auto-connect after 3 seconds if user hasn't interacted
       const safetyConnectTimer = setTimeout(() => {
-        if (!currentChat && !isConnecting && isOpen && !hasTriggeredConnection) {
-          console.log('🔄 [ChatWidget] Safety trigger - one-time connection after 3s');
-          setHasTriggeredConnection(true);
+        if (!currentChat && !isConnecting && isOpen) {
+          console.log('🔄 [ChatWidget] Safety trigger - connecting after 3s delay');
           performanceMonitor.startTimer('chat_widget_load');
-          
           initializeChat()
             .then(() => {
               console.log('✅ [ChatWidget] Safety connection successful');
@@ -754,7 +724,6 @@ const ChatWidget = ({
             .catch((error) => {
               console.error('❌ [ChatWidget] Safety connection failed:', error);
               performanceMonitor.endTimer('chat_widget_load');
-              setHasTriggeredConnection(false); // Allow retry on error
               onError?.(error);
             });
         }
@@ -762,12 +731,7 @@ const ChatWidget = ({
       
       return () => clearTimeout(safetyConnectTimer);
     }
-    
-    // Reset trigger state when chat closes
-    if (!isOpen && hasTriggeredConnection) {
-      setHasTriggeredConnection(false);
-    }
-  }, [isOpen, currentChat, initializeChat, onChatOpen, onError, isConnecting, hasTriggeredConnection]);
+  }, [isOpen, currentChat, initializeChat, onChatOpen, onError, isConnecting]);
   
   // Debug: Track ChatWidget mount
   useEffect(() => {
@@ -926,24 +890,23 @@ const ChatWidget = ({
           ref={toggleButtonRef}
           onClick={handleToggle}
           className={`
-            group relative p-4 rounded-full shadow-lg transition-all duration-300
-            bg-blue-600 hover:bg-blue-700 text-white
-            ${prefersReducedMotion ? '' : 'hover:scale-110 active:scale-95'}
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+            group relative p-4 rounded-none shadow-lg transition-all duration-300
+            bg-transparent border border-white/50 hover:border-white hover:bg-black/30 text-white backdrop-blur-sm
+            ${prefersReducedMotion ? '' : 'hover:scale-105 active:scale-95 hover:shadow-xl'}
+            focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black
           `}
-          style={{ backgroundColor: primaryColor }}
           aria-label="Open chat"
         >
           <MessageCircle className="w-6 h-6" />
           
           {/* Notification badge */}
           {!isConnected && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-500 rounded-none animate-pulse" />
           )}
           
           {/* Ripple effect */}
           {!prefersReducedMotion && (
-            <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+            <div className="absolute inset-0 rounded-none bg-white opacity-0 group-hover:opacity-10 transition-all duration-300 group-hover:scale-110" />
           )}
         </button>
       )}
@@ -954,18 +917,22 @@ const ChatWidget = ({
           ref={chatRef}
           className={`
             ${sizeClasses.width} ${isMinimized ? 'h-16' : sizeClasses.height}
-            bg-white dark:bg-gray-900 rounded-xl shadow-2xl
-            border border-gray-200 dark:border-gray-700
+            bg-transparent backdrop-blur-md rounded-none shadow-lg hover:shadow-xl transition-all duration-300
+            border border-white/50 hover:border-white hover:bg-black/30
             flex flex-col overflow-hidden
-            ${prefersReducedMotion ? '' : 'transition-all duration-300'}
+            ${prefersReducedMotion ? '' : 'transition-all duration-300 ease-out'}
           `}
         >
           {/* Header */}
-          <div className="bg-blue-600 text-white p-4 flex items-center justify-between">
+          <div className="bg-transparent backdrop-blur-md border-t border-white/50 text-white p-4 flex items-center justify-between relative">
             <div className="flex items-center space-x-3">
-              <Shield className="w-5 h-5" />
+              <img 
+                src="/Mip-Logo.png" 
+                alt="MipTech Logo" 
+                className="w-8 h-8 object-contain"
+              />
               <div>
-                <h3 className="font-semibold text-sm">{title}</h3>
+                <h3 className="font-bold text-sm font-inter">{title}</h3>
                 <ConnectionStatus 
                   connectionState={connectionState} 
                   isConnected={isConnected} 
@@ -974,16 +941,10 @@ const ChatWidget = ({
             </div>
             
             <div className="flex items-center space-x-1">
-              {/* Performance indicator */}
-              {showPerformanceIndicator && (
-                <div className="text-xs bg-blue-700 px-2 py-1 rounded">
-                  {Math.round(performanceMetrics.averageResponseTime)}ms
-                </div>
-              )}
               
               <button
                 onClick={handleMinimize}
-                className="p-1 hover:bg-blue-700 rounded transition-colors"
+                className="p-1 hover:bg-white/10 rounded-none transition-colors border border-white/30"
                 aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
               >
                 {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
@@ -991,7 +952,7 @@ const ChatWidget = ({
               
               <button
                 onClick={handleToggle}
-                className="p-1 hover:bg-blue-700 rounded transition-colors"
+                className="p-1 hover:bg-white/10 rounded-none transition-colors border border-white/30"
                 aria-label="Close chat"
               >
                 <X className="w-4 h-4" />
@@ -1004,7 +965,7 @@ const ChatWidget = ({
               {/* Messages */}
               <div
                 ref={messagesRef}
-                className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-gray-800 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
+                className="flex-1 p-4 overflow-y-auto bg-transparent backdrop-blur-sm chat-scrollbar"
               >
                 {/* Error display */}
                 <ErrorDisplay
@@ -1019,14 +980,14 @@ const ChatWidget = ({
                   <div className="text-center py-4">
                     <div className="text-gray-500 dark:text-gray-400 text-sm">
                       {isConnecting ? 
-                        'Connecting to chat...' : 
-                        isConnectionTriggered ? 'Initializing connection...' :
-                        'Ready to chat'
+                        'Inizializzazione...' : 
+                        isConnectionTriggered ? 'Connessione in corso...' :
+                        'Pronto per chattare'
                       }
                     </div>
                     {!isConnecting && !isConnectionTriggered && (
-                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        Start typing to connect
+                      <div className="text-xs text-gray-500 font-inter font-light mt-1">
+                        Inizia a scrivere per iniziare
                       </div>
                     )}
                   </div>
@@ -1067,12 +1028,7 @@ const ChatWidget = ({
                 {/* Loading indicator */}
                 {isLoading && (
                   <div className="flex justify-center py-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                    {process.env.NODE_ENV === 'development' && (
-                      <span className="text-xs text-gray-500 ml-2">
-                        Loading: {isLoading ? 'true' : 'false'} | Ready: {isReady ? 'true' : 'false'}
-                      </span>
-                    )}
+                    <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
                   </div>
                 )}
               </div>
