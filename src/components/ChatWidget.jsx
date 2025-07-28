@@ -533,10 +533,10 @@ const ChatInput = ({
             className={`
               w-full px-4 py-3 pr-16 text-sm border rounded-none resize-none font-inter h-12
               bg-transparent backdrop-blur-sm text-white placeholder-gray-400
-              focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white
+              focus:outline-none focus:border-white
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-300
-              ${isOverLimit ? 'border-accent-500 focus:ring-accent-500' : 'border-white/50 hover:border-white hover:bg-black/30'}
+              ${isOverLimit ? 'border-accent-500' : 'border-white/50 hover:border-white hover:bg-black/30'}
             `}
           />
           
