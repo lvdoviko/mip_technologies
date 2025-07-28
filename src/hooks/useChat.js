@@ -1404,6 +1404,46 @@ export const useChat = (config = {}) => {
         return currentMessages;
       });
     };
+
+    // ✅ NEW: Reconnection event handlers
+    const handleReconnecting = (data) => {
+      console.log('🔄 [Chat] WebSocket reconnecting:', data);
+      debugSetConnectionState(CHAT_STATES.RECONNECTING);
+      
+      // Show reconnection status to user
+      setError(null); // Clear any previous errors during reconnection
+    };
+
+    const handleReconnectionSuccess = (data) => {
+      console.log('✅ [Chat] WebSocket reconnection successful:', data);
+      debugSetConnectionState(CHAT_STATES.CONNECTED);
+      
+      // Clear any reconnection-related errors
+      setError(null);
+    };
+
+    const handleReconnectionStopped = (data) => {
+      console.log('🛑 [Chat] WebSocket reconnection stopped:', data);
+      debugSetConnectionState(CHAT_STATES.FAILED);
+      
+      // Set appropriate error message based on reason
+      if (data.reason === 'max_attempts_reached') {
+        setError(new Error('Connection lost. Please refresh the page to reconnect.'));
+      } else if (data.reason === 'server_going_away') {
+        setError(new Error('Server is restarting. Reconnection will resume shortly.'));
+      } else {
+        setError(new Error(`Connection failed: ${data.reason}`));
+      }
+    };
+
+    const handleDisconnected = (data) => {
+      console.log('🔌 [Chat] WebSocket disconnected:', data);
+      
+      // Only set disconnected state if we're not already reconnecting
+      if (connectionState !== CHAT_STATES.RECONNECTING) {
+        debugSetConnectionState(CHAT_STATES.DISCONNECTED);
+      }
+    };
     
     // Register the handlers
     console.log('📝 [Chat] Registering connected handler');
@@ -1429,6 +1469,12 @@ export const useChat = (config = {}) => {
     wsManager.on('processing', handleProcessing);
     wsManager.on('aiProcessingStarted', handleProcessing); // Alternative name
     wsManager.on('ai_processing_started', handleProcessing); // Backend name
+    
+    console.log('📝 [Chat] Registering reconnection handlers');
+    wsManager.on('reconnecting', handleReconnecting);
+    wsManager.on('reconnection_success', handleReconnectionSuccess);
+    wsManager.on('reconnection_stopped', handleReconnectionStopped);
+    wsManager.on('disconnected', handleDisconnected);
     
     console.log('✅ [Chat] All essential handlers registered successfully');
     

@@ -20,6 +20,11 @@ class MIPTechWebSocketManager {
     this.reconnectTimeout = null; // Track reconnection timeout
     this.currentChatId = null; // Store current chat ID for reconnection
     
+    // ✅ Message queuing for reconnections
+    this.messageQueue = []; // Queue for messages during disconnection
+    this.maxQueueSize = 50; // Prevent memory issues
+    this.isReconnecting = false; // Track reconnection state
+    
     // ✅ ENHANCEMENT: Environment-specific configuration
     this.isDevelopment = process.env.NODE_ENV === 'development';
     this.isDebugMode = process.env.REACT_APP_DEBUG_MODE === 'true';
@@ -490,6 +495,7 @@ class MIPTechWebSocketManager {
     console.log('🔌 [WebSocket] Connection closed:', event.code, event.reason);
     this.isConnected = false;
     this.isReady = false;
+    this.isReconnecting = true;
 
     // Enhanced close code analysis for platform debugging
     let closeType = 'normal_close';
@@ -500,6 +506,14 @@ class MIPTechWebSocketManager {
         closeType = 'normal_close';
         shouldReconnect = false;
         console.log('✅ [WebSocket] Normal closure - no reconnection needed');
+        break;
+      case 1001:
+        closeType = 'server_going_away';
+        shouldReconnect = true;
+        console.log('🔄 [WebSocket] Server going away (ECS deployment/restart) - immediate reconnection');
+        this.lastErrorType = 'server_restart';
+        // Reset reconnect attempts for server restarts - these should reconnect immediately
+        this.reconnectAttempts = 0;
         break;
       case 1003:
         closeType = 'unsupported_data';
@@ -552,9 +566,13 @@ class MIPTechWebSocketManager {
       this.attemptReconnect(this.currentChatId);
     } else if (!shouldReconnect) {
       console.log('🛑 [WebSocket] Reconnection disabled for this error type');
+      this.isReconnecting = false;
+      this.clearMessageQueue();
       this.emit('reconnection_stopped', { reason: closeType, code: event.code });
     } else if (this.reconnectAttempts >= maxRetries) {
       console.log(`🛑 [WebSocket] Maximum reconnection attempts reached (${maxRetries} attempts)`);
+      this.isReconnecting = false;
+      this.clearMessageQueue();
       this.emit('reconnection_stopped', { 
         reason: 'max_attempts_reached', 
         attempts: this.reconnectAttempts,
@@ -615,7 +633,12 @@ class MIPTechWebSocketManager {
     delay = Math.round(delay + jitter);
     
     // Apply context-aware delay adjustments
-    if (this.lastErrorType === 'rate_limit_error') {
+    if (this.lastErrorType === 'server_restart') {
+      // ECS deployments/server restarts - use shorter delays for faster reconnection
+      delay = Math.min(delay, 2000); // Cap at 2s for server restarts
+      delay = Math.max(delay, 500);  // Minimum 500ms to avoid overwhelming server
+      console.log(`🚀 [WebSocket] Server restart detected - fast reconnection: ${delay}ms`);
+    } else if (this.lastErrorType === 'rate_limit_error') {
       delay = Math.max(delay, 5000); // Minimum 5s for rate limits
       console.log(`⚠️ [WebSocket] Rate limit detected - using extended backoff: ${delay}ms`);
     } else if (this.lastErrorType === 'platform_initializing') {
@@ -634,7 +657,11 @@ class MIPTechWebSocketManager {
     // Cap maximum delay at 30 seconds
     delay = Math.min(delay, 30000);
 
-    const maxRetries = this.isDevelopment ? this.developmentMaxRetries : this.maxReconnectAttempts;
+    // ✅ ENHANCEMENT: Server restarts get more attempts since they're likely to succeed
+    let maxRetries = this.isDevelopment ? this.developmentMaxRetries : this.maxReconnectAttempts;
+    if (this.lastErrorType === 'server_restart') {
+      maxRetries = Math.max(maxRetries, 10); // Allow up to 10 attempts for server restarts
+    }
     
     if (this.enableVerboseLogging) {
       console.log(`🔄 [WebSocket] Reconnecting (${this.reconnectAttempts}/${maxRetries}) in ${delay}ms`, {
@@ -660,8 +687,13 @@ class MIPTechWebSocketManager {
         await this.connect(chatId);
         console.log('✅ [WebSocket] Reconnection successful');
         
-        // Reset error tracking on successful reconnection
+        // Reset error tracking and reconnection state
         this.lastErrorType = null;
+        this.isReconnecting = false;
+        
+        // Process queued messages after successful reconnection
+        this.processMessageQueue();
+        
         this.emit('reconnection_success', { attempts: this.reconnectAttempts });
         
       } catch (error) {
@@ -680,6 +712,8 @@ class MIPTechWebSocketManager {
         
         if (unrecoverableErrors.includes(error.type)) {
           console.error('🛑 [WebSocket] Stopping reconnection due to unrecoverable error:', error.type);
+          this.isReconnecting = false;
+          this.clearMessageQueue();
           this.emit('reconnection_stopped', { 
             reason: error.type, 
             error,
@@ -692,6 +726,8 @@ class MIPTechWebSocketManager {
         const maxRetries = this.isDevelopment ? this.developmentMaxRetries : this.maxReconnectAttempts;
         if (this.reconnectAttempts >= maxRetries) {
           console.error(`🛑 [WebSocket] Max reconnection attempts reached (${maxRetries})`);
+          this.isReconnecting = false;
+          this.clearMessageQueue();
           this.emit('reconnection_stopped', { 
             reason: 'max_attempts_reached', 
             error,
@@ -709,14 +745,23 @@ class MIPTechWebSocketManager {
   }
 
   sendMessage(type, data = {}) {
-    if (!this.isConnected) {
-      throw new Error('WebSocket not connected');
+    if (!this.isConnected || this.isReconnecting) {
+      // Queue messages during disconnection/reconnection
+      if (this.shouldQueueMessage(type)) {
+        this.queueMessage(type, data);
+        return;
+      } else {
+        throw new Error('WebSocket not connected and message cannot be queued');
+      }
     }
 
     if (!this.isReady && type !== 'ping') {
-      console.warn('⚠️ [WebSocket] Connection not ready, queuing message:', type);
-      // Implement message queue if needed
-      return;
+      // Queue messages when connection exists but not ready
+      if (this.shouldQueueMessage(type)) {
+        console.warn('⚠️ [WebSocket] Connection not ready, queuing message:', type);
+        this.queueMessage(type, data);
+        return;
+      }
     }
 
     const message = {
@@ -954,7 +999,11 @@ class MIPTechWebSocketManager {
     
     this.isConnected = false;
     this.isReady = false;
+    this.isReconnecting = false;
     this.serverClientId = null;
+    
+    // Clear message queue on manual disconnect
+    this.clearMessageQueue();
     
     console.log('✅ [WebSocket] Disconnected cleanly');
   }
