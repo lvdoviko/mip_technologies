@@ -896,7 +896,7 @@ const ChatWidget = ({
           onClick={handleToggle}
           className={`
             group relative p-4 rounded-none shadow-lg transition-all duration-300
-            bg-transparent border border-white/50 hover:border-white hover:bg-black/30 text-white backdrop-blur-sm
+            bg-transparent border border-white/50 hover:border-white hover:bg-white hover:text-black text-white backdrop-blur-sm
             ${prefersReducedMotion ? '' : 'hover:scale-105 active:scale-95 hover:shadow-xl'}
             focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black
           `}
