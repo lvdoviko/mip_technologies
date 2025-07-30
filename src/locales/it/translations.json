@@ -209,6 +209,18 @@
         "title": "Deploy & Ottimizzazione",
         "description": "Implementiamo la tua soluzione e ottimizziamo continuamente le sue performance basandoci su dati reali e feedback.",
         "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M9 12L11 14L15 10\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "number": "05",
+        "title": "Lancio & Deploy",
+        "description": "Implementiamo la soluzione nel tuo ambiente con monitoraggio appropriato e assicuriamo che tutto funzioni perfettamente dal primo giorno.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M4.5 16.5C4.5 17.8807 5.61929 19 7 19H17C18.3807 19 19.5 17.8807 19.5 16.5V10.5C19.5 9.11929 18.3807 8 17 8H7C5.61929 8 4.5 9.11929 4.5 10.5V16.5Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M12 8V5\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M8 8V5\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M16 8V5\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
+      },
+      {
+        "number": "06",
+        "title": "Supporto & Miglioramento",
+        "description": "Forniamo supporto continuo, monitoriamo le performance e miglioriamo costantemente le capacità AI basandoci sui dati di utilizzo reali.",
+        "icon": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12 C2 17.5228 6.47715 22 12 22Z\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M16 8L8 16\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/><path d=\"M8 8H16V16\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"/></svg>"
       }
     ],
     "cta": {
