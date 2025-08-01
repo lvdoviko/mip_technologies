@@ -123,24 +123,14 @@ body {
   transition: all 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-/* Custom scrollbar for chat messages */
+/* Hidden scrollbar for chat messages - maintains scroll functionality */
+.chat-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 .chat-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.chat-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(63, 131, 248, 0.4), rgba(144, 97, 249, 0.4));
-  border-radius: 3px;
-  transition: all 0.2s ease;
-}
-
-.chat-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(63, 131, 248, 0.6), rgba(144, 97, 249, 0.6));
+  display: none;  /* Hide scrollbar for webkit browsers */
 }
 
 /* Enhanced message entrance animation */
