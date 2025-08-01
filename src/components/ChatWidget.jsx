@@ -678,11 +678,11 @@ const ChatWidget = ({
   
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (messagesRef.current) {
+    if (messagesRef.current && messages.length > 0) {
       const scrollContainer = messagesRef.current;
-      const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop <= scrollContainer.clientHeight + 100;
       
-      if (isNearBottom) {
+      // Scroll automatico verso il basso per ogni nuovo messaggio
+      const scrollToBottom = () => {
         if (prefersReducedMotion) {
           scrollContainer.scrollTop = scrollContainer.scrollHeight;
         } else {
@@ -692,9 +692,34 @@ const ChatWidget = ({
             ease: 'power2.out'
           });
         }
-      }
+      };
+      
+      // Usa setTimeout per assicurarsi che il DOM sia aggiornato
+      setTimeout(scrollToBottom, 100);
     }
   }, [messages, prefersReducedMotion]);
+  
+  // Auto-scroll quando appaiono/scompaiono typing indicator e AI processing indicator
+  useEffect(() => {
+    if (messagesRef.current && (typingUsers.length > 0 || isAiProcessing)) {
+      const scrollContainer = messagesRef.current;
+      
+      const scrollToBottom = () => {
+        if (prefersReducedMotion) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        } else {
+          gsap.to(scrollContainer, {
+            scrollTop: scrollContainer.scrollHeight,
+            duration: 0.2,
+            ease: 'power2.out'
+          });
+        }
+      };
+      
+      // Delay più breve per gli indicatori
+      setTimeout(scrollToBottom, 50);
+    }
+  }, [typingUsers.length, isAiProcessing, prefersReducedMotion]);
   
   // Initialize chat when user demonstrates intent (lazy connection strategy)
   useEffect(() => {
@@ -823,7 +848,7 @@ const ChatWidget = ({
       // Fallback trigger: Connect if user clicks send without typing
       if (!currentChat && !isConnecting) {
         console.log('🔄 [ChatWidget] Send clicked without connection - fallback trigger');
-        await handleConnectionTrigger();
+        handleConnectionTrigger();
         
         // Wait a moment for connection to establish
         await new Promise(resolve => setTimeout(resolve, 100));
