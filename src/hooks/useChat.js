@@ -175,6 +175,11 @@ export const useChat = (config = {}) => {
   const strictModeCleanupRef = useRef(false);
   const mountCountRef = useRef(0);  // Track mount count for StrictMode detection
   
+  // Streaming buffer management refs
+  const chunkBufferRef = useRef({});
+  const chunkTimeoutRef = useRef({});
+  const bufferExpiryRef = useRef({});
+  
   // Memoized session data
   const sessionData = useMemo(() => {
     return sessionRef.current.getSession();
@@ -1601,11 +1606,6 @@ export const useChat = (config = {}) => {
     };
     
     // ✅ CRITICAL: Streaming handlers for response_start, response_chunk, response_complete
-    // Buffer management with timeout protection
-    const chunkBufferRef = useRef({});
-    const chunkTimeoutRef = useRef({});
-    const bufferExpiryRef = useRef({}); // Track buffer expiry
-    
     const handleResponseStart = (data) => {
       if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
         console.warn('⚠️ [Chat] Skipping response_start due to component unmount (production only)');
@@ -1768,6 +1768,15 @@ export const useChat = (config = {}) => {
     if (prevChatId && prevChatId !== newChatId) {
       console.log('🔄 [Chat] Switching from chat', prevChatId, 'to', newChatId);
       wsManager.leaveChat(prevChatId);
+      
+      // Clear streaming buffers when switching chats
+      Object.keys(chunkBufferRef.current).forEach(messageId => {
+        clearTimeout(chunkTimeoutRef.current[messageId]);
+        clearTimeout(bufferExpiryRef.current[messageId]);
+        delete chunkBufferRef.current[messageId];
+        delete chunkTimeoutRef.current[messageId];
+        delete bufferExpiryRef.current[messageId];
+      });
     }
     
     // Join new chat if different from previous
