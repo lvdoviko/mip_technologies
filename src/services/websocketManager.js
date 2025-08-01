@@ -19,6 +19,7 @@ class MIPTechWebSocketManager {
     this.lastErrorType = null; // Track error types for intelligent reconnection
     this.reconnectTimeout = null; // Track reconnection timeout
     this.currentChatId = null; // Store current chat ID for reconnection
+    this.currentJoinedChatId = null; // Track which chat we've sent join_chat for
     
     // ✅ Message queuing for reconnections
     this.messageQueue = []; // Queue for messages during disconnection
@@ -311,6 +312,7 @@ class MIPTechWebSocketManager {
           console.log('🎯 [WebSocket] Connection established');
           console.log('🔑 [WebSocket] Server-assigned client_id:', data.data.client_id);
           this.serverClientId = data.data.client_id; // Store platform-assigned client ID
+          // TODO: P1 - Use this.serverClientId for analytics events
           this.emit('connection_established', data); // ✅ CRITICAL: Emit event for useChat hook
           break;
 
@@ -326,6 +328,20 @@ class MIPTechWebSocketManager {
           
           this.emit('ready', data);
           this.emit('connection_ready', data); // ✅ CRITICAL: Emit event for useChat hook
+          
+          // ✅ CRITICAL FIX: Join chat after connection is ready (with Safari fallback)
+          const joinChatAsync = () => {
+            if (this.currentChatId && this.currentChatId !== this.currentJoinedChatId) {
+              console.log('🔗 [WebSocket] Auto-joining chat on connection_ready:', this.currentChatId);
+              this.joinChat(this.currentChatId);
+            }
+          };
+          
+          if (typeof queueMicrotask === 'function') {
+            queueMicrotask(joinChatAsync);
+          } else {
+            setTimeout(joinChatAsync, 0);
+          }
           break;
 
         case 'platform_initializing':
@@ -517,6 +533,7 @@ class MIPTechWebSocketManager {
     this.isConnected = false;
     this.isReady = false;
     this.isReconnecting = true;
+    this.currentJoinedChatId = null; // Clear joined chat on disconnect
 
     // Enhanced close code analysis for platform debugging
     let closeType = 'normal_close';
@@ -716,6 +733,15 @@ class MIPTechWebSocketManager {
         this.processMessageQueue();
         
         this.emit('reconnection_success', { attempts: this.reconnectAttempts });
+        
+        // ✅ CRITICAL FIX: Re-join chat after reconnection
+        // Wait for connection_ready before joining
+        this.once('connection_ready', () => {
+          if (this.currentChatId && this.currentChatId !== this.currentJoinedChatId) {
+            console.log('🔗 [WebSocket] Re-joining chat after reconnection:', this.currentChatId);
+            this.joinChat(this.currentChatId);
+          }
+        });
         
       } catch (error) {
         console.error('❌ [WebSocket] Reconnection failed:', error);
@@ -1228,6 +1254,26 @@ class MIPTechWebSocketManager {
       }
     }
     return newest;
+  }
+
+  // ✅ CRITICAL FIX: Join chat method for production unblocking
+  joinChat(chatId) {
+    if (!chatId || chatId === this.currentJoinedChatId) return; // Prevent duplicates
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    
+    console.log('🚀 [WebSocket] Joining chat:', chatId);
+    this.sendMessage('join_chat', { chat_id: chatId });
+    this.currentJoinedChatId = chatId; // Track joined chat
+  }
+
+  // ✅ CRITICAL FIX: Leave chat method for chat switching
+  leaveChat(chatId) {
+    if (!chatId || chatId !== this.currentJoinedChatId) return;
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    
+    console.log('👋 [WebSocket] Leaving chat:', chatId);
+    this.sendMessage('leave_chat', { chat_id: chatId });
+    this.currentJoinedChatId = null;
   }
 }
 

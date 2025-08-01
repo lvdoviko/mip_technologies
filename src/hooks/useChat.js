@@ -1336,25 +1336,34 @@ export const useChat = (config = {}) => {
         
         // Extract message data from the response
         const messageId = data.messageId || data.data?.message_id;
-        const content = data.data?.content || data.data?.message || '';
+        // Use buffered content if available, otherwise use content from the message
+        const finalContent = data.data?.content || data.data?.message || chunkBufferRef.current?.[messageId] || '';
         
         console.log('🔍 [DEBUG] Extracted data:', {
           messageId,
-          content: content.substring(0, 50) + '...',
+          content: finalContent.substring(0, 50) + '...',
           hasMessageId: !!messageId,
-          hasContent: !!content,
+          hasContent: !!finalContent,
+          hadBufferedContent: !!chunkBufferRef.current?.[messageId],
           dataStructure: Object.keys(data),
           dataDataStructure: data.data ? Object.keys(data.data) : null
         });
         
-        if (!messageId || !content) {
+        if (!messageId || !finalContent) {
           console.warn('⚠️ [Chat] Missing messageId or content in response_complete:', {
             messageId, 
-            hasContent: !!content,
+            hasContent: !!finalContent,
             data: data.data
           });
           return;
         }
+        
+        // Clear all timers and buffers for this message
+        clearTimeout(bufferExpiryRef.current?.[messageId]);
+        clearTimeout(chunkTimeoutRef.current?.[messageId]);
+        delete chunkBufferRef.current?.[messageId];
+        delete chunkTimeoutRef.current?.[messageId];
+        delete bufferExpiryRef.current?.[messageId];
         
         console.log('✅ [DEBUG] Data validation passed - proceeding with message update');
         
@@ -1366,11 +1375,12 @@ export const useChat = (config = {}) => {
               return {
                 ...msg,
                 id: messageId,
-                content: sanitizeInput(content),
+                content: sanitizeInput(finalContent),
                 status: MESSAGE_STATUS.RECEIVED,
                 timestamp: data.data?.created_at ? new Date(data.data.created_at * 1000).toISOString() : new Date().toISOString(),
                 metadata: {
                   ...msg.metadata,
+                  streaming: false,
                   llm_model: data.data?.llm_model,
                   response_time_ms: data.data?.response_time_ms,
                   total_tokens: data.data?.total_tokens
@@ -1385,11 +1395,12 @@ export const useChat = (config = {}) => {
           if (!hasAiMessage) {
             updatedMessages.push({
               id: messageId,
-              content: sanitizeInput(content),
+              content: sanitizeInput(finalContent),
               role: 'assistant',
               status: MESSAGE_STATUS.RECEIVED,
               timestamp: data.data?.created_at ? new Date(data.data.created_at * 1000).toISOString() : new Date().toISOString(),
               metadata: {
+                streaming: false,
                 llm_model: data.data?.llm_model,
                 response_time_ms: data.data?.response_time_ms,
                 total_tokens: data.data?.total_tokens
@@ -1589,6 +1600,88 @@ export const useChat = (config = {}) => {
       }
     };
     
+    // ✅ CRITICAL: Streaming handlers for response_start, response_chunk, response_complete
+    // Buffer management with timeout protection
+    const chunkBufferRef = useRef({});
+    const chunkTimeoutRef = useRef({});
+    const bufferExpiryRef = useRef({}); // Track buffer expiry
+    
+    const handleResponseStart = (data) => {
+      if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
+        console.warn('⚠️ [Chat] Skipping response_start due to component unmount (production only)');
+        return;
+      }
+      
+      if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
+        console.log('🔄 [Chat] Processing response_start despite unmount (StrictMode/Development)');
+      }
+      
+      const messageId = data.data?.message_id || `streaming_${Date.now()}`;
+      
+      console.log('🎬 [Chat] Response streaming started:', messageId);
+      
+      // Clear any existing buffer for this message
+      delete chunkBufferRef.current[messageId];
+      clearTimeout(chunkTimeoutRef.current[messageId]);
+      clearTimeout(bufferExpiryRef.current[messageId]);
+      
+      // Set buffer expiry timeout (20 seconds)
+      bufferExpiryRef.current[messageId] = setTimeout(() => {
+        console.warn(`[Chat] Response timeout for message ${messageId}`);
+        delete chunkBufferRef.current[messageId];
+        delete chunkTimeoutRef.current[messageId];
+        delete bufferExpiryRef.current[messageId];
+        
+        // Mark message as failed
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, status: MESSAGE_STATUS.FAILED, error: 'Response timeout' }
+            : msg
+        ));
+      }, 20000);
+      
+      const tempMessage = {
+        id: messageId,
+        content: '',
+        role: 'assistant',
+        status: MESSAGE_STATUS.STREAMING,
+        timestamp: new Date().toISOString(),
+        metadata: { streaming: true }
+      };
+      
+      setMessages(prev => [...prev, tempMessage]);
+    };
+    
+    const handleResponseChunk = (data) => {
+      if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
+        return;
+      }
+      
+      const messageId = data.data?.message_id;
+      const chunk = data.data?.chunk || '';
+      
+      if (!messageId) return;
+      
+      // Initialize buffer if needed
+      if (!chunkBufferRef.current[messageId]) {
+        chunkBufferRef.current[messageId] = '';
+      }
+      chunkBufferRef.current[messageId] += chunk;
+      
+      // Debounce updates (30ms)
+      clearTimeout(chunkTimeoutRef.current[messageId]);
+      chunkTimeoutRef.current[messageId] = setTimeout(() => {
+        const bufferedContent = chunkBufferRef.current[messageId];
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, content: bufferedContent }
+            : msg
+        ));
+      }, 30);
+    };
+    
+    // Note: handleResponseComplete is already defined above, we'll just enhance it
+    
     // Register the handlers
     console.log('📝 [Chat] Registering connected handler');
     wsManager.on('connected', handleConnected);
@@ -1620,6 +1713,11 @@ export const useChat = (config = {}) => {
     wsManager.on('reconnection_stopped', handleReconnectionStopped);
     wsManager.on('disconnected', handleDisconnected);
     
+    console.log('📝 [Chat] Registering streaming handlers');
+    wsManager.on('response_start', handleResponseStart);
+    wsManager.on('response_chunk', handleResponseChunk);
+    // response_complete is already registered above
+    
     console.log('✅ [Chat] All essential handlers registered successfully');
     
     // Cleanup function
@@ -1636,10 +1734,58 @@ export const useChat = (config = {}) => {
         wsManager.off('processing', handleProcessing);
         wsManager.off('aiProcessingStarted', handleProcessing);
         wsManager.off('ai_processing_started', handleProcessing);
+        wsManager.off('reconnecting', handleReconnecting);
+        wsManager.off('reconnection_success', handleReconnectionSuccess);
+        wsManager.off('reconnection_stopped', handleReconnectionStopped);
+        wsManager.off('disconnected', handleDisconnected);
+        wsManager.off('response_start', handleResponseStart);
+        wsManager.off('response_chunk', handleResponseChunk);
+        
+        // Clear all streaming buffers and timers
+        Object.keys(bufferExpiryRef.current || {}).forEach(messageId => {
+          clearTimeout(bufferExpiryRef.current[messageId]);
+        });
+        Object.keys(chunkTimeoutRef.current || {}).forEach(messageId => {
+          clearTimeout(chunkTimeoutRef.current[messageId]);
+        });
       }
     };
   }, []); // No dependencies to ensure it runs once
   
+  /**
+   * ✅ CRITICAL FIX: Chat switching logic with leave/join
+   */
+  const previousChatIdRef = useRef(null);
+  
+  useEffect(() => {
+    const wsManager = websocketRef.current;
+    if (!wsManager || !currentChat) return;
+    
+    const newChatId = currentChat.id;
+    const prevChatId = previousChatIdRef.current;
+    
+    // Leave previous chat if switching
+    if (prevChatId && prevChatId !== newChatId) {
+      console.log('🔄 [Chat] Switching from chat', prevChatId, 'to', newChatId);
+      wsManager.leaveChat(prevChatId);
+    }
+    
+    // Join new chat if different from previous
+    if (newChatId && newChatId !== prevChatId) {
+      console.log('🔗 [Chat] Joining new chat:', newChatId);
+      wsManager.joinChat(newChatId);
+      previousChatIdRef.current = newChatId;
+    }
+    
+    // Cleanup on unmount or when chat is cleared
+    return () => {
+      if (newChatId) {
+        console.log('🧹 [Chat] Leaving chat on cleanup:', newChatId);
+        wsManager.leaveChat(newChatId);
+        previousChatIdRef.current = null;
+      }
+    };
+  }, [currentChat?.id]);
 
   /**
    * Auto-initialize chat if enabled
