@@ -797,11 +797,30 @@ const ChatWidget = ({
     setIsMinimized(newMinimized);
     
     if (!prefersReducedMotion && chatRef.current) {
-      gsap.to(chatRef.current, {
-        height: newMinimized ? '60px' : 'auto',
-        duration: 0.3,
-        ease: 'power2.inOut'
-      });
+      if (newMinimized) {
+        // Minimizzazione: riduci a 60px
+        gsap.to(chatRef.current, {
+          height: '60px',
+          duration: 0.3,
+          ease: 'power2.inOut'
+        });
+      } else {
+        // Espansione: prima ottieni l'altezza corretta, poi anima
+        const currentHeight = chatRef.current.style.height;
+        chatRef.current.style.height = 'auto';
+        const targetHeight = chatRef.current.offsetHeight;
+        chatRef.current.style.height = currentHeight;
+        
+        gsap.to(chatRef.current, {
+          height: targetHeight + 'px',
+          duration: 0.3,
+          ease: 'power2.inOut',
+          onComplete: () => {
+            // Rimuovi lo stile inline per lasciare che CSS gestisca l'altezza
+            chatRef.current.style.height = '';
+          }
+        });
+      }
     }
   }, [isMinimized, prefersReducedMotion]);
   
