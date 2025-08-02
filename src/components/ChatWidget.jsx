@@ -809,46 +809,54 @@ const ChatWidget = ({
           // Minimizzazione: nascondere contenuto prima di ridurre altezza
           tl.to([messagesRef.current, inputRef.current], {
             opacity: 0,
-            y: -10,
-            duration: 0.15,
+            y: -8,
+            duration: 0.2,
             ease: 'power2.in'
           })
           .to(chatRef.current, {
             height: '60px',
-            duration: 0.2,
+            duration: 0.3,
             ease: 'power2.inOut'
           }, 0.1);
         } else {
-          // Espansione: prima ottieni l'altezza corretta, poi anima in sequenza
+          // Espansione: calcola l'altezza target in modo più fluido
           const currentHeight = chatRef.current.style.height;
+          
+          // Imposta temporaneamente il contenuto come visibile ma nascosto per il calcolo
+          gsap.set([messagesRef.current, inputRef.current], {
+            opacity: 0,
+            y: 0,
+            visibility: 'visible'
+          });
+          
           chatRef.current.style.height = 'auto';
           const targetHeight = chatRef.current.offsetHeight;
           chatRef.current.style.height = currentHeight;
           
-          // Imposta lo stato iniziale del contenuto (nascosto)
+          // Ora imposta lo stato iniziale per l'animazione
           gsap.set([messagesRef.current, inputRef.current], {
             opacity: 0,
-            y: -15
+            y: -10
           });
           
-          // Sequenza di animazione
+          // Sequenza di animazione più fluida
           tl.to(chatRef.current, {
             height: targetHeight + 'px',
-            duration: 0.25,
+            duration: 0.4,
             ease: 'power2.out'
           })
           .to(messagesRef.current, {
             opacity: 1,
             y: 0,
-            duration: 0.2,
+            duration: 0.3,
             ease: 'power2.out'
-          }, 0.15)
+          }, 0.1)
           .to(inputRef.current, {
             opacity: 1,
             y: 0,
-            duration: 0.15,
+            duration: 0.25,
             ease: 'power2.out'
-          }, 0.25)
+          }, 0.2)
           .call(() => {
             // Rimuovi lo stile inline per lasciare che CSS gestisca l'altezza
             chatRef.current.style.height = '';
