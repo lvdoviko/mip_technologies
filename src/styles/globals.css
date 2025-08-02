@@ -58,13 +58,13 @@
 .message-tail-left::after {
   content: '';
   position: absolute;
-  bottom: -8px;
-  left: 20px;
+  bottom: 2px;
+  left: -8px;
   width: 0;
   height: 0;
-  border-top: 8px solid black;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
+  border-right: 8px solid black;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
