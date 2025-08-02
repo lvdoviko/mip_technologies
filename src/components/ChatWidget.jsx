@@ -797,57 +797,86 @@ const ChatWidget = ({
     const newMinimized = !isMinimized;
     setIsMinimized(newMinimized);
     
-    if (!prefersReducedMotion && chatRef.current && messagesRef.current && inputRef.current) {
-      const tl = gsap.timeline();
+    if (!prefersReducedMotion && chatRef.current) {
+      // Verifica se abbiamo tutte le ref per l'animazione avanzata
+      const hasAllRefs = messagesRef.current && inputRef.current;
       
-      if (newMinimized) {
-        // Minimizzazione: nascondere contenuto prima di ridurre altezza
-        tl.to([messagesRef.current, inputRef.current], {
-          opacity: 0,
-          y: -10,
-          duration: 0.15,
-          ease: 'power2.in'
-        })
-        .to(chatRef.current, {
-          height: '60px',
-          duration: 0.2,
-          ease: 'power2.inOut'
-        }, 0.1);
+      if (hasAllRefs) {
+        // Animazione avanzata con timeline
+        const tl = gsap.timeline();
+        
+        if (newMinimized) {
+          // Minimizzazione: nascondere contenuto prima di ridurre altezza
+          tl.to([messagesRef.current, inputRef.current], {
+            opacity: 0,
+            y: -10,
+            duration: 0.15,
+            ease: 'power2.in'
+          })
+          .to(chatRef.current, {
+            height: '60px',
+            duration: 0.2,
+            ease: 'power2.inOut'
+          }, 0.1);
+        } else {
+          // Espansione: prima ottieni l'altezza corretta, poi anima in sequenza
+          const currentHeight = chatRef.current.style.height;
+          chatRef.current.style.height = 'auto';
+          const targetHeight = chatRef.current.offsetHeight;
+          chatRef.current.style.height = currentHeight;
+          
+          // Imposta lo stato iniziale del contenuto (nascosto)
+          gsap.set([messagesRef.current, inputRef.current], {
+            opacity: 0,
+            y: -15
+          });
+          
+          // Sequenza di animazione
+          tl.to(chatRef.current, {
+            height: targetHeight + 'px',
+            duration: 0.25,
+            ease: 'power2.out'
+          })
+          .to(messagesRef.current, {
+            opacity: 1,
+            y: 0,
+            duration: 0.2,
+            ease: 'power2.out'
+          }, 0.15)
+          .to(inputRef.current, {
+            opacity: 1,
+            y: 0,
+            duration: 0.15,
+            ease: 'power2.out'
+          }, 0.25)
+          .call(() => {
+            // Rimuovi lo stile inline per lasciare che CSS gestisca l'altezza
+            chatRef.current.style.height = '';
+          });
+        }
       } else {
-        // Espansione: prima ottieni l'altezza corretta, poi anima in sequenza
-        const currentHeight = chatRef.current.style.height;
-        chatRef.current.style.height = 'auto';
-        const targetHeight = chatRef.current.offsetHeight;
-        chatRef.current.style.height = currentHeight;
-        
-        // Imposta lo stato iniziale del contenuto (nascosto)
-        gsap.set([messagesRef.current, inputRef.current], {
-          opacity: 0,
-          y: -15
-        });
-        
-        // Sequenza di animazione
-        tl.to(chatRef.current, {
-          height: targetHeight + 'px',
-          duration: 0.25,
-          ease: 'power2.out'
-        })
-        .to(messagesRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.2,
-          ease: 'power2.out'
-        }, 0.15)
-        .to(inputRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.15,
-          ease: 'power2.out'
-        }, 0.25)
-        .call(() => {
-          // Rimuovi lo stile inline per lasciare che CSS gestisca l'altezza
-          chatRef.current.style.height = '';
-        });
+        // Fallback: animazione semplice se non abbiamo tutte le ref
+        if (newMinimized) {
+          gsap.to(chatRef.current, {
+            height: '60px',
+            duration: 0.3,
+            ease: 'power2.inOut'
+          });
+        } else {
+          const currentHeight = chatRef.current.style.height;
+          chatRef.current.style.height = 'auto';
+          const targetHeight = chatRef.current.offsetHeight;
+          chatRef.current.style.height = currentHeight;
+          
+          gsap.to(chatRef.current, {
+            height: targetHeight + 'px',
+            duration: 0.3,
+            ease: 'power2.inOut',
+            onComplete: () => {
+              chatRef.current.style.height = '';
+            }
+          });
+        }
       }
     }
   }, [isMinimized, prefersReducedMotion]);
