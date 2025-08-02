@@ -55,6 +55,18 @@
   border-bottom: 8px solid transparent;
 }
 
+.message-tail-left::before {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  left: -9px;
+  width: 0;
+  height: 0;
+  border-right: 9px solid white;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+}
+
 .message-tail-left::after {
   content: '';
   position: absolute;
