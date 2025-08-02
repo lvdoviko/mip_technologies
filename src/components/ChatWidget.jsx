@@ -599,6 +599,7 @@ const ChatWidget = ({
   const widgetRef = useRef(null);
   const chatRef = useRef(null);
   const messagesRef = useRef(null);
+  const inputRef = useRef(null);
   const toggleButtonRef = useRef(null);
   
   // Chat hook
@@ -796,29 +797,56 @@ const ChatWidget = ({
     const newMinimized = !isMinimized;
     setIsMinimized(newMinimized);
     
-    if (!prefersReducedMotion && chatRef.current) {
+    if (!prefersReducedMotion && chatRef.current && messagesRef.current && inputRef.current) {
+      const tl = gsap.timeline();
+      
       if (newMinimized) {
-        // Minimizzazione: riduci a 60px
-        gsap.to(chatRef.current, {
+        // Minimizzazione: nascondere contenuto prima di ridurre altezza
+        tl.to([messagesRef.current, inputRef.current], {
+          opacity: 0,
+          y: -10,
+          duration: 0.15,
+          ease: 'power2.in'
+        })
+        .to(chatRef.current, {
           height: '60px',
-          duration: 0.3,
+          duration: 0.2,
           ease: 'power2.inOut'
-        });
+        }, 0.1);
       } else {
-        // Espansione: prima ottieni l'altezza corretta, poi anima
+        // Espansione: prima ottieni l'altezza corretta, poi anima in sequenza
         const currentHeight = chatRef.current.style.height;
         chatRef.current.style.height = 'auto';
         const targetHeight = chatRef.current.offsetHeight;
         chatRef.current.style.height = currentHeight;
         
-        gsap.to(chatRef.current, {
+        // Imposta lo stato iniziale del contenuto (nascosto)
+        gsap.set([messagesRef.current, inputRef.current], {
+          opacity: 0,
+          y: -15
+        });
+        
+        // Sequenza di animazione
+        tl.to(chatRef.current, {
           height: targetHeight + 'px',
-          duration: 0.3,
-          ease: 'power2.inOut',
-          onComplete: () => {
-            // Rimuovi lo stile inline per lasciare che CSS gestisca l'altezza
-            chatRef.current.style.height = '';
-          }
+          duration: 0.25,
+          ease: 'power2.out'
+        })
+        .to(messagesRef.current, {
+          opacity: 1,
+          y: 0,
+          duration: 0.2,
+          ease: 'power2.out'
+        }, 0.15)
+        .to(inputRef.current, {
+          opacity: 1,
+          y: 0,
+          duration: 0.15,
+          ease: 'power2.out'
+        }, 0.25)
+        .call(() => {
+          // Rimuovi lo stile inline per lasciare che CSS gestisca l'altezza
+          chatRef.current.style.height = '';
         });
       }
     }
@@ -1080,19 +1108,21 @@ const ChatWidget = ({
               </div>
               
               {/* Input */}
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                isDisabled={!isReady || !canSendMessage}
-                onTyping={startTyping} // Re-enabled: Backend now supports typing_start/typing_stop
-                onStopTyping={stopTyping} // Re-enabled: Backend now supports typing_start/typing_stop
-                onConnectionTrigger={handleConnectionTrigger}
-                maxLength={maxMessageLength}
-                placeholder={placeholder}
-                connectionState={connectionState}
-                isConnected={isConnected}
-                isReady={isReady}
-                isConnecting={isConnecting}
-              />
+              <div ref={inputRef}>
+                <ChatInput
+                  onSendMessage={handleSendMessage}
+                  isDisabled={!isReady || !canSendMessage}
+                  onTyping={startTyping} // Re-enabled: Backend now supports typing_start/typing_stop
+                  onStopTyping={stopTyping} // Re-enabled: Backend now supports typing_start/typing_stop
+                  onConnectionTrigger={handleConnectionTrigger}
+                  maxLength={maxMessageLength}
+                  placeholder={placeholder}
+                  connectionState={connectionState}
+                  isConnected={isConnected}
+                  isReady={isReady}
+                  isConnecting={isConnecting}
+                />
+              </div>
             </>
           )}
         </div>
