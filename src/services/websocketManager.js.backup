@@ -217,7 +217,7 @@ class MIPTechWebSocketManager {
   handleOpen(event) {
     // ✅ ENHANCEMENT: Environment-specific connection logging
     if (this.enableVerboseLogging || process.env.NODE_ENV === 'development') {
-      logger.debug('🟢 [WebSocket] Connection OPENED', {
+      console.log('🟢 [WebSocket] Connection OPENED', {
         environment: this.isDevelopment ? 'development' : 'production',
         url: event.target?.url,
         readyState: event.target?.readyState,
@@ -225,7 +225,7 @@ class MIPTechWebSocketManager {
         timestamp: new Date().toISOString()
       });
     } else {
-      logger.debug('🟢 [WebSocket] Connection OPENED');
+      console.log('🟢 [WebSocket] Connection OPENED');
     }
     
     this.isConnected = true;
@@ -236,7 +236,7 @@ class MIPTechWebSocketManager {
     // This prevents 4408 timeout error if connection_ready is delayed
     this.readyTimer = setTimeout(() => {
       if (this.currentChatId && !this.joinSent) {
-        logger.debug('⏰ [WebSocket] Fallback timer - sending join_chat (connection_ready delayed)');
+        console.log('⏰ [WebSocket] Fallback timer - sending join_chat (connection_ready delayed)');
         this.sendJoinChat();
       }
     }, 1000);
@@ -303,7 +303,7 @@ class MIPTechWebSocketManager {
       // ✅ FE-02: Check for duplicate events
       if (this.isDuplicateEvent(data)) {
         if (this.enableVerboseLogging) {
-          logger.debug('🔄 [EventDedup] Filtered duplicate event:', {
+          console.log('🔄 [EventDedup] Filtered duplicate event:', {
             type: data.type,
             messageId: data.messageId,
             eventTs: data.eventTs
@@ -312,11 +312,11 @@ class MIPTechWebSocketManager {
         return; // Skip duplicate event
       }
       
-      logger.debug('📥 [WebSocket] Received:', data.type, data);
+      console.log('📥 [WebSocket] Received:', data.type, data);
       
       // Log normalization for debugging
       if (this.enableVerboseLogging && data.__normalized) {
-        logger.debug('🔄 [EventNormalizer] Event normalized:', {
+        console.log('🔄 [EventNormalizer] Event normalized:', {
           originalType: rawData.type,
           normalizedType: data.type,
           hasMessageId: !!data.messageId,
@@ -327,22 +327,22 @@ class MIPTechWebSocketManager {
 
       switch (data.type) {
         case 'connection_established':
-          logger.debug('🎯 [WebSocket] Connection established');
-          logger.debug('🔑 [WebSocket] Server-assigned client_id:', data.data.client_id);
+          console.log('🎯 [WebSocket] Connection established');
+          console.log('🔑 [WebSocket] Server-assigned client_id:', data.data.client_id);
           this.serverClientId = data.data.client_id; // Store platform-assigned client ID
           // TODO: P1 - Use this.serverClientId for analytics events
           this.emit('connection_established', data); // ✅ CRITICAL: Emit event for useChat hook
           break;
 
         case 'connection_ready':
-          logger.debug('🚀 [WebSocket] Connection ready for messages');
+          console.log('🚀 [WebSocket] Connection ready for messages');
           this.isReady = true;
           
           // ✅ CRITICAL: Clear fallback timer since we got connection_ready
           if (this.readyTimer) {
             clearTimeout(this.readyTimer);
             this.readyTimer = null;
-            logger.debug('✅ [WebSocket] Cleared fallback timer (connection_ready received)');
+            console.log('✅ [WebSocket] Cleared fallback timer (connection_ready received)');
           }
           
           // Send join_chat if not already sent
@@ -352,7 +352,7 @@ class MIPTechWebSocketManager {
           
           // Process any queued messages when connection becomes ready
           if (this.messageQueue.length > 0) {
-            logger.debug('📦 [WebSocket] Connection ready - processing queued messages');
+            console.log('📦 [WebSocket] Connection ready - processing queued messages');
             setTimeout(() => this.processMessageQueue(), 100); // Small delay to ensure stability
           }
           
@@ -361,34 +361,34 @@ class MIPTechWebSocketManager {
           break;
 
         case 'platform_initializing':
-          logger.debug('🔄 [Platform] Platform is initializing AI services...');
+          console.log('🔄 [Platform] Platform is initializing AI services...');
           this.emit('platformInitializing', data);
           break;
 
         case 'platform_ready':
-          logger.debug('✅ [Platform] AI services are fully loaded and ready');
+          console.log('✅ [Platform] AI services are fully loaded and ready');
           this.emit('platformReady', data);
           break;
 
         case 'ai_services_loading':
-          logger.debug('⚙️ [Platform] Vector database and LLM services loading...');
+          console.log('⚙️ [Platform] Vector database and LLM services loading...');
           this.emit('aiServicesLoading', data);
           break;
 
         case 'ai_services_ready':
-          logger.debug('🤖 [Platform] All AI components initialized');
+          console.log('🤖 [Platform] All AI components initialized');
           this.emit('aiServicesReady', data);
           break;
 
         case 'initialization_progress':
-          logger.debug('📊 [Platform] Initialization progress:', data.data);
+          console.log('📊 [Platform] Initialization progress:', data.data);
           this.emit('initializationProgress', data);
           break;
 
         case 'ping':
           // ✅ CRITICAL: Must respond with pong for heartbeat
           this.lastPingAt = Date.now(); // Track for health monitoring
-          logger.debug('🏓 [WebSocket] Ping received, sending pong');
+          console.log('🏓 [WebSocket] Ping received, sending pong');
           this.sendMessage('pong', { 
             timestamp: Date.now(),
             ts: Date.now() // Both formats for compatibility
@@ -402,13 +402,13 @@ class MIPTechWebSocketManager {
           break;
 
         case 'chat_response_streaming':
-          logger.debug('📡 [WebSocket] Streaming response chunk received');
+          console.log('📡 [WebSocket] Streaming response chunk received');
           this.emit('chatResponseStreaming', data);
           this.emit('chat_response_streaming', data); // ✅ CRITICAL: Emit for streaming handlers
           break;
 
         case 'message_received':
-          logger.debug('✅ [WebSocket] Message received confirmation', {
+          console.log('✅ [WebSocket] Message received confirmation', {
             messageId: data.data?.message_id,
             chatId: data.data?.chat_id,
             timestamp: data.data?.timestamp || Date.now()
@@ -426,7 +426,7 @@ class MIPTechWebSocketManager {
           break;
 
         case 'processing':
-          logger.debug('⚙️ [WebSocket] AI processing started', {
+          console.log('⚙️ [WebSocket] AI processing started', {
             messageId: data.data?.message_id,
             chatId: data.data?.chat_id,
             timestamp: data.data?.timestamp || Date.now()
@@ -445,7 +445,7 @@ class MIPTechWebSocketManager {
           break;
 
         case 'response_complete':
-          logger.debug('🎉 [WebSocket] AI response completed', {
+          console.log('🎉 [WebSocket] AI response completed', {
             messageId: data.data?.message?.id,
             chatId: data.data?.chat_id,
             responseTime: data.data?.message?.response_time_ms,
@@ -460,7 +460,7 @@ class MIPTechWebSocketManager {
             source: 'backend_integration'
           };
           
-          logger.debug('🔥 [WebSocket] About to emit response_complete events with data:', {
+          console.log('🔥 [WebSocket] About to emit response_complete events with data:', {
             type: completionData.type,
             hasMessage: !!completionData.data?.message,
             messageId: completionData.data?.message?.id,
@@ -473,7 +473,7 @@ class MIPTechWebSocketManager {
           this.emit('aiResponseComplete', completionData); // Additional alias for clarity
           this.emit('ai_response_complete', completionData); // Backend event name
           
-          logger.debug('✅ [WebSocket] All response_complete events emitted');
+          console.log('✅ [WebSocket] All response_complete events emitted');
           break;
 
         case 'typing_indicator':
@@ -492,7 +492,7 @@ class MIPTechWebSocketManager {
           break;
 
         case 'error':
-          logger.error('💥 [WebSocket] Server error:', data.data);
+          console.error('💥 [WebSocket] Server error:', data.data);
           // Enhanced error handling to distinguish between error types
           const errorData = {
             ...data.data,
@@ -503,15 +503,15 @@ class MIPTechWebSocketManager {
           
           // Emit specific error types for better frontend handling
           if (data.data?.type === 'ai_processing_error') {
-            logger.error('🤖 [WebSocket] AI Processing Error:', data.data);
+            console.error('🤖 [WebSocket] AI Processing Error:', data.data);
             this.emit('aiProcessingError', errorData);
             this.emit('ai_processing_error', errorData);
           } else if (data.data?.type === 'message_validation_error') {
-            logger.error('📝 [WebSocket] Message Validation Error:', data.data);
+            console.error('📝 [WebSocket] Message Validation Error:', data.data);
             this.emit('messageValidationError', errorData);
             this.emit('message_validation_error', errorData);
           } else if (data.data?.type === 'rate_limit_error') {
-            logger.error('🚦 [WebSocket] Rate Limit Error:', data.data);
+            console.error('🚦 [WebSocket] Rate Limit Error:', data.data);
             this.emit('rateLimitError', errorData);
             this.emit('rate_limit_error', errorData);
           }
@@ -522,22 +522,22 @@ class MIPTechWebSocketManager {
           break;
 
         case 'authentication_required':
-          logger.warn('🔐 [WebSocket] Authentication required');
+          console.warn('🔐 [WebSocket] Authentication required');
           this.emit('authenticationRequired', data.data);
           break;
 
         case 'token_expired':
-          logger.warn('⏰ [WebSocket] Authentication token expired');
+          console.warn('⏰ [WebSocket] Authentication token expired');
           this.emit('tokenExpired', data.data);
           break;
 
         case 'unauthorized':
-          logger.error('🚫 [WebSocket] Unauthorized access');
+          console.error('🚫 [WebSocket] Unauthorized access');
           this.emit('unauthorized', data.data);
           break;
 
         case 'rate_limit_exceeded':
-          logger.warn('⚠️ [WebSocket] Rate limit exceeded:', data.data);
+          console.warn('⚠️ [WebSocket] Rate limit exceeded:', data.data);
           this.emit('rateLimitExceeded', data.data);
           break;
 
@@ -546,12 +546,12 @@ class MIPTechWebSocketManager {
       }
 
     } catch (error) {
-      logger.error('❌ [WebSocket] Failed to parse message:', error);
+      console.error('❌ [WebSocket] Failed to parse message:', error);
     }
   }
 
   handleClose(event) {
-    logger.debug('🔌 [WebSocket] Connection closed:', event.code, event.reason);
+    console.log('🔌 [WebSocket] Connection closed:', event.code, event.reason);
     this.isConnected = false;
     this.isReady = false;
     this.isReconnecting = true;
@@ -572,78 +572,78 @@ class MIPTechWebSocketManager {
       case 1000:
         closeType = 'normal_close';
         shouldReconnect = false;
-        logger.debug('✅ [WebSocket] Normal closure - no reconnection needed');
+        console.log('✅ [WebSocket] Normal closure - no reconnection needed');
         break;
       case 1001:
         closeType = 'server_going_away';
         shouldReconnect = true;
-        logger.debug('🔄 [WebSocket] Server restarting (rolling deploy) - will reconnect');
+        console.log('🔄 [WebSocket] Server restarting (rolling deploy) - will reconnect');
         this.lastErrorType = 'server_restart';
         // Reset reconnect attempts for server restarts - these should reconnect immediately
         this.reconnectAttempts = 0;
         break;
       case 1003:
         closeType = 'unsupported_data';
-        logger.debug('❌ [WebSocket] Unsupported data format - check message structure');
+        console.log('❌ [WebSocket] Unsupported data format - check message structure');
         break;
       case 1006:
         closeType = 'abnormal_closure';
-        logger.debug('⚠️ [WebSocket] Abnormal closure - likely platform restart or network issue');
+        console.log('⚠️ [WebSocket] Abnormal closure - likely platform restart or network issue');
         break;
       case 1008:
         closeType = 'config_error';
         shouldReconnect = false;
-        logger.error('❌ [WebSocket] Configuration error - check tenant_id in URL');
+        console.error('❌ [WebSocket] Configuration error - check tenant_id in URL');
         this.lastErrorType = 'configuration_error';
         break;
       case 1011:
         closeType = 'server_error';
-        logger.debug('💥 [WebSocket] Server error - platform may be experiencing issues');
+        console.log('💥 [WebSocket] Server error - platform may be experiencing issues');
         break;
       case 1012:
         closeType = 'service_restart';
-        logger.debug('🔄 [WebSocket] Service restarting - platform maintenance');
+        console.log('🔄 [WebSocket] Service restarting - platform maintenance');
         this.lastErrorType = 'platform_initializing';
         break;
       // Auth failure codes (44xx)
       case 4400:
         closeType = 'bad_first_frame';
         shouldReconnect = false;
-        logger.error('❌ [WebSocket] Expected join_chat as first message');
+        console.error('❌ [WebSocket] Expected join_chat as first message');
         this.lastErrorType = 'protocol_error';
         break;
       case 4401:
         closeType = 'auth_required';
         shouldReconnect = false;
-        logger.error('❌ [WebSocket] Authentication required or invalid token');
+        console.error('❌ [WebSocket] Authentication required or invalid token');
         this.lastErrorType = 'authentication_error';
         break;
       case 4403:
         closeType = 'forbidden';
         shouldReconnect = false;
-        logger.error('❌ [WebSocket] Tenant mismatch or insufficient scope');
+        console.error('❌ [WebSocket] Tenant mismatch or insufficient scope');
         this.lastErrorType = 'authorization_error';
         break;
       case 4408:
         closeType = 'join_timeout';
         shouldReconnect = false;
-        logger.error('❌ [WebSocket] join_chat not sent within 10 seconds');
+        console.error('❌ [WebSocket] join_chat not sent within 10 seconds');
         this.lastErrorType = 'timeout_error';
         break;
       // Legacy error codes (keeping for backward compatibility)
       case 4003:
         closeType = 'rate_limit_exceeded';
-        logger.debug('🚦 [WebSocket] Rate limit exceeded - backing off');
+        console.log('🚦 [WebSocket] Rate limit exceeded - backing off');
         this.lastErrorType = 'rate_limit_error';
         break;
       case 4004:
         closeType = 'authentication_failed';
-        logger.debug('🔐 [WebSocket] Authentication failed - check tenant configuration');
+        console.log('🔐 [WebSocket] Authentication failed - check tenant configuration');
         this.lastErrorType = 'authentication_error';
         shouldReconnect = false;
         break;
       default:
-        logger.debug(`🔍 [WebSocket] Unexpected close code: ${event.code} - ${event.reason}`);
+        console.log(`🔍 [WebSocket] Unexpected close code: ${event.code} - ${event.reason}`);
     }
 
     this.emit('disconnected', { 
@@ -659,17 +659,17 @@ class MIPTechWebSocketManager {
     // Attempt reconnection based on close code analysis
     if (shouldReconnect && event.code !== 1000 && this.reconnectAttempts < maxRetries) {
       if (this.enableVerboseLogging) {
-        logger.debug(`🔄 [WebSocket] Attempting reconnection (${this.reconnectAttempts + 1}/${maxRetries}) in ${this.isDevelopment ? 'development' : 'production'} mode`);
+        console.log(`🔄 [WebSocket] Attempting reconnection (${this.reconnectAttempts + 1}/${maxRetries}) in ${this.isDevelopment ? 'development' : 'production'} mode`);
       }
       // ✅ ENHANCEMENT: Pass chatId to maintain session context
       this.attemptReconnect(this.currentChatId);
     } else if (!shouldReconnect) {
-      logger.debug('🛑 [WebSocket] Reconnection disabled for this error type');
+      console.log('🛑 [WebSocket] Reconnection disabled for this error type');
       this.isReconnecting = false;
       this.clearMessageQueue();
       this.emit('reconnection_stopped', { reason: closeType, code: event.code });
     } else if (this.reconnectAttempts >= maxRetries) {
-      logger.debug(`🛑 [WebSocket] Maximum reconnection attempts reached (${maxRetries} attempts)`);
+      console.log(`🛑 [WebSocket] Maximum reconnection attempts reached (${maxRetries} attempts)`);
       this.isReconnecting = false;
       this.clearMessageQueue();
       this.emit('reconnection_stopped', { 
@@ -683,7 +683,7 @@ class MIPTechWebSocketManager {
   }
 
   handleError(event) {
-    logger.error('❌ [WebSocket] Error:', event);
+    console.error('❌ [WebSocket] Error:', event);
     
     // Enhanced error handling for platform-specific scenarios
     let errorMessage = 'WebSocket connection error';
@@ -736,21 +736,21 @@ class MIPTechWebSocketManager {
       // ECS deployments/server restarts - use shorter delays for faster reconnection
       delay = Math.min(delay, 2000); // Cap at 2s for server restarts
       delay = Math.max(delay, 500);  // Minimum 500ms to avoid overwhelming server
-      logger.debug(`🚀 [WebSocket] Server restart detected - fast reconnection: ${delay}ms`);
+      console.log(`🚀 [WebSocket] Server restart detected - fast reconnection: ${delay}ms`);
     } else if (this.lastErrorType === 'rate_limit_error') {
       delay = Math.max(delay, 5000); // Minimum 5s for rate limits
-      logger.debug(`⚠️ [WebSocket] Rate limit detected - using extended backoff: ${delay}ms`);
+      console.log(`⚠️ [WebSocket] Rate limit detected - using extended backoff: ${delay}ms`);
     } else if (this.lastErrorType === 'platform_initializing') {
       delay = Math.max(delay, 2000); // Minimum 2s for platform startup
-      logger.debug(`🔄 [WebSocket] Platform initializing - waiting for readiness: ${delay}ms`);
+      console.log(`🔄 [WebSocket] Platform initializing - waiting for readiness: ${delay}ms`);
     } else if (this.lastErrorType === 'network_error') {
       // Network issues might need more time
       delay = Math.max(delay, 3000);
-      logger.debug(`🌐 [WebSocket] Network error detected - extended delay: ${delay}ms`);
+      console.log(`🌐 [WebSocket] Network error detected - extended delay: ${delay}ms`);
     } else if (this.lastErrorType === 'server_error') {
       // Server errors might need time to resolve
       delay = Math.max(delay, 4000);
-      logger.debug(`🔥 [WebSocket] Server error detected - extended delay: ${delay}ms`);
+      console.log(`🔥 [WebSocket] Server error detected - extended delay: ${delay}ms`);
     }
     
     // Cap maximum delay at 30 seconds
@@ -763,13 +763,13 @@ class MIPTechWebSocketManager {
     }
     
     if (this.enableVerboseLogging) {
-      logger.debug(`🔄 [WebSocket] Reconnecting (${this.reconnectAttempts}/${maxRetries}) in ${delay}ms`, {
+      console.log(`🔄 [WebSocket] Reconnecting (${this.reconnectAttempts}/${maxRetries}) in ${delay}ms`, {
         environment: this.isDevelopment ? 'development' : 'production',
         errorType: this.lastErrorType,
         chatId
       });
     } else {
-      logger.debug(`🔄 [WebSocket] Reconnecting (${this.reconnectAttempts}/${maxRetries}) in ${delay}ms`);
+      console.log(`🔄 [WebSocket] Reconnecting (${this.reconnectAttempts}/${maxRetries}) in ${delay}ms`);
     }
     
     this.emit('reconnecting', { 
@@ -784,7 +784,7 @@ class MIPTechWebSocketManager {
       try {
         // ✅ ENHANCEMENT: Pass chatId to maintain session context
         await this.connect(chatId);
-        logger.debug('✅ [WebSocket] Reconnection successful');
+        console.log('✅ [WebSocket] Reconnection successful');
         
         // Reset error tracking and reconnection state
         this.lastErrorType = null;
@@ -799,13 +799,13 @@ class MIPTechWebSocketManager {
         // Wait for connection_ready before joining
         this.once('connection_ready', () => {
           if (this.currentChatId && this.currentChatId !== this.currentJoinedChatId) {
-            logger.debug('🔗 [WebSocket] Re-joining chat after reconnection:', this.currentChatId);
+            console.log('🔗 [WebSocket] Re-joining chat after reconnection:', this.currentChatId);
             this.joinChat(this.currentChatId);
           }
         });
         
       } catch (error) {
-        logger.error('❌ [WebSocket] Reconnection failed:', error);
+        console.error('❌ [WebSocket] Reconnection failed:', error);
         
         // Store error type for next reconnection attempt
         this.lastErrorType = error.type || 'unknown_error';
@@ -819,7 +819,7 @@ class MIPTechWebSocketManager {
         ];
         
         if (unrecoverableErrors.includes(error.type)) {
-          logger.error('🛑 [WebSocket] Stopping reconnection due to unrecoverable error:', error.type);
+          console.error('🛑 [WebSocket] Stopping reconnection due to unrecoverable error:', error.type);
           this.isReconnecting = false;
           this.clearMessageQueue();
           this.emit('reconnection_stopped', { 
@@ -833,7 +833,7 @@ class MIPTechWebSocketManager {
         // If we've reached max attempts, stop trying
         const maxRetries = this.isDevelopment ? this.developmentMaxRetries : this.maxReconnectAttempts;
         if (this.reconnectAttempts >= maxRetries) {
-          logger.error(`🛑 [WebSocket] Max reconnection attempts reached (${maxRetries})`);
+          console.error(`🛑 [WebSocket] Max reconnection attempts reached (${maxRetries})`);
           this.isReconnecting = false;
           this.clearMessageQueue();
           this.emit('reconnection_stopped', { 
@@ -866,7 +866,7 @@ class MIPTechWebSocketManager {
     if (!this.isReady && type !== 'ping') {
       // Queue messages when connection exists but not ready
       if (this.shouldQueueMessage(type)) {
-        logger.warn('⚠️ [WebSocket] Connection not ready, queuing message:', type);
+        console.warn('⚠️ [WebSocket] Connection not ready, queuing message:', type);
         this.queueMessage(type, data);
         return;
       }
@@ -882,11 +882,11 @@ class MIPTechWebSocketManager {
     // ✅ FE-01: Normalize outgoing event with central event normalizer
     const normalizedMessage = eventNormalizer.normalizeOutgoingEvent(message);
     
-    logger.debug('📤 [WebSocket] Sending:', type, normalizedMessage);
+    console.log('📤 [WebSocket] Sending:', type, normalizedMessage);
     
     // Log normalization for debugging
     if (this.enableVerboseLogging && normalizedMessage.__normalized) {
-      logger.debug('🔄 [EventNormalizer] Outgoing event normalized:', {
+      console.log('🔄 [EventNormalizer] Outgoing event normalized:', {
         originalType: message.type,
         normalizedType: normalizedMessage.type,
         hasMessageId: !!normalizedMessage.message_id,
@@ -911,9 +911,9 @@ class MIPTechWebSocketManager {
     if (chatId && chatId !== 'null') {
       messageData.chat_id = chatId;
       messageData.chatId = chatId; // Dual casing for compatibility
-      logger.debug('📤 [WebSocket] Sending user message to specific chat:', chatId);
+      console.log('📤 [WebSocket] Sending user message to specific chat:', chatId);
     } else {
-      logger.debug('📤 [WebSocket] Sending user message via tenant fallback (no chat session)');
+      console.log('📤 [WebSocket] Sending user message via tenant fallback (no chat session)');
     }
     
     // CRITICAL: Use 'user_message' not 'chat_message'
@@ -981,7 +981,7 @@ class MIPTechWebSocketManager {
     const listenerId = this.generateListenerId(event, handler);
     
     // ✅ DEBUG: Always log listener registration attempts
-    logger.debug(`📝 [WebSocket] Attempting to register listener for event: ${event}`, {
+    console.log(`📝 [WebSocket] Attempting to register listener for event: ${event}`, {
       listenerId: listenerId.substring(0, 12),
       handlerType: typeof handler,
       isDuplicate: this.registeredListeners.has(listenerId),
@@ -990,7 +990,7 @@ class MIPTechWebSocketManager {
     
     // Check for duplicate registration
     if (this.registeredListeners.has(listenerId)) {
-      logger.warn(`⚠️ [WebSocket] Duplicate listener registration detected for event '${event}'.`, {
+      console.warn(`⚠️ [WebSocket] Duplicate listener registration detected for event '${event}'.`, {
         event,
         listenerId: listenerId.substring(0, 12),
         action: 'skipped'
@@ -1006,7 +1006,7 @@ class MIPTechWebSocketManager {
     this.eventListeners.get(event).push(handler);
     this.registeredListeners.set(listenerId, { event, handler, registeredAt: Date.now() });
     
-    logger.debug(`✅ [WebSocket] Successfully registered listener for '${event}'`, {
+    console.log(`✅ [WebSocket] Successfully registered listener for '${event}'`, {
       listenerId: listenerId.substring(0, 12),
       totalListeners: this.eventListeners.get(event).length,
       registeredAt: Date.now()
@@ -1056,7 +1056,7 @@ class MIPTechWebSocketManager {
           if (listenerInfo.event === event && listenerInfo.handler === handler) {
             this.registeredListeners.delete(listenerId);
             if (this.enableVerboseLogging) {
-              logger.debug(`📝 [WebSocket] Unregistered listener for '${event}' (ID: ${listenerId.substring(0, 8)}...)`);
+              console.log(`📝 [WebSocket] Unregistered listener for '${event}' (ID: ${listenerId.substring(0, 8)}...)`);
             }
             break;
           }
@@ -1067,7 +1067,7 @@ class MIPTechWebSocketManager {
 
   emit(event, data) {
     // ✅ DEBUG: Log all event emissions
-    logger.debug(`🚀 [WebSocket] Emitting event: ${event}`, {
+    console.log(`🚀 [WebSocket] Emitting event: ${event}`, {
       hasListeners: this.eventListeners.has(event),
       listenerCount: this.eventListeners.has(event) ? this.eventListeners.get(event).length : 0,
       eventData: data?.type || 'no-type',
@@ -1078,20 +1078,20 @@ class MIPTechWebSocketManager {
       const handlers = this.eventListeners.get(event);
       handlers.forEach((handler, index) => {
         try {
-          logger.debug(`📞 [WebSocket] Calling handler ${index + 1}/${handlers.length} for event: ${event}`);
+          console.log(`📞 [WebSocket] Calling handler ${index + 1}/${handlers.length} for event: ${event}`);
           handler(data);
-          logger.debug(`✅ [WebSocket] Handler ${index + 1} completed for event: ${event}`);
+          console.log(`✅ [WebSocket] Handler ${index + 1} completed for event: ${event}`);
         } catch (error) {
-          logger.error(`❌ [WebSocket] Event handler error for ${event} (handler ${index + 1}):`, error);
+          console.error(`❌ [WebSocket] Event handler error for ${event} (handler ${index + 1}):`, error);
         }
       });
     } else {
-      logger.warn(`⚠️ [WebSocket] No listeners registered for event: ${event}`);
+      console.warn(`⚠️ [WebSocket] No listeners registered for event: ${event}`);
     }
   }
 
   disconnect() {
-    logger.debug('🔌 [WebSocket] Disconnecting...');
+    console.log('🔌 [WebSocket] Disconnecting...');
     
     // Clear any pending timers
     if (this.readyTimer) {
@@ -1103,7 +1103,7 @@ class MIPTechWebSocketManager {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
-      logger.debug('✅ [WebSocket] Cancelled pending reconnection');
+      console.log('✅ [WebSocket] Cancelled pending reconnection');
     }
     
     // Reset reconnection state
@@ -1117,7 +1117,7 @@ class MIPTechWebSocketManager {
     this.eventHistory.clear();
     
     if (this.enableVerboseLogging) {
-      logger.debug('✅ [WebSocket] Cleared deduplication structures');
+      console.log('✅ [WebSocket] Cleared deduplication structures');
     }
     
     if (this.ws) {
@@ -1131,7 +1131,7 @@ class MIPTechWebSocketManager {
       try {
         this.ws.close(1000, 'Client disconnect');
       } catch (error) {
-        logger.warn('⚠️ [WebSocket] Error during close:', error);
+        console.warn('⚠️ [WebSocket] Error during close:', error);
       }
       this.ws = null;
     }
@@ -1144,7 +1144,7 @@ class MIPTechWebSocketManager {
     // Clear message queue on manual disconnect
     this.clearMessageQueue();
     
-    logger.debug('✅ [WebSocket] Disconnected cleanly');
+    console.log('✅ [WebSocket] Disconnected cleanly');
   }
 
   // Health check
@@ -1170,7 +1170,7 @@ class MIPTechWebSocketManager {
 
   queueMessage(type, data) {
     if (this.messageQueue.length >= this.maxQueueSize) {
-      logger.warn('⚠️ [WebSocket] Message queue full, dropping oldest message');
+      console.warn('⚠️ [WebSocket] Message queue full, dropping oldest message');
       this.messageQueue.shift(); // Remove oldest message
     }
 
@@ -1183,7 +1183,7 @@ class MIPTechWebSocketManager {
 
     this.messageQueue.push(queuedMessage);
     
-    logger.debug(`📦 [WebSocket] Message queued: ${type}`, {
+    console.log(`📦 [WebSocket] Message queued: ${type}`, {
       queueSize: this.messageQueue.length,
       messageId: queuedMessage.id,
       isReconnecting: this.isReconnecting
@@ -1192,11 +1192,11 @@ class MIPTechWebSocketManager {
 
   processMessageQueue() {
     if (this.messageQueue.length === 0) {
-      logger.debug('📦 [WebSocket] No queued messages to process');
+      console.log('📦 [WebSocket] No queued messages to process');
       return;
     }
 
-    logger.debug(`📦 [WebSocket] Processing ${this.messageQueue.length} queued messages`);
+    console.log(`📦 [WebSocket] Processing ${this.messageQueue.length} queued messages`);
     
     // Create a copy of the queue and clear the original
     const messagesToProcess = [...this.messageQueue];
@@ -1205,23 +1205,23 @@ class MIPTechWebSocketManager {
     // Process each queued message
     messagesToProcess.forEach((queuedMessage, index) => {
       try {
-        logger.debug(`📤 [WebSocket] Sending queued message ${index + 1}/${messagesToProcess.length}: ${queuedMessage.type}`);
+        console.log(`📤 [WebSocket] Sending queued message ${index + 1}/${messagesToProcess.length}: ${queuedMessage.type}`);
         
         // Send the message directly (bypass queue check)
         this.sendMessageDirectly(queuedMessage.type, queuedMessage.data);
         
       } catch (error) {
-        logger.error(`❌ [WebSocket] Failed to send queued message ${queuedMessage.id}:`, error);
+        console.error(`❌ [WebSocket] Failed to send queued message ${queuedMessage.id}:`, error);
         
         // Re-queue the message if it's still valid and we have space
         if (this.messageQueue.length < this.maxQueueSize) {
-          logger.debug(`🔄 [WebSocket] Re-queueing failed message: ${queuedMessage.id}`);
+          console.log(`🔄 [WebSocket] Re-queueing failed message: ${queuedMessage.id}`);
           this.messageQueue.push(queuedMessage);
         }
       }
     });
 
-    logger.debug(`✅ [WebSocket] Finished processing queued messages. Remaining in queue: ${this.messageQueue.length}`);
+    console.log(`✅ [WebSocket] Finished processing queued messages. Remaining in queue: ${this.messageQueue.length}`);
   }
 
   sendMessageDirectly(type, data = {}) {
@@ -1244,14 +1244,14 @@ class MIPTechWebSocketManager {
     // ✅ FE-01: Normalize outgoing event with central event normalizer
     const normalizedMessage = eventNormalizer.normalizeOutgoingEvent(message);
     
-    logger.debug('📤 [WebSocket] Sending (direct):', type, normalizedMessage);
+    console.log('📤 [WebSocket] Sending (direct):', type, normalizedMessage);
     
     this.ws.send(JSON.stringify(normalizedMessage));
   }
 
   clearMessageQueue() {
     if (this.messageQueue.length > 0) {
-      logger.debug(`🗑️ [WebSocket] Clearing message queue (${this.messageQueue.length} messages)`);
+      console.log(`🗑️ [WebSocket] Clearing message queue (${this.messageQueue.length} messages)`);
       this.messageQueue = [];
     }
   }
@@ -1331,13 +1331,13 @@ class MIPTechWebSocketManager {
     if (this.joinSent || !this.currentChatId) return;
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
     
-    logger.debug('🔐 [WebSocket] Sending join_chat with JWT token');
+    console.log('🔐 [WebSocket] Sending join_chat with JWT token');
     
     // Get token from constructor options or localStorage
     const token = this.authToken || localStorage.getItem('miptech_access_token');
     
     if (!token) {
-      logger.warn('⚠️ [WebSocket] No JWT token available for join_chat');
+      console.warn('⚠️ [WebSocket] No JWT token available for join_chat');
     }
     
     this.sendMessage('join_chat', {
@@ -1359,7 +1359,7 @@ class MIPTechWebSocketManager {
     if (!chatId || chatId === this.currentJoinedChatId) return; // Prevent duplicates
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
     
-    logger.debug('🚀 [WebSocket] Joining chat:', chatId);
+    console.log('🚀 [WebSocket] Joining chat:', chatId);
     this.currentChatId = chatId;
     this.sendJoinChat(); // Use new centralized method
   }
@@ -1369,7 +1369,7 @@ class MIPTechWebSocketManager {
     if (!chatId || chatId !== this.currentJoinedChatId) return;
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
     
-    logger.debug('👋 [WebSocket] Leaving chat:', chatId);
+    console.log('👋 [WebSocket] Leaving chat:', chatId);
     this.sendMessage('leave_chat', { chat_id: chatId });
     this.currentJoinedChatId = null;
   }

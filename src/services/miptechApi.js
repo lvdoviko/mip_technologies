@@ -1,4 +1,6 @@
 // src/services/miptechApi.js
+import logger from '../utils/logger';
+
 class MIPTechApiClient {
   constructor(options = {}) {
     this.baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8001';
@@ -13,11 +15,9 @@ class MIPTechApiClient {
     
     // Development-specific settings
     this.developmentTimeout = this.isDevelopment ? 60000 : 30000; // Longer timeout in dev
-    // Enable request logging in production if ?debugApi=true
-    this.enableRequestLogging = this.isDevelopment || 
-      this.isDebugMode || 
-      (typeof window !== 'undefined' && window.location.search.includes('debugApi'));
-    this.enableDetailedErrors = this.isDevelopment || this.isDebugMode;
+    // Use logger utility instead of custom logging flags
+    this.enableRequestLogging = false; // Let logger handle environment checks
+    this.enableDetailedErrors = false; // Let logger handle error details
     
     // 🔧 CRITICAL FIX: Bind methods that use `this` to preserve context
     this.createChat = this.createChat.bind(this);
@@ -50,7 +50,7 @@ class MIPTechApiClient {
     const url = `${this.baseUrl}/api/${this.version}${endpoint}`;
     
     if (this.enableRequestLogging) {
-      console.log('🔗 [API] Request URL:', url);
+      logger.debug('API: Request URL:', url);
     }
 
     const config = {
@@ -74,7 +74,7 @@ class MIPTechApiClient {
 
     // ✅ ENHANCEMENT: Conditional request logging based on environment
     if (this.enableRequestLogging) {
-      console.log(`🌐 [API] ${config.method || 'GET'} ${endpoint}`, {
+      logger.debug(`🌐 [API] ${config.method || 'GET'} ${endpoint}`, {
         environment: this.isDevelopment ? 'development' : 'production',
         headers: config.headers,
         tenantId: this.tenantId,
@@ -85,7 +85,7 @@ class MIPTechApiClient {
 
     // ✅ FORCE LOGGING: Always log pre-request details for createChat
     if (endpoint === '/chat') {
-      console.log('🚀 [API] Pre-request validation for createChat:', {
+      logger.debug('API: Pre-request validation for createChat:', {
         finalUrl: url,
         method: config.method || 'GET',
         contentType: config.headers['Content-Type'],
@@ -106,7 +106,7 @@ class MIPTechApiClient {
 
       // ✅ FORCE LOGGING: Always log response details for createChat regardless of environment
       if (endpoint === '/chat' || this.enableRequestLogging) {
-        console.log('📥 [API] Raw HTTP response:', {
+        logger.debug('API: Raw HTTP response:', {
           endpoint,
           status: response.status,
           statusText: response.statusText,
@@ -122,7 +122,7 @@ class MIPTechApiClient {
         
         // Force logging for createChat errors
         if (endpoint === '/chat' || this.enableRequestLogging) {
-          console.error('❌ [API] HTTP request failed:', {
+          logger.error('❌ [API] HTTP request failed:', {
             endpoint,
             status: response.status,
             statusText: response.statusText,
@@ -137,7 +137,7 @@ class MIPTechApiClient {
         try {
           errorData = responseText ? JSON.parse(responseText) : {};
         } catch (parseError) {
-          console.error('❌ [API] Failed to parse error response as JSON:', parseError);
+          logger.error('❌ [API] Failed to parse error response as JSON:', parseError);
           errorData = { detail: responseText || response.statusText };
         }
         
@@ -174,7 +174,7 @@ class MIPTechApiClient {
       
       // ✅ FORCE LOGGING: Always log successful response data for createChat
       if (endpoint === '/chat' || this.enableRequestLogging) {
-        console.log('✅ [API] Successful HTTP response:', {
+        logger.debug('API: Successful HTTP response:', {
           endpoint,
           status: response.status,
           data: responseData
@@ -185,7 +185,7 @@ class MIPTechApiClient {
     } catch (error) {
       // ✅ ENHANCEMENT: Environment-specific error handling
       if (this.enableDetailedErrors) {
-        console.error(`❌ [API] Request failed:`, {
+        logger.error(`❌ [API] Request failed:`, {
           endpoint,
           error: error.message,
           status: error.status,
@@ -193,7 +193,7 @@ class MIPTechApiClient {
           troubleshooting: this.isDevelopment ? 'Check server logs and network tab' : 'Contact support'
         });
       } else {
-        console.error(`❌ [API] Request failed: ${error.message}`);
+        logger.error(`❌ [API] Request failed: ${error.message}`);
       }
       
       // Add environment context to error
@@ -212,9 +212,9 @@ class MIPTechApiClient {
   // Healthz endpoint (working endpoint)
   async healthz() {
     const url = `${this.baseUrl}/healthz`;
-    console.log('🟢 [HEALTHZ] Starting healthz check to:', url);
+    logger.debug('HEALTHZ: Starting healthz check to:', url);
     if (this.enableRequestLogging) {
-      console.log('🔗 [API] healthz URL:', url);
+      logger.debug('API: healthz URL:', url);
     }
     
     try {
@@ -229,14 +229,15 @@ class MIPTechApiClient {
         signal: controller.signal
       };
       
-      console.log('🟢 [HEALTHZ] About to fetch with config:', { headers: config.headers });
+      logger.debug('HEALTHZ: About to fetch with config:', { headers: config.headers });
       let response;
       try {
         response = await fetch(url, config);
       } catch (fetchError) {
-        console.error('🔴 [HEALTHZ] Fetch failed:', fetchError);
-        console.error('🔴 [HEALTHZ] Fetch error name:', fetchError.name);
-        console.error('🔴 [HEALTHZ] Fetch error message:', fetchError.message);
+        logger.error('HEALTHZ: Fetch failed', { 
+          error: fetchError.message,
+          name: fetchError.name 
+        });
         // Enhance error for proper handling
         const enhancedError = new Error(`Network request failed: ${fetchError.message}`);
         enhancedError.request = { url, method: 'GET' };
@@ -253,12 +254,12 @@ class MIPTechApiClient {
       
       const result = await response.json();
       if (this.enableRequestLogging) {
-        console.log('✅ [API] healthz response:', result);
+        logger.debug('API: healthz response:', result);
       }
       
       return result; // { status: "healthy", version: "0.1.0" }
     } catch (error) {
-      console.error('🔴 [HEALTHZ] Caught error in healthz:', error);
+      logger.error('HEALTHZ: Caught error in healthz', { error: error.message });
       // Enhance error for proper handling
       if (error.name === 'AbortError') {
         const timeoutError = new Error(`Healthz timeout after ${this.developmentTimeout}ms`);
@@ -288,7 +289,7 @@ class MIPTechApiClient {
       if (!response.ok) {
         // Fall back to GET
         if (this.enableRequestLogging) {
-          console.log('📡 [API] HEAD failed, trying GET for readyz');
+          logger.debug('API: HEAD failed, trying GET for readyz');
         }
         response = await fetch(url, { 
           method: 'GET',
@@ -298,12 +299,12 @@ class MIPTechApiClient {
       
       const ready = response.ok;
       if (this.enableRequestLogging) {
-        console.log(`✅ [API] Platform readiness: ${ready ? 'ready' : 'not ready'}`);
+        logger.debug(`✅ [API] Platform readiness: ${ready ? 'ready' : 'not ready'}`);
       }
       return ready;
     } catch (error) {
       if (this.enableRequestLogging) {
-        console.error('❌ [API] Readiness check failed:', error);
+        logger.error('❌ [API] Readiness check failed:', error);
       }
       return false;
     }
@@ -339,7 +340,7 @@ class MIPTechApiClient {
       
       // Only log in dev mode
       if (this.isDevelopment || this.enableRequestLogging) {
-        console.log('📝 [API] Created new persistent session ID');
+        logger.debug('API: Created new persistent session ID');
       }
     }
     
@@ -371,7 +372,7 @@ class MIPTechApiClient {
     
     // ✅ ADD: Pre-validation logging to pinpoint exact failure
     if (this.enableRequestLogging) {
-      console.log('🔍 [API] createChat() PRE-VALIDATION:', {
+      logger.debug('API: createChat() PRE-VALIDATION:', {
         finalSessionId,
         finalVisitorId,
         options,
@@ -387,14 +388,14 @@ class MIPTechApiClient {
     
     // Validate input before making request
     if (this.enableRequestLogging) {
-      console.log('🔍 [API] About to call validateChatCreateData()...');
+      logger.debug('API: About to call validateChatCreateData()...');
     }
     this.validateChatCreateData(finalSessionId, finalVisitorId, options);
     if (this.enableRequestLogging) {
-      console.log('✅ [API] validateChatCreateData() passed successfully');
+      logger.debug('API: validateChatCreateData() passed successfully');
     }
     
-    console.log('🔍 [API] Creating requestData object...');
+    logger.debug('API: Creating requestData object...');
     const requestData = {
       session_id: finalSessionId,           // ✅ REQUIRED
       visitor_id: finalVisitorId,           // ✅ REQUIRED
@@ -402,13 +403,13 @@ class MIPTechApiClient {
       context: options.context || {},
       tenant_id: this.tenantId              // ✅ CRITICAL: Add tenant_id to body
     };
-    console.log('✅ [API] requestData object created successfully');
+    logger.debug('API: requestData object created successfully');
     
-    console.log('🔍 [API] Creating chat with validated data:', requestData);
+    logger.debug('API: Creating chat with validated data:', requestData);
     
     // ✅ FORCE LOGGING: Always log createChat request details regardless of environment
     const apiKeyMasked = (this.apiKeyOptions || process.env.REACT_APP_MIPTECH_API_KEY)?.substring(0, 20) + '...';
-    console.log('🌐 [API] createChat() request details:', {
+    logger.debug('API: createChat() request details:', {
       url: `${this.baseUrl}/api/${this.version}/chat`,
       method: 'POST',
       headers: this.getHeaders(),

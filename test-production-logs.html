@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Console Log Test</title>
+</head>
+<body>
+    <h1>Production Console Log Test</h1>
+    <p>Open DevTools console to verify no sensitive data is logged in production mode.</p>
+    
+    <iframe 
+        id="testFrame" 
+        src="http://localhost:3001" 
+        style="width: 100%; height: 600px; border: 1px solid #ccc;">
+    </iframe>
+    
+    <script>
+        // Capture console logs from iframe
+        let logs = [];
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        // Override console methods to capture logs
+        console.log = function(...args) {
+            logs.push({ type: 'log', message: args.join(' ') });
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            logs.push({ type: 'error', message: args.join(' ') });
+            originalError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            logs.push({ type: 'warn', message: args.join(' ') });
+            originalWarn.apply(console, args);
+        };
+        
+        // Check for sensitive data patterns
+        const sensitivePatterns = [
+            /session_\d+_[a-z0-9]+/i,  // Session IDs
+            /visitor_\d+_[a-z0-9]+/i,  // Visitor IDs
+            /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i,  // UUIDs
+            /eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*/,  // JWT tokens
+            /Bearer\s+[A-Za-z0-9-_]+/i,  // Bearer tokens
+            /api[_-]?key[:\s]+[\w-]+/i,  // API keys
+            /X-API-Key[:\s]+[\w-]+/i,  // X-API-Key headers
+            /tenant[_-]?id[:\s]+[\w-]+/i,  // Tenant IDs
+        ];
+        
+        // After 5 seconds, analyze logs
+        setTimeout(() => {
+            console.log('=== Production Console Log Analysis ===');
+            console.log(`Total logs captured: ${logs.length}`);
+            
+            let issuesFound = [];
+            logs.forEach(log => {
+                sensitivePatterns.forEach(pattern => {
+                    if (pattern.test(log.message)) {
+                        issuesFound.push({
+                            type: log.type,
+                            pattern: pattern.toString(),
+                            message: log.message.substring(0, 200)
+                        });
+                    }
+                });
+            });
+            
+            if (issuesFound.length > 0) {
+                console.error('⚠️ SENSITIVE DATA DETECTED IN PRODUCTION LOGS:');
+                issuesFound.forEach(issue => {
+                    console.error(`  - ${issue.type}: ${issue.pattern} found in: ${issue.message}`);
+                });
+            } else {
+                console.log('✅ No sensitive data detected in production logs');
+            }
+            
+            // Show summary
+            const logTypes = logs.reduce((acc, log) => {
+                acc[log.type] = (acc[log.type] || 0) + 1;
+                return acc;
+            }, {});
+            
+            console.log('Log type summary:', logTypes);
+        }, 5000);
+    </script>
+</body>
+</html>

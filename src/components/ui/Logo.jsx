@@ -11,7 +11,7 @@ const Logo = ({ variant = 'light', size = 'md', className = '' }) => {
 
   return (
     <img
-      src="/MIPS_cut.png"
+      src="/BlockMIP.png"
       alt="MIP Technologies Logo"
       className={`${sizes[size]} mr-3 hover:scale-110 transition-transform duration-300 ${className}`}
       style={{ objectFit: 'contain' }}

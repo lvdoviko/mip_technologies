@@ -1,6 +1,7 @@
 // src/components/ChatWidget.jsx
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { gsap } from 'gsap';
+import logger from '../utils/logger';
 import { 
   MessageCircle, 
   Send, 
@@ -401,7 +402,7 @@ const ChatInput = ({
   
   // ✅ DEBUG: Log ChatInput props for troubleshooting
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 [ChatInput] Props received:', {
+    logger.debug('ChatInput: Props received:', {
       isDisabled,
       isReady,
       isConnected,
@@ -425,7 +426,7 @@ const ChatInput = ({
     
     // ✅ PRIMARY TRIGGER: Connection on first keystroke
     if (value.length === 1 && prevValue.length === 0 && onConnectionTrigger) {
-      console.log('🚀 [ChatInput] First keystroke detected - triggering connection');
+      logger.debug('ChatInput: First keystroke detected - triggering connection');
       onConnectionTrigger();
     }
     
@@ -634,7 +635,7 @@ const ChatWidget = ({
   
   // ✅ DEBUG: Log ChatWidget state for troubleshooting
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 [ChatWidget] State update:', {
+    logger.debug('ChatWidget: State update:', {
       connectionState,
       isConnected,
       isReady,
@@ -666,7 +667,7 @@ const ChatWidget = ({
   // Handle AI processing timeout notifications
   useEffect(() => {
     if (hasProcessingError && errorState.processingError?.type === 'processing_timeout') {
-      console.log('⚠️ [ChatWidget] AI processing timeout detected');
+      logger.debug('ChatWidget: AI processing timeout detected');
       
       if (enableNotifications && 'Notification' in window) {
         new Notification('AI Processing Timeout', {
@@ -724,7 +725,7 @@ const ChatWidget = ({
   
   // Initialize chat when user demonstrates intent (lazy connection strategy)
   useEffect(() => {
-    console.log(`🔍 [ChatWidget] useEffect triggered - isOpen: ${isOpen}, currentChat: ${!!currentChat}`);
+    // Removed repetitive logging that was causing console spam
     
     // ✅ LAZY CONNECTION: Only connect when user actually wants to chat
     // Connection will be triggered by:
@@ -733,21 +734,20 @@ const ChatWidget = ({
     // 3. Chat open + 3 second delay (safety trigger)
     
     if (isOpen && !currentChat && !isConnecting) {
-      console.log('🔄 [ChatWidget] Chat opened - ready for user interaction (no auto-connect)');
       onChatOpen?.();
       
       // Safety trigger: Auto-connect after 3 seconds if user hasn't interacted
       const safetyConnectTimer = setTimeout(() => {
         if (!currentChat && !isConnecting && isOpen) {
-          console.log('🔄 [ChatWidget] Safety trigger - connecting after 3s delay');
+          logger.debug('ChatWidget: Safety trigger - connecting after 3s delay');
           performanceMonitor.startTimer('chat_widget_load');
           initializeChat()
             .then(() => {
-              console.log('✅ [ChatWidget] Safety connection successful');
+              logger.debug('ChatWidget: Safety connection successful');
               performanceMonitor.endTimer('chat_widget_load');
             })
             .catch((error) => {
-              console.error('❌ [ChatWidget] Safety connection failed:', error);
+              logger.error('ChatWidget: Safety connection failed:', error);
               performanceMonitor.endTimer('chat_widget_load');
               onError?.(error);
             });
@@ -760,15 +760,15 @@ const ChatWidget = ({
   
   // Debug: Track ChatWidget mount
   useEffect(() => {
-    console.log('🔧 [ChatWidget] Component mounted');
+    logger.debug('ChatWidget: Component mounted');
     return () => {
-      console.log('🔧 [ChatWidget] Component unmounting');
+      logger.debug('ChatWidget: Component unmounting');
     };
   }, []);
 
   // Handle chat open/close animations
   const handleToggle = useCallback(() => {
-    console.log(`🎯 [ChatWidget] Toggle clicked - current state: isOpen=${isOpen}`);
+    logger.debug(`🎯 [ChatWidget] Toggle clicked - current state: isOpen=${isOpen}`);
     if (isOpen) {
       if (!prefersReducedMotion && chatRef.current) {
         gsap.to(chatRef.current, {
@@ -906,18 +906,18 @@ const ChatWidget = ({
   // Handle connection trigger on user typing (primary trigger)
   const handleConnectionTrigger = useCallback(() => {
     if (!currentChat && !isConnecting && !connectionTriggeredRef.current) {
-      console.log('🚀 [ChatWidget] User typing detected - triggering connection');
+      logger.debug('ChatWidget: User typing detected - triggering connection');
       connectionTriggeredRef.current = true;
       setIsConnectionTriggered(true);
       
       performanceMonitor.startTimer('chat_widget_load');
       initializeChat()
         .then(() => {
-          console.log('✅ [ChatWidget] User-triggered connection successful');
+          logger.debug('ChatWidget: User-triggered connection successful');
           performanceMonitor.endTimer('chat_widget_load');
         })
         .catch((error) => {
-          console.error('❌ [ChatWidget] User-triggered connection failed:', error);
+          logger.error('ChatWidget: User-triggered connection failed:', error);
           performanceMonitor.endTimer('chat_widget_load');
           connectionTriggeredRef.current = false;
           setIsConnectionTriggered(false);
@@ -931,7 +931,7 @@ const ChatWidget = ({
     try {
       // Fallback trigger: Connect if user clicks send without typing
       if (!currentChat && !isConnecting) {
-        console.log('🔄 [ChatWidget] Send clicked without connection - fallback trigger');
+        logger.debug('ChatWidget: Send clicked without connection - fallback trigger');
         handleConnectionTrigger();
         
         // Wait a moment for connection to establish
@@ -959,7 +959,7 @@ const ChatWidget = ({
     // Note: We can't directly clear errorState from the hook here since it's managed internally
     // The errors will be cleared when the conditions that caused them are resolved
     // This is just for UI feedback purposes
-    console.log(`Dismissing error type: ${errorType}`);
+    logger.debug(`Dismissing error type: ${errorType}`);
     
     // For now, we'll rely on the hook's internal error clearing logic
     // Future enhancement: Add a clearError function to the useChat hook if needed
@@ -1106,7 +1106,7 @@ const ChatWidget = ({
                 
                 {/* Messages */}
                 {messages.length > 0 && process.env.NODE_ENV === 'development' && 
-                  console.log('🔍 [ChatWidget] Rendering messages:', {
+                  logger.debug('ChatWidget: Rendering messages:', {
                     totalMessages: messages.length,
                     messageIds: messages.map(m => m.id),
                     messageRoles: messages.map(m => m.role),

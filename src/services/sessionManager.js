@@ -6,6 +6,7 @@ import {
   ERROR_SEVERITY, 
   MIPTechError 
 } from '../utils/errorHandler';
+import logger from '../utils/logger';
 
 /**
  * Simple encryption/decryption utilities for localStorage
@@ -84,7 +85,7 @@ export class SessionManager {
     // Dependency injection for testing - ensure dependencies is an object
     const deps = dependencies || {};
     this.localStorage = deps.localStorage || localStorage;
-    this.console = deps.console || console;
+    this.console = deps.console || logger;
     
     // Fix for setInterval brand-check: bind to proper global scope
     // Use window in browser environment, globalThis as fallback
@@ -130,7 +131,7 @@ export class SessionManager {
         this.updateLastActivity();
       }
     } catch (error) {
-      this.console.error('[Session] Failed to initialize session:', error);
+      logger.error('[Session] Failed to initialize session:', error);
       this.session = this.createNewSession();
     }
   }
@@ -167,7 +168,7 @@ export class SessionManager {
     this.saveSession(session);
     this.metrics.sessionCreated++;
     
-    this.console.log('[Session] Created new session:', session.id);
+    logger.info('[Session] Created new session:', session.id);
     return session;
   }
 
@@ -188,16 +189,16 @@ export class SessionManager {
       
       // Validate session structure
       if (!this.isValidSession(session)) {
-        this.console.warn('[Session] Invalid session structure, creating new session');
+        logger.warn('[Session] Invalid session structure, creating new session');
         return null;
       }
       
       this.metrics.sessionLoaded++;
-      this.console.log('[Session] Loaded existing session:', session.id);
+      logger.info('[Session] Loaded existing session:', session.id);
       return session;
       
     } catch (error) {
-      this.console.error('[Session] Failed to load session:', error);
+      logger.error('[Session] Failed to load session:', error);
       this.metrics.storageErrors++;
       
       // Clean up corrupted session data
@@ -226,7 +227,7 @@ export class SessionManager {
       // Check storage size limits
       const sessionSize = JSON.stringify(session).length;
       if (sessionSize > this.config.maxStorageSize) {
-        this.console.warn('[Session] Session exceeds size limit, cleaning up chat history');
+        logger.warn('[Session] Session exceeds size limit, cleaning up chat history');
         this.trimChatHistory(session);
       }
       
@@ -242,7 +243,7 @@ export class SessionManager {
       this.metrics.sessionSaved++;
       
     } catch (error) {
-      this.console.error('[Session] Failed to save session:', error);
+      logger.error('[Session] Failed to save session:', error);
       this.metrics.storageErrors++;
       
       if (this.config.encryptionEnabled && error.type === ERROR_TYPES.SYSTEM) {
@@ -353,7 +354,7 @@ export class SessionManager {
    * Clear session data
    */
   clearSession() {
-    this.console.log('[Session] Clearing session');
+    logger.info('[Session] Clearing session');
     this.clearSessionData();
     this.session = this.createNewSession();
   }
@@ -366,7 +367,7 @@ export class SessionManager {
       this.localStorage.removeItem(this.config.sessionKey);
       this.localStorage.removeItem(this.config.tokenKey);
     } catch (error) {
-      this.console.error('[Session] Failed to clear session data:', error);
+      logger.error('[Session] Failed to clear session data:', error);
     }
   }
 
@@ -463,7 +464,7 @@ export class SessionManager {
         this.saveSession();
       }
     } catch (error) {
-      this.console.error('[Session] Failed to set session token:', error);
+      logger.error('[Session] Failed to set session token:', error);
     }
   }
 
@@ -474,7 +475,7 @@ export class SessionManager {
     try {
       return this.localStorage.getItem(this.config.tokenKey);
     } catch (error) {
-      this.console.error('[Session] Failed to get session token:', error);
+      logger.error('[Session] Failed to get session token:', error);
       return null;
     }
   }
@@ -490,7 +491,7 @@ export class SessionManager {
         this.saveSession();
       }
     } catch (error) {
-      this.console.error('[Session] Failed to clear session token:', error);
+      logger.error('[Session] Failed to clear session token:', error);
     }
   }
 
@@ -522,11 +523,11 @@ export class SessionManager {
    */
   performCleanup() {
     try {
-      this.console.log('[Session] Performing cleanup...');
+      logger.info('[Session] Performing cleanup...');
       
       // Check if current session is expired
       if (this.session && this.isSessionExpired(this.session)) {
-        this.console.log('[Session] Current session expired, creating new one');
+        logger.info('[Session] Current session expired, creating new one');
         this.session = this.createNewSession();
       }
       
@@ -539,7 +540,7 @@ export class SessionManager {
       this.metrics.cleanupRuns++;
       
     } catch (error) {
-      this.console.error('[Session] Cleanup failed:', error);
+      logger.error('[Session] Cleanup failed:', error);
     }
   }
 
