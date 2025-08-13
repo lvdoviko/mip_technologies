@@ -55,16 +55,28 @@
   border-bottom: 8px solid transparent;
 }
 
+.message-tail-left::before {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  left: -9px;
+  width: 0;
+  height: 0;
+  border-right: 9px solid white;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+}
+
 .message-tail-left::after {
   content: '';
   position: absolute;
-  bottom: -8px;
-  left: 20px;
+  bottom: 2px;
+  left: -8px;
   width: 0;
   height: 0;
-  border-top: 8px solid black;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
+  border-right: 8px solid black;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -123,24 +135,14 @@ body {
   transition: all 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-/* Custom scrollbar for chat messages */
+/* Hidden scrollbar for chat messages - maintains scroll functionality */
+.chat-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 .chat-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.chat-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(63, 131, 248, 0.4), rgba(144, 97, 249, 0.4));
-  border-radius: 3px;
-  transition: all 0.2s ease;
-}
-
-.chat-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(63, 131, 248, 0.6), rgba(144, 97, 249, 0.6));
+  display: none;  /* Hide scrollbar for webkit browsers */
 }
 
 /* Enhanced message entrance animation */

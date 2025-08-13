@@ -599,6 +599,7 @@ const ChatWidget = ({
   const widgetRef = useRef(null);
   const chatRef = useRef(null);
   const messagesRef = useRef(null);
+  const inputRef = useRef(null);
   const toggleButtonRef = useRef(null);
   
   // Chat hook
@@ -678,11 +679,11 @@ const ChatWidget = ({
   
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (messagesRef.current) {
+    if (messagesRef.current && messages.length > 0) {
       const scrollContainer = messagesRef.current;
-      const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop <= scrollContainer.clientHeight + 100;
       
-      if (isNearBottom) {
+      // Scroll automatico verso il basso per ogni nuovo messaggio
+      const scrollToBottom = () => {
         if (prefersReducedMotion) {
           scrollContainer.scrollTop = scrollContainer.scrollHeight;
         } else {
@@ -692,9 +693,34 @@ const ChatWidget = ({
             ease: 'power2.out'
           });
         }
-      }
+      };
+      
+      // Usa setTimeout per assicurarsi che il DOM sia aggiornato
+      setTimeout(scrollToBottom, 100);
     }
   }, [messages, prefersReducedMotion]);
+  
+  // Auto-scroll quando appaiono/scompaiono typing indicator e AI processing indicator
+  useEffect(() => {
+    if (messagesRef.current && (typingUsers.length > 0 || isAiProcessing)) {
+      const scrollContainer = messagesRef.current;
+      
+      const scrollToBottom = () => {
+        if (prefersReducedMotion) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        } else {
+          gsap.to(scrollContainer, {
+            scrollTop: scrollContainer.scrollHeight,
+            duration: 0.2,
+            ease: 'power2.out'
+          });
+        }
+      };
+      
+      // Delay più breve per gli indicatori
+      setTimeout(scrollToBottom, 50);
+    }
+  }, [typingUsers.length, isAiProcessing, prefersReducedMotion]);
   
   // Initialize chat when user demonstrates intent (lazy connection strategy)
   useEffect(() => {
@@ -772,11 +798,94 @@ const ChatWidget = ({
     setIsMinimized(newMinimized);
     
     if (!prefersReducedMotion && chatRef.current) {
-      gsap.to(chatRef.current, {
-        height: newMinimized ? '60px' : 'auto',
-        duration: 0.3,
-        ease: 'power2.inOut'
-      });
+      // Verifica se abbiamo tutte le ref per l'animazione avanzata
+      const hasAllRefs = messagesRef.current && inputRef.current;
+      
+      if (hasAllRefs) {
+        // Animazione avanzata con timeline
+        const tl = gsap.timeline();
+        
+        if (newMinimized) {
+          // Minimizzazione: nascondere contenuto prima di ridurre altezza
+          tl.to([messagesRef.current, inputRef.current], {
+            opacity: 0,
+            y: -8,
+            duration: 0.2,
+            ease: 'power2.in'
+          })
+          .to(chatRef.current, {
+            height: '60px',
+            duration: 0.3,
+            ease: 'power2.inOut'
+          }, 0.1);
+        } else {
+          // Espansione: calcola l'altezza target in modo più fluido
+          const currentHeight = chatRef.current.style.height;
+          
+          // Imposta temporaneamente il contenuto come visibile ma nascosto per il calcolo
+          gsap.set([messagesRef.current, inputRef.current], {
+            opacity: 0,
+            y: 0,
+            visibility: 'visible'
+          });
+          
+          chatRef.current.style.height = 'auto';
+          const targetHeight = chatRef.current.offsetHeight;
+          chatRef.current.style.height = currentHeight;
+          
+          // Ora imposta lo stato iniziale per l'animazione
+          gsap.set([messagesRef.current, inputRef.current], {
+            opacity: 0,
+            y: -10
+          });
+          
+          // Sequenza di animazione più fluida
+          tl.to(chatRef.current, {
+            height: targetHeight + 'px',
+            duration: 0.4,
+            ease: 'power2.out'
+          })
+          .to(messagesRef.current, {
+            opacity: 1,
+            y: 0,
+            duration: 0.3,
+            ease: 'power2.out'
+          }, 0.1)
+          .to(inputRef.current, {
+            opacity: 1,
+            y: 0,
+            duration: 0.25,
+            ease: 'power2.out'
+          }, 0.2)
+          .call(() => {
+            // Rimuovi lo stile inline per lasciare che CSS gestisca l'altezza
+            chatRef.current.style.height = '';
+          });
+        }
+      } else {
+        // Fallback: animazione semplice se non abbiamo tutte le ref
+        if (newMinimized) {
+          gsap.to(chatRef.current, {
+            height: '60px',
+            duration: 0.3,
+            ease: 'power2.inOut'
+          });
+        } else {
+          const currentHeight = chatRef.current.style.height;
+          chatRef.current.style.height = 'auto';
+          const targetHeight = chatRef.current.offsetHeight;
+          chatRef.current.style.height = currentHeight;
+          
+          gsap.to(chatRef.current, {
+            height: targetHeight + 'px',
+            duration: 0.3,
+            ease: 'power2.inOut',
+            onComplete: () => {
+              chatRef.current.style.height = '';
+            }
+          });
+        }
+      }
     }
   }, [isMinimized, prefersReducedMotion]);
   
@@ -823,7 +932,7 @@ const ChatWidget = ({
       // Fallback trigger: Connect if user clicks send without typing
       if (!currentChat && !isConnecting) {
         console.log('🔄 [ChatWidget] Send clicked without connection - fallback trigger');
-        await handleConnectionTrigger();
+        handleConnectionTrigger();
         
         // Wait a moment for connection to establish
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -1036,19 +1145,21 @@ const ChatWidget = ({
               </div>
               
               {/* Input */}
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                isDisabled={!isReady || !canSendMessage}
-                onTyping={startTyping} // Re-enabled: Backend now supports typing_start/typing_stop
-                onStopTyping={stopTyping} // Re-enabled: Backend now supports typing_start/typing_stop
-                onConnectionTrigger={handleConnectionTrigger}
-                maxLength={maxMessageLength}
-                placeholder={placeholder}
-                connectionState={connectionState}
-                isConnected={isConnected}
-                isReady={isReady}
-                isConnecting={isConnecting}
-              />
+              <div ref={inputRef}>
+                <ChatInput
+                  onSendMessage={handleSendMessage}
+                  isDisabled={!isReady || !canSendMessage}
+                  onTyping={startTyping} // Re-enabled: Backend now supports typing_start/typing_stop
+                  onStopTyping={stopTyping} // Re-enabled: Backend now supports typing_start/typing_stop
+                  onConnectionTrigger={handleConnectionTrigger}
+                  maxLength={maxMessageLength}
+                  placeholder={placeholder}
+                  connectionState={connectionState}
+                  isConnected={isConnected}
+                  isReady={isReady}
+                  isConnecting={isConnecting}
+                />
+              </div>
             </>
           )}
         </div>
