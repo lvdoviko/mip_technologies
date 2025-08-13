@@ -168,7 +168,7 @@ export class SessionManager {
     this.saveSession(session);
     this.metrics.sessionCreated++;
     
-    logger.info('[Session] Created new session:', session.id);
+    logger.debug('[Session] Created new session:', session.id);
     return session;
   }
 
@@ -194,7 +194,7 @@ export class SessionManager {
       }
       
       this.metrics.sessionLoaded++;
-      logger.info('[Session] Loaded existing session:', session.id);
+      logger.debug('[Session] Loaded existing session:', session.id);
       return session;
       
     } catch (error) {
@@ -354,7 +354,7 @@ export class SessionManager {
    * Clear session data
    */
   clearSession() {
-    logger.info('[Session] Clearing session');
+    logger.debug('[Session] Clearing session');
     this.clearSessionData();
     this.session = this.createNewSession();
   }
@@ -523,11 +523,11 @@ export class SessionManager {
    */
   performCleanup() {
     try {
-      logger.info('[Session] Performing cleanup...');
+      logger.debug('[Session] Performing cleanup...');
       
       // Check if current session is expired
       if (this.session && this.isSessionExpired(this.session)) {
-        logger.info('[Session] Current session expired, creating new one');
+        logger.debug('[Session] Current session expired, creating new one');
         this.session = this.createNewSession();
       }
       

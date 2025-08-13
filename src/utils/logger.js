@@ -2,13 +2,20 @@
 class Logger {
   constructor() {
     this.isDevelopment = process.env.NODE_ENV === 'development';
+    this.isProduction = process.env.NODE_ENV === 'production';
     this.isDebugMode = process.env.REACT_APP_DEBUG_MODE === 'true';
-    // In production, ONLY enable logging if explicitly set via env or query param
+    // In production, ONLY enable logging for errors/warnings
     this.enableLogging = this.isDevelopment || this.isDebugMode;
     
     // Check for debug query param (only in development)
     if (this.isDevelopment && typeof window !== 'undefined' && window.location.search.includes('debug=true')) {
       this.enableLogging = true;
+    }
+    
+    // CRITICAL: In production, force disable all debug/info logs
+    if (this.isProduction) {
+      this.enableLogging = false;
+      this.isDebugMode = false;
     }
   }
 
@@ -73,10 +80,19 @@ class Logger {
 
   // Format log message with timestamp and context
   format(level, message, data) {
-    if (!this.enableLogging && level !== 'error') return null;
+    // In production, only format errors and warnings
+    if (this.isProduction && level !== 'error' && level !== 'warn') {
+      return null;
+    }
+    
+    if (!this.enableLogging && level !== 'error' && level !== 'warn') {
+      return null;
+    }
     
     const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
-    const prefix = {
+    
+    // No emojis in production
+    const prefix = this.isProduction ? '' : {
       debug: '🔍',
       info: '📝',
       warn: '⚠️',
@@ -84,14 +100,19 @@ class Logger {
       success: '✅'
     }[level] || '📌';
     
+    const formattedMessage = this.isProduction 
+      ? `[${timestamp}] ${message}`
+      : `${prefix} [${timestamp}] ${message}`;
+    
     return {
-      message: `${prefix} [${timestamp}] ${message}`,
+      message: formattedMessage,
       data: data ? this.sanitize(data) : undefined
     };
   }
 
   debug(message, data) {
     // NEVER show debug logs in production
+    if (this.isProduction) return;
     if (!this.isDevelopment) return;
     if (!this.enableLogging) return;
     const formatted = this.format('debug', message, data);
@@ -101,8 +122,10 @@ class Logger {
   }
 
   info(message, data) {
-    // Info logs only in development or debug mode
-    if (!this.isDevelopment && !this.isDebugMode) return;
+    // NEVER show info logs in production
+    if (this.isProduction) return;
+    // Info logs only in development
+    if (!this.isDevelopment) return;
     if (!this.enableLogging) return;
     const formatted = this.format('info', message, data);
     if (formatted) {
@@ -127,6 +150,8 @@ class Logger {
   }
 
   success(message, data) {
+    // NEVER show success logs in production
+    if (this.isProduction) return;
     // Success logs only in development
     if (!this.isDevelopment) return;
     if (!this.enableLogging) return;
@@ -138,12 +163,14 @@ class Logger {
 
   // Group related logs (development only)
   group(label) {
+    if (this.isProduction) return;
     if (!this.isDevelopment) return;
     if (!this.enableLogging) return;
     console.group(`📁 ${label}`);
   }
 
   groupEnd() {
+    if (this.isProduction) return;
     if (!this.isDevelopment) return;
     if (!this.enableLogging) return;
     console.groupEnd();
@@ -151,6 +178,7 @@ class Logger {
 
   // Table display for structured data (development only)
   table(data, columns) {
+    if (this.isProduction) return;
     if (!this.isDevelopment) return;
     if (!this.enableLogging) return;
     const sanitized = this.sanitize(data);
@@ -159,12 +187,14 @@ class Logger {
 
   // Performance timing (development only)
   time(label) {
+    if (this.isProduction) return;
     if (!this.isDevelopment) return;
     if (!this.enableLogging) return;
     console.time(`⏱️ ${label}`);
   }
 
   timeEnd(label) {
+    if (this.isProduction) return;
     if (!this.isDevelopment) return;
     if (!this.enableLogging) return;
     console.timeEnd(`⏱️ ${label}`);

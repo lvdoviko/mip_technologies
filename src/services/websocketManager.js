@@ -134,7 +134,7 @@ class MIPTechWebSocketManager {
       const wsUrl = chatId ? this.buildWebSocketUrlWithChatId(chatId) : this.buildWebSocketUrl();
 
       // ✅ ENHANCEMENT: Environment-specific logging
-      logger.info('WebSocket: Connecting', {
+      logger.debug('WebSocket: Connecting', {
         url: wsUrl,
         environment: this.isDevelopment ? 'development' : 'production',
         chatId,
