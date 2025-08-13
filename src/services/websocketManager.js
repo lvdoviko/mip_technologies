@@ -79,6 +79,7 @@ class MIPTechWebSocketManager {
   /**
    * Build WebSocket URL with chat_id parameter (MVP requirement)
    * ✅ ENHANCED: Handle null chatId gracefully for degraded mode
+   * ✅ SECURITY: Never put JWT token in URL - it goes in join_chat message only
    */
   buildWebSocketUrlWithChatId(chatId) {
     const params = new URLSearchParams();
@@ -104,15 +105,23 @@ class MIPTechWebSocketManager {
       params.set('user_id', this.userId);
     }
     
-    if (this.authToken) {
-      params.set('token', this.authToken);
-    }
+    // ✅ SECURITY: NEVER add token to URL - it goes in join_chat message only
+    // if (this.authToken) {
+    //   params.set('token', this.authToken); // ❌ NEVER DO THIS
+    // }
     
     // Check if baseUrl already includes the path
     const hasPath = this.baseUrl.includes('/api/v1/ws/chat');
     const baseUrlToUse = hasPath ? this.baseUrl : `${this.baseUrl}/api/v1/ws/chat`;
     
-    return `${baseUrlToUse}?${params.toString()}`;
+    const url = `${baseUrlToUse}?${params.toString()}`;
+    
+    // ✅ SECURITY: Validate no token accidentally added
+    if (url.includes('token=') || url.includes('jwt=') || url.includes('auth=')) {
+      throw new Error('SECURITY VIOLATION: Token detected in WebSocket URL');
+    }
+    
+    return url;
   }
 
   async connect(chatId = null) {
@@ -223,6 +232,17 @@ class MIPTechWebSocketManager {
     
     this.isConnected = true;
     this.reconnectAttempts = 0;
+    this.joinSent = false; // Track if join_chat was sent
+    
+    // ✅ CRITICAL: Fallback timer - send join_chat after 1s if connection_ready hasn't arrived
+    // This prevents 4408 timeout error if connection_ready is delayed
+    this.readyTimer = setTimeout(() => {
+      if (this.currentChatId && !this.joinSent) {
+        console.log('⏰ [WebSocket] Fallback timer - sending join_chat (connection_ready delayed)');
+        this.sendJoinChat();
+      }
+    }, 1000);
+    
     this.emit('connected', { 
       tenantId: this.tenantId,
       userId: this.userId,
@@ -320,6 +340,18 @@ class MIPTechWebSocketManager {
           console.log('🚀 [WebSocket] Connection ready for messages');
           this.isReady = true;
           
+          // ✅ CRITICAL: Clear fallback timer since we got connection_ready
+          if (this.readyTimer) {
+            clearTimeout(this.readyTimer);
+            this.readyTimer = null;
+            console.log('✅ [WebSocket] Cleared fallback timer (connection_ready received)');
+          }
+          
+          // Send join_chat if not already sent
+          if (this.currentChatId && !this.joinSent) {
+            this.sendJoinChat();
+          }
+          
           // Process any queued messages when connection becomes ready
           if (this.messageQueue.length > 0) {
             console.log('📦 [WebSocket] Connection ready - processing queued messages');
@@ -328,20 +360,6 @@ class MIPTechWebSocketManager {
           
           this.emit('ready', data);
           this.emit('connection_ready', data); // ✅ CRITICAL: Emit event for useChat hook
-          
-          // ✅ CRITICAL FIX: Join chat after connection is ready (with Safari fallback)
-          const joinChatAsync = () => {
-            if (this.currentChatId && this.currentChatId !== this.currentJoinedChatId) {
-              console.log('🔗 [WebSocket] Auto-joining chat on connection_ready:', this.currentChatId);
-              this.joinChat(this.currentChatId);
-            }
-          };
-          
-          if (typeof queueMicrotask === 'function') {
-            queueMicrotask(joinChatAsync);
-          } else {
-            setTimeout(joinChatAsync, 0);
-          }
           break;
 
         case 'platform_initializing':
@@ -370,7 +388,13 @@ class MIPTechWebSocketManager {
           break;
 
         case 'ping':
-          // Handle platform ping messages
+          // ✅ CRITICAL: Must respond with pong for heartbeat
+          this.lastPingAt = Date.now(); // Track for health monitoring
+          console.log('🏓 [WebSocket] Ping received, sending pong');
+          this.sendMessage('pong', { 
+            timestamp: Date.now(),
+            ts: Date.now() // Both formats for compatibility
+          });
           this.emit('ping', data);
           break;
 
@@ -534,6 +558,13 @@ class MIPTechWebSocketManager {
     this.isReady = false;
     this.isReconnecting = true;
     this.currentJoinedChatId = null; // Clear joined chat on disconnect
+    this.joinSent = false; // Reset join_chat tracking
+
+    // Clear any pending timers
+    if (this.readyTimer) {
+      clearTimeout(this.readyTimer);
+      this.readyTimer = null;
+    }
 
     // Enhanced close code analysis for platform debugging
     let closeType = 'normal_close';
@@ -548,7 +579,7 @@ class MIPTechWebSocketManager {
       case 1001:
         closeType = 'server_going_away';
         shouldReconnect = true;
-        console.log('🔄 [WebSocket] Server going away (ECS deployment/restart) - immediate reconnection');
+        console.log('🔄 [WebSocket] Server restarting (rolling deploy) - will reconnect');
         this.lastErrorType = 'server_restart';
         // Reset reconnect attempts for server restarts - these should reconnect immediately
         this.reconnectAttempts = 0;
@@ -561,6 +592,12 @@ class MIPTechWebSocketManager {
         closeType = 'abnormal_closure';
         console.log('⚠️ [WebSocket] Abnormal closure - likely platform restart or network issue');
         break;
+      case 1008:
+        closeType = 'config_error';
+        shouldReconnect = false;
+        console.error('❌ [WebSocket] Configuration error - check tenant_id in URL');
+        this.lastErrorType = 'configuration_error';
+        break;
       case 1011:
         closeType = 'server_error';
         console.log('💥 [WebSocket] Server error - platform may be experiencing issues');
@@ -570,6 +607,32 @@ class MIPTechWebSocketManager {
         console.log('🔄 [WebSocket] Service restarting - platform maintenance');
         this.lastErrorType = 'platform_initializing';
         break;
+      // Auth failure codes (44xx)
+      case 4400:
+        closeType = 'bad_first_frame';
+        shouldReconnect = false;
+        console.error('❌ [WebSocket] Expected join_chat as first message');
+        this.lastErrorType = 'protocol_error';
+        break;
+      case 4401:
+        closeType = 'auth_required';
+        shouldReconnect = false;
+        console.error('❌ [WebSocket] Authentication required or invalid token');
+        this.lastErrorType = 'authentication_error';
+        break;
+      case 4403:
+        closeType = 'forbidden';
+        shouldReconnect = false;
+        console.error('❌ [WebSocket] Tenant mismatch or insufficient scope');
+        this.lastErrorType = 'authorization_error';
+        break;
+      case 4408:
+        closeType = 'join_timeout';
+        shouldReconnect = false;
+        console.error('❌ [WebSocket] join_chat not sent within 10 seconds');
+        this.lastErrorType = 'timeout_error';
+        break;
+      // Legacy error codes (keeping for backward compatibility)
       case 4003:
         closeType = 'rate_limit_exceeded';
         console.log('🚦 [WebSocket] Rate limit exceeded - backing off');
@@ -839,21 +902,24 @@ class MIPTechWebSocketManager {
 
   // Chat-specific methods
   sendChatMessage(message, chatId = null) {
-    // ✅ ENHANCED: Handle null chatId gracefully - server will use tenant fallback
+    // ✅ CRITICAL: Use 'text' field and 'user_message' event type per v3.2 spec
     const messageData = {
-      message,
-      tenant_id: this.tenantId
+      text: message, // CRITICAL: Use 'text' not 'message'
+      tenant_id: this.tenantId,
+      tenantId: this.tenantId // Dual casing for compatibility
     };
     
     // Only include chat_id if it exists and is valid
     if (chatId && chatId !== 'null') {
       messageData.chat_id = chatId;
-      console.log('📤 [WebSocket] Sending chat message to specific chat:', chatId);
+      messageData.chatId = chatId; // Dual casing for compatibility
+      console.log('📤 [WebSocket] Sending user message to specific chat:', chatId);
     } else {
-      console.log('📤 [WebSocket] Sending chat message via tenant fallback (no chat session)');
+      console.log('📤 [WebSocket] Sending user message via tenant fallback (no chat session)');
     }
     
-    this.sendMessage('chat_message', messageData);
+    // CRITICAL: Use 'user_message' not 'chat_message'
+    this.sendMessage('user_message', messageData);
   }
 
   createNewChat() {
@@ -1029,6 +1095,12 @@ class MIPTechWebSocketManager {
   disconnect() {
     console.log('🔌 [WebSocket] Disconnecting...');
     
+    // Clear any pending timers
+    if (this.readyTimer) {
+      clearTimeout(this.readyTimer);
+      this.readyTimer = null;
+    }
+    
     // Clear any pending reconnection attempts
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -1089,7 +1161,7 @@ class MIPTechWebSocketManager {
   shouldQueueMessage(type) {
     // Queue important message types during reconnection
     const queueableTypes = [
-      'chat_message',
+      'user_message', // Updated from 'chat_message'
       'typing_start',
       'typing_stop',
       'new_chat',
@@ -1256,14 +1328,42 @@ class MIPTechWebSocketManager {
     return newest;
   }
 
+  // ✅ CRITICAL: Send join_chat with JWT token and dual casing
+  sendJoinChat() {
+    if (this.joinSent || !this.currentChatId) return;
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    
+    console.log('🔐 [WebSocket] Sending join_chat with JWT token');
+    
+    // Get token from constructor options or localStorage
+    const token = this.authToken || localStorage.getItem('miptech_access_token');
+    
+    if (!token) {
+      console.warn('⚠️ [WebSocket] No JWT token available for join_chat');
+    }
+    
+    this.sendMessage('join_chat', {
+      // Dual casing for maximum compatibility
+      chat_id: this.currentChatId,
+      chatId: this.currentChatId,
+      tenant_id: this.tenantId,
+      tenantId: this.tenantId,
+      // JWT token MUST be in payload, never in URL
+      token: token
+    });
+    
+    this.joinSent = true;
+    this.currentJoinedChatId = this.currentChatId;
+  }
+
   // ✅ CRITICAL FIX: Join chat method for production unblocking
   joinChat(chatId) {
     if (!chatId || chatId === this.currentJoinedChatId) return; // Prevent duplicates
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
     
     console.log('🚀 [WebSocket] Joining chat:', chatId);
-    this.sendMessage('join_chat', { chat_id: chatId });
-    this.currentJoinedChatId = chatId; // Track joined chat
+    this.currentChatId = chatId;
+    this.sendJoinChat(); // Use new centralized method
   }
 
   // ✅ CRITICAL FIX: Leave chat method for chat switching

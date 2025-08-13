@@ -507,6 +507,43 @@ export const useChat = (config = {}) => {
 
 
   /**
+   * ✅ CRITICAL: Fetch JWT token from serverless endpoint
+   */
+  const fetchChatToken = useCallback(async () => {
+    try {
+      // Check if running in production (Vercel) or development
+      const tokenUrl = process.env.NODE_ENV === 'production' ? '/api/token' : 'http://localhost:3000/api/token';
+      
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch chat token');
+      }
+      
+      const data = await response.json();
+      console.log('🔐 [Chat] Successfully fetched JWT token');
+      return data.token;
+    } catch (error) {
+      console.error('❌ [Chat] Failed to fetch token:', error);
+      // Fallback to localStorage if exists (for development)
+      const fallbackToken = localStorage.getItem('miptech_access_token');
+      if (fallbackToken) {
+        console.log('🔐 [Chat] Using fallback token from localStorage');
+        return fallbackToken;
+      }
+      // For development, try to use the API key from env
+      if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_MIPTECH_API_KEY) {
+        console.log('🔐 [Chat] Using development API key');
+        return process.env.REACT_APP_MIPTECH_API_KEY;
+      }
+      return null;
+    }
+  }, []);
+
+  /**
    * Initialize chat connection
    */
   const initializeChat = useCallback(async (options = {}) => {
@@ -716,13 +753,28 @@ export const useChat = (config = {}) => {
         console.log('⏭️ [INIT] STEP 3 SKIPPED: Chat history loading disabled for MVP implementation');
       }
       
+      // Step 3.5: Fetch JWT token for WebSocket authentication
+      console.log('🔍 [INIT] STEP 3.5: Fetching JWT token for WebSocket authentication');
+      const authToken = await fetchChatToken();
+      if (!authToken) {
+        console.warn('⚠️ [INIT] No JWT token available - may have authentication issues');
+      } else {
+        console.log('✅ [INIT] STEP 3.5 COMPLETED: JWT token fetched successfully');
+        // Pass token to WebSocket manager
+        if (websocketRef.current) {
+          websocketRef.current.authToken = authToken;
+          console.log('🔐 [INIT] JWT token set in WebSocket manager');
+        }
+      }
+      
       // Step 4: Connect WebSocket with chat_id parameter (MVP requirement)
       // ✅ ENHANCED: Handle null chatId gracefully for degraded mode
       const websocketChatId = chat.id; // May be null for degraded mode
       console.log('🔍 [INIT] STEP 4: connectWebSocket() - Connecting WebSocket:', {
         chatId: websocketChatId,
         degradedMode: !!chat.degraded_mode,
-        willUseTenantFallback: !websocketChatId
+        willUseTenantFallback: !websocketChatId,
+        hasToken: !!authToken
       });
       
       try {

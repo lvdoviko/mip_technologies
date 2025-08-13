@@ -274,6 +274,41 @@ class MIPTechApiClient {
     }
   }
 
+  // ✅ CRITICAL: Readiness check with HEAD→GET fallback
+  async checkReadiness() {
+    const url = `${this.baseUrl}/readyz`;
+    
+    try {
+      // Try HEAD first (lighter)
+      let response = await fetch(url, { 
+        method: 'HEAD',
+        headers: this.getHeaders()
+      });
+      
+      if (!response.ok) {
+        // Fall back to GET
+        if (this.enableRequestLogging) {
+          console.log('📡 [API] HEAD failed, trying GET for readyz');
+        }
+        response = await fetch(url, { 
+          method: 'GET',
+          headers: this.getHeaders()
+        });
+      }
+      
+      const ready = response.ok;
+      if (this.enableRequestLogging) {
+        console.log(`✅ [API] Platform readiness: ${ready ? 'ready' : 'not ready'}`);
+      }
+      return ready;
+    } catch (error) {
+      if (this.enableRequestLogging) {
+        console.error('❌ [API] Readiness check failed:', error);
+      }
+      return false;
+    }
+  }
+
   // Chat endpoints
   async getChatConfig() {
     return this.request('/chat/config/');
@@ -285,6 +320,30 @@ class MIPTechApiClient {
 
   async getChat(chatId) {
     return this.request(`/chat/${chatId}`);
+  }
+
+  // ✅ CRITICAL: Persistent session ID for idempotency (201 vs 200 response)
+  getOrCreateSessionId() {
+    const key = 'miptech_session_id';
+    let sessionId = localStorage.getItem(key);
+    
+    if (!sessionId) {
+      try {
+        // Modern browsers
+        sessionId = crypto.randomUUID();
+      } catch {
+        // Fallback for older browsers
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+      }
+      localStorage.setItem(key, sessionId);
+      
+      // Only log in dev mode
+      if (this.isDevelopment || this.enableRequestLogging) {
+        console.log('📝 [API] Created new persistent session ID');
+      }
+    }
+    
+    return sessionId;
   }
 
   validateChatCreateData(sessionId, visitorId, options) {
@@ -306,28 +365,34 @@ class MIPTechApiClient {
   }
 
   async createChat(sessionId = null, visitorId = null, options = {}) {
-    // Generate IDs if not provided (for MVP implementation)
-    const finalSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    // ✅ CRITICAL: Use persistent session ID for idempotency
+    const finalSessionId = sessionId || this.getOrCreateSessionId();
     const finalVisitorId = visitorId || `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     
     // ✅ ADD: Pre-validation logging to pinpoint exact failure
-    console.log('🔍 [API] createChat() PRE-VALIDATION:', {
-      finalSessionId,
-      finalVisitorId,
-      options,
-      tenantId: this.tenantId,
-      sessionIdLength: finalSessionId.length,
-      sessionIdType: typeof finalSessionId,
-      visitorIdLength: finalVisitorId.length,
-      visitorIdType: typeof finalVisitorId,
-      regexTest: /^[a-zA-Z0-9_-]+$/.test(finalSessionId),
-      visitorRegexTest: /^[a-zA-Z0-9_-]+$/.test(finalVisitorId)
-    });
+    if (this.enableRequestLogging) {
+      console.log('🔍 [API] createChat() PRE-VALIDATION:', {
+        finalSessionId,
+        finalVisitorId,
+        options,
+        tenantId: this.tenantId,
+        sessionIdLength: finalSessionId.length,
+        sessionIdType: typeof finalSessionId,
+        visitorIdLength: finalVisitorId.length,
+        visitorIdType: typeof finalVisitorId,
+        regexTest: /^[a-zA-Z0-9_-]+$/.test(finalSessionId),
+        visitorRegexTest: /^[a-zA-Z0-9_-]+$/.test(finalVisitorId)
+      });
+    }
     
     // Validate input before making request
-    console.log('🔍 [API] About to call validateChatCreateData()...');
+    if (this.enableRequestLogging) {
+      console.log('🔍 [API] About to call validateChatCreateData()...');
+    }
     this.validateChatCreateData(finalSessionId, finalVisitorId, options);
-    console.log('✅ [API] validateChatCreateData() passed successfully');
+    if (this.enableRequestLogging) {
+      console.log('✅ [API] validateChatCreateData() passed successfully');
+    }
     
     console.log('🔍 [API] Creating requestData object...');
     const requestData = {

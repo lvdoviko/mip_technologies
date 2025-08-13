@@ -2,15 +2,19 @@
   "build": {
     "env": {
       "REACT_APP_MIPTECH_API_URL": "https://api.miptechnologies.tech",
-      "REACT_APP_MIPTECH_WS_URL": "wss://api.miptechnologies.tech",
+      "REACT_APP_MIPTECH_WS_URL": "wss://api.miptechnologies.tech/api/v1/ws/chat",
       "REACT_APP_MIPTECH_TENANT_ID": "miptech-company",
-      "REACT_APP_MIPTECH_API_KEY": "3jYpTi4ytz3yb5tXHCSH4m1A1arYKUnFjrB7FZ9KXp6YULKYsqPmhhxCefcGgg-8y0wd4nM9YoIIRu6diDGIyg",
       "REACT_APP_ENVIRONMENT": "production",
       "REACT_APP_DEBUG": "false",
       "REACT_APP_DEBUG_MODE": "false",
       "REACT_APP_LOG_LEVEL": "error",
       "REACT_APP_ENABLE_CHAT": "true",
       "GENERATE_SOURCEMAP": "false"
+    }
+  },
+  "functions": {
+    "api/token.js": {
+      "maxDuration": 10
     }
   }
 }
