@@ -735,75 +735,49 @@ export const useChat = (config = {}) => {
       
       messageTimeoutRef.current.set(messageId, timeoutId);
       
-      // Send to API
-      const response = await apiRef.current.sendMessage(currentChat.id, sanitizedContent, {
-        metadata: {
-          ...options.metadata,
-          message_id: messageId, // This might be temp ID
-          temp_id: messageRecord.tempId, // Always include temp ID for reconciliation
-          client_timestamp: trackedMessage.timestamp
-        }
-      });
-      
+      // Send via WebSocket only - no REST API (stream: true is set by default in WebSocket manager)
+      websocketRef.current.sendChatMessage(sanitizedContent);
+
       if (isUnmountedRef.current) return;
-      
-      // Clear timeout
+
+      // Clear timeout when message is queued/sent via WebSocket
       clearTimeout(timeoutId);
       messageTimeoutRef.current.delete(messageId);
-      
-      // ✅ FE-04: Try to reconcile with server response
-      if (response && response.message_id && messageRecord.tempId) {
-        const reconciled = messageRegistryRef.current.reconcileMessage(
-          messageRecord.tempId,
-          response.message_id,
-          response
-        );
-        
-        if (reconciled) {
-          // Update UI with reconciled message
-          setMessages(prev => prev.map(msg => 
-            msg.id === messageId 
-              ? { ...reconciled.message, status: MESSAGE_STATUS.SENT }
-              : msg
-          ));
-        }
-      } else {
-        // Standard update if no reconciliation needed
-        messageRegistryRef.current.updateMessageState(messageId, 'sent');
-        
-        // Update UI for non-reconciled messages
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, status: MESSAGE_STATUS.SENT, serverResponse: response }
-            : msg
-        ));
-      }
-      
+
+      // Update message registry state to 'sent' (will be updated to 'received' when message_received event arrives)
+      messageRegistryRef.current.updateMessageState(messageId, 'sent');
+
+      // Update UI to show message as sent
+      setMessages(prev => prev.map(msg =>
+        msg.id === messageId
+          ? { ...msg, status: MESSAGE_STATUS.SENT }
+          : msg
+      ));
+
       // Track performance
       if (chatConfig.enablePerformanceTracking) {
         const duration = performanceRef.current.endTimer(`message_${messageId}`);
         performanceRef.current.trackChatWidget('message_sent', duration?.duration);
-        
+
         // Update metrics
         setPerformanceMetrics(prev => ({
           ...prev,
           messagesCount: prev.messagesCount + 1,
-          averageResponseTime: prev.averageResponseTime 
+          averageResponseTime: prev.averageResponseTime
             ? (prev.averageResponseTime + (duration?.duration || 0)) / 2
             : duration?.duration || 0
         }));
       }
-      
+
       // Update persistence
       if (chatConfig.enablePersistence) {
         sessionRef.current.addChatMessage({
           ...userMessage,
-          status: MESSAGE_STATUS.SENT,
-          serverResponse: response
+          status: MESSAGE_STATUS.SENT
         });
       }
-      
-      return response;
+
+      return { success: true, messageId };
       
     } catch (err) {
       if (isUnmountedRef.current) return;
@@ -1358,13 +1332,66 @@ export const useChat = (config = {}) => {
 
     const handleDisconnected = (data) => {
       logger.debug('Chat: WebSocket disconnected:', data);
-      
+
       // Only set disconnected state if we're not already reconnecting
       if (connectionState !== CHAT_STATES.RECONNECTING) {
         debugSetConnectionState(CHAT_STATES.DISCONNECTED);
       }
     };
-    
+
+    // ✅ CRITICAL: chat_created handler - captures chat_id from WebSocket events
+    const handleChatCreated = (data) => {
+      // ✅ CRITICAL FIX: Less aggressive guard for chat_created - this is essential for chat functionality
+      if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
+        logger.warn('Chat: Skipping chat_created due to component unmount (production only)');
+        return;
+      }
+
+      // Allow chat_created in development and StrictMode scenarios
+      if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
+        logger.debug('Chat: Processing chat_created despite unmount (StrictMode/Development)');
+      }
+
+      logger.debug('Chat: Chat created - updating chat_id:', {
+        chatId: data.chat_id,
+        hasTopLevelChatId: !!data.chat_id,
+        dataStructure: Object.keys(data),
+        timestamp: new Date().toISOString()
+      });
+
+      // Extract chat_id from top-level field (not data.chat_id)
+      const chatId = data.chat_id;
+
+      if (!chatId) {
+        logger.warn('Chat: chat_created event missing top-level chat_id:', data);
+        return;
+      }
+
+      // Update current chat with the actual chat_id from server
+      setCurrentChat(prev => {
+        if (!prev) {
+          logger.warn('Chat: No current chat to update with chat_id');
+          return prev;
+        }
+
+        const updatedChat = { ...prev, id: chatId };
+        logger.debug('Chat: Updated current chat with server chat_id:', {
+          previousId: prev.id,
+          newId: chatId,
+          updatedChat
+        });
+
+        return updatedChat;
+      });
+
+      // WebSocket manager will handle its own chatId storage and message queue flushing
+      // This is handled automatically when the websocketManager receives chat_created
+
+      if (chatConfig.enablePerformanceTracking) {
+        performanceRef.current.trackChatWidget('chat_created');
+      }
+    };
+
     // ✅ CRITICAL: Streaming handlers for response_start, response_chunk, response_complete
     const handleResponseStart = (data) => {
       if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
@@ -1454,7 +1481,10 @@ export const useChat = (config = {}) => {
     
     logger.debug('Chat: Registering initializationProgress handler');
     wsManager.on('initializationProgress', handleInitializationProgress);
-    
+
+    logger.debug('Chat: Registering chat_created handler');
+    wsManager.on('chat_created', handleChatCreated);
+
     logger.debug('Chat: Registering response_complete handler');
     wsManager.on('response_complete', handleResponseComplete);
     
@@ -1488,6 +1518,7 @@ export const useChat = (config = {}) => {
         wsManager.off('connection_ready', handleConnectionReady);
         wsManager.off('ready', handleReady);
         wsManager.off('initializationProgress', handleInitializationProgress);
+        wsManager.off('chat_created', handleChatCreated);
         wsManager.off('response_complete', handleResponseComplete);
         wsManager.off('message_received', handleMessageReceived);
         wsManager.off('messageReceived', handleMessageReceived);
