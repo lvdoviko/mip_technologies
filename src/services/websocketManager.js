@@ -339,8 +339,8 @@ class MIPTechWebSocketManager {
             logger.debug('✅ [WebSocket] Cleared fallback timer (connection_ready received)');
           }
           
-          // Send join_chat if not already sent
-          if (this.currentChatId && !this.joinSent) {
+          // ✅ CRITICAL FIX: Send join_chat if not already sent (don't wait for currentChatId)
+          if (!this.joinSent) {
             this.sendJoinChat();
           }
           
@@ -396,6 +396,14 @@ class MIPTechWebSocketManager {
           if (chatId) {
             logger.debug('🎯 [WebSocket] Chat created with ID:', chatId);
             this.currentChatId = chatId;
+
+            // ✅ CRITICAL: Clear watchdog timer since we received chat_created
+            if (this.chatCreatedWatchdog) {
+              clearTimeout(this.chatCreatedWatchdog);
+              this.chatCreatedWatchdog = null;
+              logger.debug('✅ [WebSocket] Cleared chat_created watchdog - chat successfully created');
+            }
+
             this.emit('chat_created', { ...data, chat_id: chatId });
 
             // Process any queued messages now that we have chat_id
@@ -574,6 +582,13 @@ class MIPTechWebSocketManager {
     if (this.readyTimer) {
       clearTimeout(this.readyTimer);
       this.readyTimer = null;
+    }
+
+    // ✅ CRITICAL: Clear chat_created watchdog on disconnect
+    if (this.chatCreatedWatchdog) {
+      clearTimeout(this.chatCreatedWatchdog);
+      this.chatCreatedWatchdog = null;
+      logger.debug('✅ [WebSocket] Cleared chat_created watchdog on disconnect');
     }
 
     // Enhanced close code analysis for platform debugging
@@ -914,17 +929,18 @@ class MIPTechWebSocketManager {
       stream: true // Enable streaming responses
     };
 
-    // Use current chat_id if available, otherwise queue the message
+    // ✅ CRITICAL FIX: Stronger guard - use current chat_id if available, otherwise queue
     const effectiveChatId = chatId || this.currentChatId;
-    if (effectiveChatId) {
-      messageData.chat_id = effectiveChatId;
-      logger.debug('📤 [WebSocket] Sending chat message to chat:', effectiveChatId);
-      this.sendMessage('chat_message', messageData); // CRITICAL: Use 'chat_message' type
-    } else {
-      // Queue message until chat_id is available
+    if (!effectiveChatId) {
+      // ALWAYS queue if no chat_id - never send without it
       logger.debug('📦 [WebSocket] Queueing message - no chat_id available yet');
-      this.queueMessage('chat_message', messageData);
+      return this.queueMessage('chat_message', messageData);
     }
+
+    // Only proceed if we have a valid chat_id
+    messageData.chat_id = effectiveChatId;
+    logger.debug('📤 [WebSocket] Sending chat message to chat:', effectiveChatId);
+    this.sendMessage('chat_message', messageData); // CRITICAL: Use 'chat_message' type
   }
 
   createNewChat() {
@@ -1372,6 +1388,23 @@ class MIPTechWebSocketManager {
     });
 
     this.joinSent = true;
+
+    // Add watchdog timer - if no chat_created within 2s, send fallback new_chat
+    this.chatCreatedWatchdog = setTimeout(() => {
+      if (!this.currentChatId) {
+        logger.warn('🕒 [WebSocket] No chat_created received within 2s, sending new_chat fallback');
+        this.sendMessage('new_chat', {
+          title: 'Website Chat',
+          channel: 'website'
+        });
+      }
+    }, 2000);
+  }
+
+  // ✅ CRITICAL FIX: Add missing sendJoinChat method (called from connection_ready and joinChat)
+  sendJoinChat() {
+    // Delegate to existing method
+    this.sendJoinChatOnOpen();
   }
 
   // ✅ CRITICAL FIX: Join chat method for production unblocking

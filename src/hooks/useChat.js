@@ -961,7 +961,7 @@ export const useChat = (config = {}) => {
         logger.warn('Chat: Skipping connected due to component unmount (production only)');
         return;
       }
-      
+
       // Allow connected in development and StrictMode scenarios
       if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
         logger.debug('Chat: Processing connected despite unmount (StrictMode/Development)');
@@ -969,6 +969,36 @@ export const useChat = (config = {}) => {
       logger.debug('Chat: Connected handler - WebSocket connection established');
       debugSetConnectionState(CHAT_STATES.CONNECTED);
       setError(null);
+    };
+
+    // ✅ CRITICAL FIX: connection_established handler - eliminates warning and handles client_id
+    const handleConnectionEstablished = (data) => {
+      // ✅ CRITICAL FIX: Less aggressive guard for connection_established
+      if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
+        logger.warn('Chat: Skipping connection_established due to component unmount (production only)');
+        return;
+      }
+
+      // Allow connection_established in development and StrictMode scenarios
+      if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
+        logger.debug('Chat: Processing connection_established despite unmount (StrictMode/Development)');
+      }
+
+      logger.debug('Chat: Connection established - WebSocket ready', {
+        clientId: data.data?.client_id,
+        hasData: !!data.data,
+        timestamp: new Date().toISOString()
+      });
+
+      // Store server-assigned client ID if provided
+      if (data.data?.client_id && websocketRef.current) {
+        websocketRef.current.serverClientId = data.data.client_id;
+        logger.debug('Chat: Stored server client ID:', data.data.client_id);
+      }
+
+      if (chatConfig.enablePerformanceTracking) {
+        performanceRef.current.trackChatWidget('connection_established');
+      }
     };
     
     // ✅ CRITICAL: connection_ready handler - makes chat go from "connected" to "ready"
@@ -1472,7 +1502,10 @@ export const useChat = (config = {}) => {
     // Register the handlers
     logger.debug('Chat: Registering connected handler');
     wsManager.on('connected', handleConnected);
-    
+
+    logger.debug('Chat: Registering connection_established handler');
+    wsManager.on('connection_established', handleConnectionEstablished);
+
     logger.debug('Chat: Registering connection_ready handler');
     wsManager.on('connection_ready', handleConnectionReady);
     
@@ -1515,6 +1548,7 @@ export const useChat = (config = {}) => {
       logger.debug('Chat: Cleaning up essential WebSocket handlers');
       if (wsManager) {
         wsManager.off('connected', handleConnected);
+        wsManager.off('connection_established', handleConnectionEstablished);
         wsManager.off('connection_ready', handleConnectionReady);
         wsManager.off('ready', handleReady);
         wsManager.off('initializationProgress', handleInitializationProgress);
