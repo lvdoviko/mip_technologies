@@ -44,36 +44,30 @@ class MIPTechWebSocketManager {
     this.processedEvents = new Set(); // Track processed events to prevent duplicates
     this.eventHistory = new Map(); // Track recent events for duplicate detection
     this.dedupWindowMs = 1000; // 1 second window for duplicate event detection
+
+    // ✅ Heartbeat configuration for production reliability
+    this.heartbeatInterval = null;
+    this.heartbeatIntervalMs = 30000; // 30 seconds as specified in requirements
   }
 
   /**
-   * Build WebSocket URL with proper authentication parameters
-   * Platform auto-generates client_id if not provided for better security
+   * Build WebSocket URL for MIPTech Realtime v1 protocol (no token required for native site)
+   * Uses exact format: wss://api.miptechnologies.tech/api/v1/ws/chat?tenant_id=miptech-company
    */
   buildWebSocketUrl() {
     const params = new URLSearchParams();
-    
-    // Required parameter
+
+    // CRITICAL: Only tenant_id required for native website
     params.set('tenant_id', this.tenantId);
-    
-    // Optional parameters
-    if (this.customClientId) {
-      params.set('client_id', this.customClientId);
-    }
-    // Note: If client_id not provided, platform auto-generates secure UUID4
-    
-    if (this.userId) {
-      params.set('user_id', this.userId);
-    }
-    
-    if (this.authToken) {
-      params.set('token', this.authToken);
-    }
-    
-    // Check if baseUrl already includes the path
-    const hasPath = this.baseUrl.includes('/api/v1/ws/chat');
-    const baseUrlToUse = hasPath ? this.baseUrl : `${this.baseUrl}/api/v1/ws/chat`;
-    
+
+    // For native website, no token, client_id, or user_id needed
+    // The backend allows WebSocket connection without authentication for allowed origins
+
+    // Always use the full production WebSocket URL for consistency
+    const baseUrlToUse = this.baseUrl.includes('/api/v1/ws/chat')
+      ? this.baseUrl
+      : `${this.baseUrl}/api/v1/ws/chat`;
+
     return `${baseUrlToUse}?${params.toString()}`;
   }
 
@@ -127,11 +121,12 @@ class MIPTechWebSocketManager {
 
   async connect(chatId = null) {
     try {
-      // Store chatId for potential reconnections
-      this.currentChatId = chatId;
-      
-      // Build WebSocket URL with chat_id parameter for platform routing
-      const wsUrl = chatId ? this.buildWebSocketUrlWithChatId(chatId) : this.buildWebSocketUrl();
+      // For WebSocket-only mode, we don't need chatId upfront
+      // The chat will be created through join_chat message after connection
+      this.currentChatId = null; // Will be set from chat_created event
+
+      // Build WebSocket URL (no chatId parameter needed)
+      const wsUrl = this.buildWebSocketUrl();
 
       // ✅ ENHANCEMENT: Environment-specific logging
       logger.debug('WebSocket: Connecting', {
@@ -227,24 +222,23 @@ class MIPTechWebSocketManager {
     } else {
       logger.debug('🟢 [WebSocket] Connection OPENED');
     }
-    
+
     this.isConnected = true;
     this.reconnectAttempts = 0;
     this.joinSent = false; // Track if join_chat was sent
-    
-    // ✅ CRITICAL: Fallback timer - send join_chat after 1s if connection_ready hasn't arrived
-    // This prevents 4408 timeout error if connection_ready is delayed
-    this.readyTimer = setTimeout(() => {
-      if (this.currentChatId && !this.joinSent) {
-        logger.debug('⏰ [WebSocket] Fallback timer - sending join_chat (connection_ready delayed)');
-        this.sendJoinChat();
-      }
-    }, 1000);
-    
-    this.emit('connected', { 
+
+    // ✅ CRITICAL: Send explicit join_chat immediately on connection open
+    // This is required for MIPTech Realtime v1 protocol compliance
+    logger.debug('🚀 [WebSocket] Sending explicit join_chat on connection open');
+    this.sendJoinChatOnOpen();
+
+    // ✅ Start heartbeat to maintain connection
+    this.startHeartbeat();
+
+    this.emit('connected', {
       tenantId: this.tenantId,
       userId: this.userId,
-      authenticated: !!this.authToken 
+      authenticated: false // No authentication for native website
     });
   }
 
@@ -394,6 +388,21 @@ class MIPTechWebSocketManager {
             ts: Date.now() // Both formats for compatibility
           });
           this.emit('ping', data);
+          break;
+
+        case 'chat_created':
+          // ✅ CRITICAL: Capture chat_id from top-level (not data)
+          const chatId = data.chat_id; // Top-level chat_id
+          if (chatId) {
+            logger.debug('🎯 [WebSocket] Chat created with ID:', chatId);
+            this.currentChatId = chatId;
+            this.emit('chat_created', { ...data, chat_id: chatId });
+
+            // Process any queued messages now that we have chat_id
+            this.processMessageQueue();
+          } else {
+            logger.warn('⚠️ [WebSocket] chat_created event missing chat_id');
+          }
           break;
 
         case 'chat_response':
@@ -556,6 +565,9 @@ class MIPTechWebSocketManager {
     this.isReady = false;
     this.isReconnecting = true;
     this.currentJoinedChatId = null; // Clear joined chat on disconnect
+
+    // Stop heartbeat when connection closes
+    this.stopHeartbeat();
     this.joinSent = false; // Reset join_chat tracking
 
     // Clear any pending timers
@@ -795,14 +807,10 @@ class MIPTechWebSocketManager {
         
         this.emit('reconnection_success', { attempts: this.reconnectAttempts });
         
-        // ✅ CRITICAL FIX: Re-join chat after reconnection
-        // Wait for connection_ready before joining
-        this.once('connection_ready', () => {
-          if (this.currentChatId && this.currentChatId !== this.currentJoinedChatId) {
-            logger.debug('🔗 [WebSocket] Re-joining chat after reconnection:', this.currentChatId);
-            this.joinChat(this.currentChatId);
-          }
-        });
+        // ✅ CRITICAL FIX: Re-send join_chat after reconnection for WebSocket-only mode
+        // Note: sendJoinChatOnOpen() is already called in handleOpen() so we don't need
+        // additional logic here for the WebSocket-only protocol. The join_chat will
+        // create a new chat session and we'll get a new chat_id from chat_created event.
         
       } catch (error) {
         logger.error('❌ [WebSocket] Reconnection failed:', error);
@@ -900,24 +908,23 @@ class MIPTechWebSocketManager {
 
   // Chat-specific methods
   sendChatMessage(message, chatId = null) {
-    // ✅ CRITICAL: Use 'text' field and 'user_message' event type per v3.2 spec
+    // ✅ CRITICAL: Use 'message' field and 'chat_message' event type per MIPTech Realtime v1
     const messageData = {
-      text: message, // CRITICAL: Use 'text' not 'message'
-      tenant_id: this.tenantId,
-      tenantId: this.tenantId // Dual casing for compatibility
+      message: message, // CRITICAL: Use 'message' field (not 'text' or 'content')
+      stream: true // Enable streaming responses
     };
-    
-    // Only include chat_id if it exists and is valid
-    if (chatId && chatId !== 'null') {
-      messageData.chat_id = chatId;
-      messageData.chatId = chatId; // Dual casing for compatibility
-      logger.debug('📤 [WebSocket] Sending user message to specific chat:', chatId);
+
+    // Use current chat_id if available, otherwise queue the message
+    const effectiveChatId = chatId || this.currentChatId;
+    if (effectiveChatId) {
+      messageData.chat_id = effectiveChatId;
+      logger.debug('📤 [WebSocket] Sending chat message to chat:', effectiveChatId);
+      this.sendMessage('chat_message', messageData); // CRITICAL: Use 'chat_message' type
     } else {
-      logger.debug('📤 [WebSocket] Sending user message via tenant fallback (no chat session)');
+      // Queue message until chat_id is available
+      logger.debug('📦 [WebSocket] Queueing message - no chat_id available yet');
+      this.queueMessage('chat_message', messageData);
     }
-    
-    // CRITICAL: Use 'user_message' not 'chat_message'
-    this.sendMessage('user_message', messageData);
   }
 
   createNewChat() {
@@ -1092,13 +1099,16 @@ class MIPTechWebSocketManager {
 
   disconnect() {
     logger.debug('🔌 [WebSocket] Disconnecting...');
-    
+
     // Clear any pending timers
     if (this.readyTimer) {
       clearTimeout(this.readyTimer);
       this.readyTimer = null;
     }
-    
+
+    // Stop heartbeat
+    this.stopHeartbeat();
+
     // Clear any pending reconnection attempts
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -1152,18 +1162,40 @@ class MIPTechWebSocketManager {
     this.sendMessage('ping', { timestamp: Date.now() });
   }
 
+  // ✅ CRITICAL: Heartbeat functionality for production reliability
+  startHeartbeat() {
+    this.stopHeartbeat(); // Clear any existing interval
+
+    logger.debug(`🫀 [WebSocket] Starting heartbeat every ${this.heartbeatIntervalMs}ms`);
+    this.heartbeatInterval = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        logger.debug('🏓 [WebSocket] Sending heartbeat ping');
+        this.sendMessage('ping', { ts: Date.now() });
+      } else {
+        logger.warn('⚠️ [WebSocket] Heartbeat skipped - connection not open');
+        this.stopHeartbeat();
+      }
+    }, this.heartbeatIntervalMs);
+  }
+
+  stopHeartbeat() {
+    if (this.heartbeatInterval) {
+      logger.debug('🛑 [WebSocket] Stopping heartbeat');
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
   /**
    * ✅ Message queuing methods for reconnection handling
    */
   
   shouldQueueMessage(type) {
-    // Queue important message types during reconnection
+    // Queue important message types during reconnection or while waiting for chat_id
     const queueableTypes = [
-      'user_message', // Updated from 'chat_message'
+      'chat_message', // CRITICAL: Use 'chat_message' for MIPTech Realtime v1
       'typing_start',
-      'typing_stop',
-      'new_chat',
-      'load_chat'
+      'typing_stop'
     ];
     return queueableTypes.includes(type);
   }
@@ -1326,32 +1358,20 @@ class MIPTechWebSocketManager {
     return newest;
   }
 
-  // ✅ CRITICAL: Send join_chat with JWT token and dual casing
-  sendJoinChat() {
-    if (this.joinSent || !this.currentChatId) return;
+  // ✅ CRITICAL: Send join_chat on connection open (no JWT token required for native site)
+  sendJoinChatOnOpen() {
+    if (this.joinSent) return;
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-    
-    logger.debug('🔐 [WebSocket] Sending join_chat with JWT token');
-    
-    // Get token from constructor options or localStorage
-    const token = this.authToken || localStorage.getItem('miptech_access_token');
-    
-    if (!token) {
-      logger.warn('⚠️ [WebSocket] No JWT token available for join_chat');
-    }
-    
+
+    logger.debug('🚀 [WebSocket] Sending join_chat on connection open (MIPTech Realtime v1)');
+
+    // Send explicit join_chat as required by the protocol
     this.sendMessage('join_chat', {
-      // Dual casing for maximum compatibility
-      chat_id: this.currentChatId,
-      chatId: this.currentChatId,
-      tenant_id: this.tenantId,
-      tenantId: this.tenantId,
-      // JWT token MUST be in payload, never in URL
-      token: token
+      channel: 'website',
+      create: true // Request chat creation
     });
-    
+
     this.joinSent = true;
-    this.currentJoinedChatId = this.currentChatId;
   }
 
   // ✅ CRITICAL FIX: Join chat method for production unblocking

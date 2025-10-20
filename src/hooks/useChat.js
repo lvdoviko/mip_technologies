@@ -304,129 +304,11 @@ export const useChat = (config = {}) => {
     return merged.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   }, []);
 
-  /**
-   * Wait for platform AI services to be ready (MVP requirement)
-   * Platform needs 1.7+ seconds for AI service initialization
-   */
-  const waitForPlatformReady = useCallback(async (retries = 5) => {
-    logger.debug('DIAGNOSTIC: === waitForPlatformReady START ===');
-    logger.debug('DIAGNOSTIC: apiRef.current:', apiRef.current);
-    logger.debug('DIAGNOSTIC: apiRef.current?.healthz type:', typeof apiRef.current?.healthz);
-    
-    for (let i = 0; i < retries; i++) {
-      try {
-        // ✅ FIX: Reset unmount state during platform checks to prevent early returns
-        if (isUnmountedRef && isUnmountedRef.current) {
-          logger.debug('Platform: Resetting unmount state during platform check');
-          isUnmountedRef.current = false;
-        }
-        
-        logger.debug(`🔍 [Platform] Checking readiness (${i + 1}/${retries})...`);
-        
-        // ✅ FIX: Use healthz endpoint which returns 200
-        logger.debug('Platform: Calling apiRef.current.healthz()...');
-        const health = await apiRef.current.healthz();
-        logger.debug('Platform: healthz() response:', health);
-        
-        if (health && (health.ai_services_ready || health.status === 'healthy')) {
-          logger.debug('Platform: AI services ready - platform check successful');
-          return true;
-        }
-      } catch (error) {
-        logger.error(`🔴 [DIAGNOSTIC] Platform check ${i + 1}/${retries} error:`, error);
-        logger.error('DIAGNOSTIC: Error name:', error.name);
-        logger.error('DIAGNOSTIC: Error message:', error.message);
-        logger.error('DIAGNOSTIC: Error stack:', error.stack);
-        logger.debug(`⚠️ [Platform] Check ${i + 1}/${retries} failed:`, error.message);
-      }
+  // ✅ REMOVED: waitForPlatformReady function - not needed for WebSocket-only mode
+  // Platform readiness will be handled through WebSocket events
 
-      if (i < retries - 1) {
-        // Wait 1.7 seconds for AI services initialization (FINAL-CLIENT-SIDE.md requirement)
-        logger.debug('Platform: Waiting 1.7s for AI services initialization...');
-        await new Promise(resolve => setTimeout(resolve, 1700));
-      }
-    }
-
-    logger.error('DIAGNOSTIC: All platform ready checks failed after', retries, 'attempts');
-    // Throw error to trigger proper error handling
-    throw new Error('Platform health check failed after all retries');
-  }, []);
-
-  /**
-   * Create chat session via REST API (MVP requirement)
-   * Platform requires chat session before WebSocket connection
-   * ✅ ENHANCED: Graceful error handling to prevent WebSocket disconnection
-   */
-  const createChatSession = useCallback(async (tenantId, retryCount = 0) => {
-    const maxRetries = 3;
-    const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Exponential backoff, max 5s
-    
-    try {
-      logger.debug(`💬 [Platform] Creating chat session via REST API for tenant: ${tenantId} (attempt ${retryCount + 1}/${maxRetries + 1})`);
-      
-      // ✅ CRITICAL: Generate required session and visitor IDs (CLIENT-FIX-REPORT.md lines 537-538)
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-      const visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-      logger.debug('Platform: Generated IDs:', { sessionId, visitorId });
-
-      // ✅ PHASE 1: Diagnostic logging to verify binding issue
-      logger.debug('DEBUG: Pre-call state verification:', {
-        hasApiRef: !!apiRef.current,
-        apiRefType: typeof apiRef.current,
-        hasCreateChat: !!apiRef.current?.createChat,
-        createChatType: typeof apiRef.current?.createChat,
-        isCreateChatOwnProperty: apiRef.current?.hasOwnProperty('createChat'),
-        tenantId: apiRef.current?.tenantId,
-        baseUrl: apiRef.current?.baseUrl
-      });
-      
-      // ✅ FIX: Use API client instead of direct fetch to avoid double path issue
-      logger.debug('Platform: Calling apiRef.current.createChat()...');
-      const chatData = await apiRef.current.createChat(sessionId, visitorId, {
-        title: 'Website Chat Session'
-      });
-      logger.debug('Platform: createChat() response:', chatData);
-
-      const chatId = chatData.chat_id || chatData.id;
-      logger.debug('Platform: Chat session created with ID:', chatId);
-      return { success: true, chatId, data: chatData };
-      
-    } catch (error) {
-      logger.error(`❌ [Platform] Failed to create chat session (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
-      
-      // Check if this is a retryable error (HTTP 500, 503, network issues)
-      const isRetryableError = (
-        error.status === 500 || 
-        error.status === 503 || 
-        error.message?.includes('relation') || // Database schema issues
-        error.message?.includes('Network') ||
-        error.message?.includes('timeout') ||
-        !error.status // Network/connection errors
-      );
-      
-      // Retry logic for temporary issues
-      if (isRetryableError && retryCount < maxRetries) {
-        logger.debug(`🔄 [Platform] Retrying createChatSession in ${retryDelay}ms (retryable error: ${error.message})`);
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-        return createChatSession(tenantId, retryCount + 1);
-      }
-      
-      // For non-retryable errors or max retries reached, return graceful failure
-      logger.error('Platform: createChatSession failed permanently:', {
-        error: error.message,
-        status: error.status,
-        isRetryable: isRetryableError,
-        attempts: retryCount + 1
-      });
-      
-      return { 
-        success: false, 
-        error: error.message, 
-        status: error.status,
-        canContinueWithoutChat: true // ✅ KEY: Allow WebSocket connection without chat session
-      };
-    }
-  }, []);
+  // ✅ REMOVED: createChatSession function - no longer needed for WebSocket-only mode
+  // Chat creation now happens through WebSocket join_chat message
 
   const loadChatHistory = useCallback(async (chatId) => {
     try {
@@ -507,42 +389,7 @@ export const useChat = (config = {}) => {
   }, [chatConfig.enablePerformanceTracking]);
 
 
-  /**
-   * ✅ CRITICAL: Fetch JWT token from serverless endpoint
-   */
-  const fetchChatToken = useCallback(async () => {
-    try {
-      // Check if running in production (Vercel) or development
-      const tokenUrl = process.env.NODE_ENV === 'production' ? '/api/token' : 'http://localhost:3000/api/token';
-      
-      const response = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch chat token');
-      }
-      
-      const data = await response.json();
-      logger.debug('Chat: Successfully fetched JWT token');
-      return data.token;
-    } catch (error) {
-      logger.error('Chat: Failed to fetch token:', error);
-      // Fallback to localStorage if exists (for development)
-      const fallbackToken = localStorage.getItem('miptech_access_token');
-      if (fallbackToken) {
-        logger.debug('Chat: Using fallback token from localStorage');
-        return fallbackToken;
-      }
-      // For development, try to use the API key from env
-      if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_MIPTECH_API_KEY) {
-        logger.debug('Chat: Using development API key');
-        return process.env.REACT_APP_MIPTECH_API_KEY;
-      }
-      return null;
-    }
-  }, []);
+  // ✅ REMOVED: fetchChatToken function - no JWT tokens needed for WebSocket-only mode
 
   /**
    * Initialize chat connection
@@ -653,86 +500,25 @@ export const useChat = (config = {}) => {
         logger.debug('INIT: Performance tracking started');
       }
       
-      // MVP: Platform Architecture Implementation
-      // Step 1: Wait for platform AI services to be ready
-      logger.debug('INIT: STEP 1: healthz() - Checking platform readiness...');
-      const healthResult = await waitForPlatformReady();
-      logger.debug('INIT: STEP 1 COMPLETED: healthz() returned:', healthResult);
-      
-      // Small delay to let React refs stabilize after async operation
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
-      logger.debug('INIT: isUnmountedRef.current AFTER platform check:', isUnmountedRef.current, 'at', new Date().toISOString());
-      if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
-        logger.debug('INIT: Component unmounted after platform check - early return (production only)');
-        return;
-      }
-      if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
-        logger.debug('INIT: Component unmounted after platform check but allowing due to StrictMode/development');
-      }
-      
-      // Step 2: Create chat session via REST API
+      // WebSocket-Only Mode: Direct connection without REST API
+      logger.debug('INIT: STEP 1: Direct WebSocket connection (no REST API needed)');
+
+      // Create minimal chat placeholder that will be replaced when chat_created is received
       const tenantId = process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
-      logger.debug('INIT: STEP 2: createChatSession() - Creating chat session for tenant:', tenantId);
-      const chatResult = await createChatSession(tenantId);
-      logger.debug('INIT: STEP 2 COMPLETED: createChatSession() returned:', chatResult);
-      
-      // ✅ CRITICAL FIX: Handle graceful failures without disconnecting WebSocket
-      let chatId = null;
-      let canProceedWithWebSocket = true;
-      
-      if (chatResult.success) {
-        chatId = chatResult.chatId;
-        logger.debug('INIT: Chat session created successfully, proceeding with full functionality');
-      } else if (chatResult.canContinueWithoutChat) {
-        logger.warn('INIT: Chat session creation failed, but continuing with WebSocket-only mode:', {
-          error: chatResult.error,
-          status: chatResult.status
-        });
-        // Set error state to inform user, but don't fail initialization
-        setError(new Error(`Chat creation temporarily unavailable: ${chatResult.error}`));
-        canProceedWithWebSocket = true;
-      } else {
-        logger.error('INIT: Chat session creation failed permanently, cannot proceed');
-        canProceedWithWebSocket = false;
-        throw new Error(`Chat initialization failed: ${chatResult.error}`);
-      }
-      
-      // Small delay to let React refs stabilize after async operation
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
-      logger.debug('INIT: isUnmountedRef.current AFTER chat creation:', isUnmountedRef.current, 'at', new Date().toISOString());
-      if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
-        logger.debug('INIT: Component unmounted after chat creation - early return (production only)');
-        return;
-      }
-      if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
-        logger.debug('INIT: Component unmounted after chat creation but allowing due to StrictMode/development');
-      }
-      
-      // Store chat info for WebSocket connection (handle null chatId gracefully)
-      const chat = chatId ? {
-        id: chatId,
+      const chat = {
+        id: null, // Will be set from chat_created event
         tenant_id: tenantId,
         title: options.title || 'Website Chat',
         created_at: new Date().toISOString()
-      } : {
-        id: null, // WebSocket will operate without specific chat session
-        tenant_id: tenantId,
-        title: options.title || 'WebSocket-Only Connection',
-        created_at: new Date().toISOString(),
-        degraded_mode: true // Flag to indicate limited functionality
       };
-      
-      logger.debug('INIT: Chat session prepared:', {
-        chatId: chat.id,
+
+      logger.debug('INIT: Chat placeholder prepared:', {
         tenantId: chat.tenant_id,
         title: chat.title,
-        degradedMode: !!chat.degraded_mode,
         timestamp: chat.created_at
       });
-      
-      logger.debug('INIT: isUnmountedRef.current BEFORE WebSocket setup:', isUnmountedRef.current, 'at', new Date().toISOString());
+
+      // Check if component is still mounted before proceeding
       if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
         logger.debug('INIT: Component unmounted before WebSocket setup - early return (production only)');
         return;
@@ -740,60 +526,21 @@ export const useChat = (config = {}) => {
       if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
         logger.debug('INIT: Component unmounted before WebSocket setup but allowing due to StrictMode/development');
       }
-      
+
       setCurrentChat(chat);
-      logger.debug('INIT: Chat stored in state');
-      
-      // MVP: Chat history loading disabled for initial implementation
-      // Load chat history if persistence is enabled
-      if (chatConfig.enablePersistence && false) { // MVP: Disabled for first implementation
-        logger.debug('INIT: STEP 3: loadChatHistory() - Loading chat history...');
-        await loadChatHistory(chat.id);
-        logger.debug('INIT: STEP 3 COMPLETED: loadChatHistory() finished');
-      } else {
-        logger.debug('INIT: STEP 3 SKIPPED: Chat history loading disabled for MVP implementation');
-      }
-      
-      // Step 3.5: Fetch JWT token for WebSocket authentication
-      logger.debug('INIT: STEP 3.5: Fetching JWT token for WebSocket authentication');
-      const authToken = await fetchChatToken();
-      if (!authToken) {
-        logger.warn('INIT: No JWT token available - may have authentication issues');
-      } else {
-        logger.debug('INIT: STEP 3.5 COMPLETED: JWT token fetched successfully');
-        // Pass token to WebSocket manager
-        if (websocketRef.current) {
-          websocketRef.current.authToken = authToken;
-          logger.debug('INIT: JWT token set in WebSocket manager');
-        }
-      }
-      
-      // Step 4: Connect WebSocket with chat_id parameter (MVP requirement)
-      // ✅ ENHANCED: Handle null chatId gracefully for degraded mode
-      const websocketChatId = chat.id; // May be null for degraded mode
-      logger.debug('INIT: STEP 4: connectWebSocket() - Connecting WebSocket:', {
-        chatId: websocketChatId,
-        degradedMode: !!chat.degraded_mode,
-        willUseTenantFallback: !websocketChatId,
-        hasToken: !!authToken
-      });
-      
+      logger.debug('INIT: Chat placeholder stored in state');
+
+      // Connect WebSocket directly - no chat_id needed upfront
+      logger.debug('INIT: STEP 2: connectWebSocket() - Direct WebSocket connection');
+
       try {
-        await connectWebSocket(websocketChatId);
-        logger.debug('INIT: STEP 4 COMPLETED: connectWebSocket() succeeded');
-        
-        // Clear any previous errors if WebSocket connection succeeds
-        if (websocketChatId) {
-          setError(null); // Full functionality restored
-        } else {
-          // Keep the degraded mode warning but indicate WebSocket is working
-          logger.debug('INIT: WebSocket connected in degraded mode (no chat session)');
-        }
+        await connectWebSocket(); // No chatId parameter needed
+        logger.debug('INIT: STEP 2 COMPLETED: WebSocket connection successful');
+        setError(null); // Clear any previous errors
       } catch (wsError) {
         logger.error('INIT: WebSocket connection failed:', wsError);
-        // Don't throw here - let user know WebSocket failed but don't crash initialization
         setError(new Error(`WebSocket connection failed: ${wsError.message}`));
-        // Continue with initialization to show error state to user
+        // Don't throw - let user see the error but don't crash
       }
       
       // Track performance
@@ -1214,46 +961,8 @@ export const useChat = (config = {}) => {
     stopTyping();
   }, [stopTyping]);
 
-  /**
-   * ✅ NEW: Retry chat creation for failed attempts
-   * Allows users to retry after HTTP 500 errors without reconnecting WebSocket
-   */
-  const retryChatCreation = useCallback(async () => {
-    if (!currentChat || !currentChat.degraded_mode) {
-      logger.debug('Retry: No retry needed - chat already exists or not in degraded mode');
-      return false;
-    }
-
-    logger.debug('Retry: Attempting to create chat session while maintaining WebSocket connection');
-    setError(null); // Clear previous error
-    
-    try {
-      const tenantId = process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
-      const chatResult = await createChatSession(tenantId);
-      
-      if (chatResult.success) {
-        // Update chat with real session data
-        const updatedChat = {
-          ...currentChat,
-          id: chatResult.chatId,
-          title: 'Website Chat',
-          degraded_mode: false
-        };
-        
-        setCurrentChat(updatedChat);
-        logger.debug('Retry: Chat creation successful, upgraded to full functionality');
-        return true;
-      } else {
-        setError(new Error(`Chat creation still failing: ${chatResult.error}`));
-        logger.debug('Retry: Chat creation still failing, remaining in degraded mode');
-        return false;
-      }
-    } catch (error) {
-      setError(new Error(`Retry failed: ${error.message}`));
-      logger.error('Retry: Exception during chat creation retry:', error);
-      return false;
-    }
-  }, [currentChat, createChatSession]);
+  // ✅ REMOVED: retryChatCreation function - not needed for WebSocket-only mode
+  // Chat creation is handled automatically through WebSocket protocol
   
   /**
    * WebSocket event handlers
@@ -2006,7 +1715,6 @@ export const useChat = (config = {}) => {
     clearMessages,
     retryMessage,
     disconnect,
-    retryChatCreation, // ✅ NEW: Allow manual retry of chat creation
     
     // Utilities
     sessionData,

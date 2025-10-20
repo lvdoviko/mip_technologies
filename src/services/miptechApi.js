@@ -5,8 +5,7 @@ class MIPTechApiClient {
   constructor(options = {}) {
     this.baseUrl = options.baseUrl || process.env.REACT_APP_MIPTECH_API_URL || 'http://localhost:8001';
     this.tenantId = options.tenantId || process.env.REACT_APP_MIPTECH_TENANT_ID || 'miptech-company';
-    // ✅ FIX: Store apiKey options but read from env dynamically to avoid caching issues
-    this.apiKeyOptions = options.apiKey;
+    // ✅ REMOVED: API key authentication - using WebSocket-only mode
     this.version = options.version || process.env.REACT_APP_MIPTECH_API_VERSION || 'v1';
     
     // ✅ ENHANCEMENT: Environment-specific configuration
@@ -36,11 +35,8 @@ class MIPTechApiClient {
       'User-Agent': 'MIPTech-Client/1.0'
     };
 
-    // ✅ ENTERPRISE FIX: Use X-API-Key header format (enterprise standard)
-    const apiKey = this.apiKeyOptions || process.env.REACT_APP_MIPTECH_API_KEY;
-    if (apiKey) {
-      headers['X-API-Key'] = apiKey;
-    }
+    // ✅ REMOVED: API key authentication - WebSocket-only mode doesn't require API keys
+    // All communication now happens through WebSocket protocol
 
     return headers;
   }
@@ -89,7 +85,7 @@ class MIPTechApiClient {
         finalUrl: url,
         method: config.method || 'GET',
         contentType: config.headers['Content-Type'],
-        authorization: config.headers['Authorization'] ? 'Bearer ***' : 'MISSING',
+        // ✅ REMOVED: Authorization header logging - WebSocket-only mode
         tenantHeaders: {
           'X-Tenant-ID': config.headers['X-Tenant-ID'],
           'X-Tenant': config.headers['X-Tenant'],
@@ -408,13 +404,12 @@ class MIPTechApiClient {
     logger.debug('API: Creating chat with validated data:', requestData);
     
     // ✅ FORCE LOGGING: Always log createChat request details regardless of environment
-    const apiKeyMasked = (this.apiKeyOptions || process.env.REACT_APP_MIPTECH_API_KEY)?.substring(0, 20) + '...';
     logger.debug('API: createChat() request details:', {
       url: `${this.baseUrl}/api/${this.version}/chat`,
       method: 'POST',
       headers: this.getHeaders(),
       body: requestData,
-      apiKey: apiKeyMasked,
+      // ✅ REMOVED: API key logging - WebSocket-only mode
       tenantId: this.tenantId
     });
     

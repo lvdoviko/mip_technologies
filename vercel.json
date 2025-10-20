@@ -11,10 +11,5 @@
       "REACT_APP_ENABLE_CHAT": "true",
       "GENERATE_SOURCEMAP": "false"
     }
-  },
-  "functions": {
-    "api/token.js": {
-      "maxDuration": 10
-    }
   }
 }
