@@ -207,15 +207,15 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
                   AI is responding
                   <span className="inline-flex ml-0.5">
                     <span
-                      className={`transition-opacity ${prefersReducedMotion ? 'opacity-100' : 'opacity-20 animate-pulse'}`}
+                      className={`transition-opacity ${prefersReducedMotion ? 'opacity-100' : 'opacity-0 animate-pulse'}`}
                       style={{ animationDelay: '0ms', animationDuration: '1.5s' }}
                     >.</span>
                     <span
-                      className={`transition-opacity ${prefersReducedMotion ? 'opacity-100' : 'opacity-20 animate-pulse'}`}
+                      className={`transition-opacity ${prefersReducedMotion ? 'opacity-100' : 'opacity-0 animate-pulse'}`}
                       style={{ animationDelay: '0.5s', animationDuration: '1.5s' }}
                     >.</span>
                     <span
-                      className={`transition-opacity ${prefersReducedMotion ? 'opacity-100' : 'opacity-20 animate-pulse'}`}
+                      className={`transition-opacity ${prefersReducedMotion ? 'opacity-100' : 'opacity-0 animate-pulse'}`}
                       style={{ animationDelay: '1s', animationDuration: '1.5s' }}
                     >.</span>
                   </span>
