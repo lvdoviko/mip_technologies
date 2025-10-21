@@ -109,6 +109,9 @@ export const useChat = (config = {}) => {
   const [error, setError] = useState(null);
   const [typingUsers, setTypingUsers] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+
+  // ✅ Assistant loading state - independent from message objects
+  const [assistantLoading, setAssistantLoading] = useState(false);
   
   // Platform-specific state
   const [canSendMessages, setCanSendMessages] = useState(false);
@@ -750,6 +753,9 @@ export const useChat = (config = {}) => {
       // Send via WebSocket only - no REST API (stream: true is set by default in WebSocket manager)
       websocketRef.current.sendChatMessage(sanitizedContent);
 
+      // ✅ Start assistant loading indicator immediately after sending
+      setAssistantLoading(true);
+
       if (isUnmountedRef.current) return;
 
       // Clear timeout when message is queued/sent via WebSocket
@@ -1151,12 +1157,15 @@ export const useChat = (config = {}) => {
           return;
         }
         
+        // ✅ Stop assistant loading indicator - response completed
+        setAssistantLoading(false);
+
         // Clear all timers for this message (websocketManager handles buffer cleanup)
         clearTimeout(bufferExpiryRef.current?.[messageId]);
         clearTimeout(chunkTimeoutRef.current?.[messageId]);
         delete chunkTimeoutRef.current?.[messageId];
         delete bufferExpiryRef.current?.[messageId];
-        
+
         logger.debug('DEBUG: Data validation passed - proceeding with message update');
         
         // Update the message in state from loading to completed
@@ -1217,6 +1226,8 @@ export const useChat = (config = {}) => {
           timestamp: Date.now(),
           handlerPhase: 'response_complete_processing'
         });
+        // ✅ Stop assistant loading indicator on error
+        setAssistantLoading(false);
         setIsLoading(false);
         setCanSendMessages(true);
       }
@@ -1464,6 +1475,9 @@ export const useChat = (config = {}) => {
       }
 
       logger.debug('Chat: Response streaming started:', messageId);
+
+      // ✅ Stop assistant loading indicator - response started
+      setAssistantLoading(false);
 
       // ✅ CRITICAL FIX: Remove duplicate buffer system - websocketManager handles all buffering
       // Clear any legacy timeouts for this message (in case they exist)
@@ -1879,7 +1893,10 @@ export const useChat = (config = {}) => {
     
     // Advanced typing controls
     forceStopTyping,
-    
+
+    // ✅ Assistant loading state for independent loading bubble
+    assistantLoading,
+
     // ✅ FE-04: Message registry statistics and controls
     messageRegistryStats: messageRegistryRef.current.getStats(),
     getMessageRegistry: () => messageRegistryRef.current
@@ -1907,7 +1924,8 @@ export const useChat = (config = {}) => {
     errorState,
     streamingResponse,
     debouncedTyping,
-    forceStopTyping
+    forceStopTyping,
+    assistantLoading
   ]);
 };
 

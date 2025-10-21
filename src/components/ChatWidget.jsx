@@ -625,7 +625,9 @@ const ChatWidget = ({
     aiProcessingState,
     isAiProcessing,
     errorState,
-    hasProcessingError
+    hasProcessingError,
+    // ✅ Assistant loading state for independent loading bubble
+    assistantLoading
   } = useChat({
     autoConnect: false,
     enablePerformanceTracking: showPerformanceIndicator,
@@ -1131,7 +1133,21 @@ const ChatWidget = ({
                       showPerformanceInfo={showPerformanceIndicator}
                     />
                   ))}
-                
+
+                {/* Assistant Loading Bubble - Independent from message objects */}
+                {assistantLoading && (
+                  <div className="flex justify-start mb-3">
+                    <div className="bg-black/80 border border-white/20 px-4 py-3 rounded-xl max-w-[85%]">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                        </svg>
+                        <span className="text-sm text-gray-300">AI is responding…</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Typing indicator */}
                 <TypingIndicator
                   isVisible={typingUsers.length > 0}
