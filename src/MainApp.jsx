@@ -132,7 +132,6 @@ const MainApp = () => {
         onChatOpen={handleOpenChatFromInvitation}
         delay={3000}
         autoHideDuration={8000}
-        position="bottom-left"
       />
 
       {/* MIPTech AI Chat Widget */}
