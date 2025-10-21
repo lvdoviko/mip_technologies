@@ -1059,17 +1059,22 @@ class MIPTechWebSocketManager {
       stream: true // Enable streaming responses
     };
 
-    // ✅ CRITICAL FIX: Stronger guard - use current chat_id if available, otherwise queue
+    // ✅ CRITICAL FIX: Allow first message without chat_id to break deadlock
     const effectiveChatId = chatId || this.currentChatId;
-    if (!effectiveChatId) {
-      // ALWAYS queue if no chat_id - never send without it
-      logger.debug('📦 [WebSocket] Queueing message - no chat_id available yet');
+    if (effectiveChatId) {
+      messageData.chat_id = effectiveChatId;
+      logger.debug('📤 [WebSocket] Sending chat message to chat:', effectiveChatId);
+    } else {
+      // ✅ CRITICAL: Let first message go without chat_id - server will provide it in message_received
+      logger.debug('📤 [WebSocket] Sending first chat_message without chat_id (will capture from message_received)');
+    }
+
+    // ✅ CRITICAL: Always send if connected, don't block on chat_id
+    if (!this.isConnected || this.isReconnecting) {
+      logger.debug('📦 [WebSocket] Not connected - queueing message');
       return this.queueMessage('chat_message', messageData);
     }
 
-    // Only proceed if we have a valid chat_id
-    messageData.chat_id = effectiveChatId;
-    logger.debug('📤 [WebSocket] Sending chat message to chat:', effectiveChatId);
     this.sendMessage('chat_message', messageData); // CRITICAL: Use 'chat_message' type
   }
 
@@ -1384,7 +1389,13 @@ class MIPTechWebSocketManager {
     messagesToProcess.forEach((queuedMessage, index) => {
       try {
         logger.debug(`📤 [WebSocket] Sending queued message ${index + 1}/${messagesToProcess.length}: ${queuedMessage.type}`);
-        
+
+        // ✅ CRITICAL: Attach chat_id if we have one now, but don't block without it
+        if (queuedMessage.type === 'chat_message' && !queuedMessage.data.chat_id && this.currentChatId) {
+          queuedMessage.data.chat_id = this.currentChatId;
+          logger.debug('📤 [WebSocket] Added chat_id to queued message:', this.currentChatId);
+        }
+
         // Send the message directly (bypass queue check)
         this.sendMessageDirectly(queuedMessage.type, queuedMessage.data);
         

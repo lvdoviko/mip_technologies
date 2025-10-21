@@ -1563,7 +1563,8 @@ export const useChat = (config = {}) => {
     wsManager.on('chat_joined', handleChatCreated); // Same logic as chat_created
     wsManager.on('chatJoined', handleChatCreated); // alias
 
-    logger.debug('Chat: Registering no-op pong/heartbeat handlers (per external review)');
+    logger.debug('Chat: Registering no-op ping/pong/heartbeat handlers (per external review)');
+    wsManager.on('ping', () => { /* no-op to eliminate warnings */ });
     wsManager.on('pong', () => { /* no-op to eliminate warnings */ });
     wsManager.on('heartbeat', () => { /* no-op to eliminate warnings */ });
 
