@@ -48,15 +48,15 @@ const WIDGET_SIZES = {
 const MessageStatusIcon = ({ status }) => {
   switch (status) {
     case MESSAGE_STATUS.SENDING:
-      return <Loader2 className="w-4 h-4 animate-spin text-primary-400" />;
+      return <Loader2 className="w-3 h-3 animate-spin text-primary-400" />;
     case MESSAGE_STATUS.SENT:
-      return <CheckCircle className="w-4 h-4 text-primary-500" />;
+      return <CheckCircle className="w-3 h-3 text-primary-500" />;
     case MESSAGE_STATUS.DELIVERED:
-      return <CheckCircle className="w-4 h-4 text-primary-600" />;
+      return <CheckCircle className="w-3 h-3 text-primary-600" />;
     case 'processing':
-      return <Clock className="w-4 h-4 text-secondary-400 animate-pulse" />;
+      return <Clock className="w-3 h-3 text-secondary-400 animate-pulse" />;
     case MESSAGE_STATUS.FAILED:
-      return <XCircle className="w-4 h-4 text-accent-400" />;
+      return <XCircle className="w-3 h-3 text-accent-400" />;
     default:
       return null;
   }
@@ -201,7 +201,7 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
             {/* ✅ UNIFIED BUBBLE: Show loading animation or content */}
             {showLoading ? (
               <div className="flex items-center gap-2 flex-1">
-                <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
                 </svg>
                 <span className="text-base text-gray-300">
@@ -542,8 +542,8 @@ const ChatInput = ({
   };
   
   return (
-    <div className="border-t border-white/10 bg-black/60 backdrop-blur-sm p-5">
-      <div className="flex items-stretch space-x-3">
+    <div className="border-t border-white/10 bg-black/60 backdrop-blur-sm p-6">
+      <div className="flex items-stretch space-x-4">
         <div className="flex-1 relative">
           <textarea
             ref={inputRef}
@@ -563,7 +563,7 @@ const ChatInput = ({
             }}
             className={`
               chat-input-textarea
-              w-full px-5 pr-18 text-base resize-none font-inter h-14
+              w-full px-5 pr-18 text-sm resize-none font-inter h-12
               text-white placeholder-gray-400
               disabled:opacity-50 disabled:cursor-not-allowed
               ${isOverLimit ? '!border-red-400' : ''}
@@ -583,7 +583,7 @@ const ChatInput = ({
           onClick={handleSubmit}
           disabled={!inputValue.trim() || isDisabled || isOverLimit}
           className={`
-            p-4 rounded-none transition-all duration-300 border font-inter h-14 flex items-center justify-center
+            p-3 rounded-none transition-all duration-300 border font-inter h-12 flex items-center justify-center
             ${(!inputValue.trim() || isDisabled || isOverLimit)
               ? 'bg-transparent border-white/20 text-gray-500 cursor-not-allowed'
               : 'bg-transparent border-white/50 hover:border-white text-white hover:bg-white hover:text-black shadow-sm hover:shadow-md'
@@ -1081,15 +1081,15 @@ const ChatWidget = ({
           `}
         >
           {/* Header */}
-          <div className="bg-transparent backdrop-blur-md border-t border-white/50 text-white p-5 flex items-center justify-between relative">
-            <div className="flex items-center space-x-4">
+          <div className="bg-transparent backdrop-blur-md border-t border-white/50 text-white p-6 flex items-center justify-between relative">
+            <div className="flex items-center space-x-3">
               <img
                 src="/Mip-Logo.png"
                 alt="MipTech Logo"
-                className="w-10 h-10 object-contain"
+                className="w-8 h-8 object-contain"
               />
               <div>
-                <h3 className="font-bold text-base font-inter">{title}</h3>
+                <h3 className="font-bold text-sm font-inter">{title}</h3>
                 <ConnectionStatus 
                   connectionState={connectionState} 
                   isConnected={isConnected} 
@@ -1097,25 +1097,25 @@ const ChatWidget = ({
               </div>
             </div>
             
-            <div className="flex items-center space-x-1.5">
+            <div className="flex items-center space-x-1">
 
               <button
                 onClick={handleMinimize}
-                className="p-1.5 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
+                className="p-1 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
                 aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
               >
                 {isMinimized ?
-                  <Maximize2 className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" /> :
-                  <Minimize2 className="w-5 h-5 transition-transform duration-300 group-hover:scale-90" />
+                  <Maximize2 className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" /> :
+                  <Minimize2 className="w-4 h-4 transition-transform duration-300 group-hover:scale-90" />
                 }
               </button>
 
               <button
                 onClick={handleToggle}
-                className="p-1.5 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
+                className="p-1 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
                 aria-label="Close chat"
               >
-                <X className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
+                <X className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" />
               </button>
             </div>
           </div>
@@ -1125,7 +1125,7 @@ const ChatWidget = ({
               {/* Messages */}
               <div
                 ref={messagesRef}
-                className="flex-1 p-5 overflow-y-auto bg-transparent backdrop-blur-sm chat-scrollbar"
+                className="flex-1 p-6 overflow-y-auto bg-transparent backdrop-blur-sm chat-scrollbar"
               >
                 {/* Error display */}
                 <ErrorDisplay
