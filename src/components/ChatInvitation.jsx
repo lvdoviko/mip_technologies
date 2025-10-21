@@ -114,8 +114,8 @@ const ChatInvitation = ({
     <div
       ref={invitationRef}
       className={`
-        fixed bottom-3 right-20 sm:bottom-4 sm:right-24 z-40
-        hidden lg:block
+        fixed bottom-3 right-16 sm:bottom-4 sm:right-20 z-40
+        hidden md:block
         bg-transparent backdrop-blur-md
         border border-white/50 hover:border-white
         rounded-none p-3 pr-6
