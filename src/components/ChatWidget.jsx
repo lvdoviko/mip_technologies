@@ -203,14 +203,14 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
                 </svg>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm text-gray-300">AI is responding</span>
-                  <div className="flex space-x-0.5 ml-1">
-                    <div className={`w-1 h-1 bg-gray-300 rounded-full ${prefersReducedMotion ? '' : 'animate-bounce'}`} style={{ animationDelay: '0ms' }}></div>
-                    <div className={`w-1 h-1 bg-gray-300 rounded-full ${prefersReducedMotion ? '' : 'animate-bounce'}`} style={{ animationDelay: '150ms' }}></div>
-                    <div className={`w-1 h-1 bg-gray-300 rounded-full ${prefersReducedMotion ? '' : 'animate-bounce'}`} style={{ animationDelay: '300ms' }}></div>
-                  </div>
-                </div>
+                <span className="text-sm text-gray-300">
+                  AI is responding
+                  <span className="inline-flex ml-0.5">
+                    <span className={`${prefersReducedMotion ? 'opacity-100' : 'animate-pulse'}`} style={{ animationDelay: '0ms', animationDuration: '1.5s' }}>.</span>
+                    <span className={`${prefersReducedMotion ? 'opacity-100' : 'animate-pulse'}`} style={{ animationDelay: '0.5s', animationDuration: '1.5s' }}>.</span>
+                    <span className={`${prefersReducedMotion ? 'opacity-100' : 'animate-pulse'}`} style={{ animationDelay: '1s', animationDuration: '1.5s' }}>.</span>
+                  </span>
+                </span>
               </div>
             ) : (
               <p className="text-sm leading-relaxed break-words font-mono tracking-wide flex-1">{message.content}</p>
