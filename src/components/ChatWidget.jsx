@@ -38,7 +38,8 @@ const WIDGET_POSITIONS = {
 const WIDGET_SIZES = {
   compact: { width: 'w-72', height: 'h-80' },
   medium: { width: 'w-80', height: 'h-96' },
-  large: { width: 'w-96', height: 'h-[32rem]' }
+  large: { width: 'w-96', height: 'h-[32rem]' },
+  xl: { width: 'w-[30rem]', height: 'h-[36rem]' }  // 480px × 576px (50% larger than medium)
 };
 
 /**
@@ -47,15 +48,15 @@ const WIDGET_SIZES = {
 const MessageStatusIcon = ({ status }) => {
   switch (status) {
     case MESSAGE_STATUS.SENDING:
-      return <Loader2 className="w-3 h-3 animate-spin text-primary-400" />;
+      return <Loader2 className="w-4 h-4 animate-spin text-primary-400" />;
     case MESSAGE_STATUS.SENT:
-      return <CheckCircle className="w-3 h-3 text-primary-500" />;
+      return <CheckCircle className="w-4 h-4 text-primary-500" />;
     case MESSAGE_STATUS.DELIVERED:
-      return <CheckCircle className="w-3 h-3 text-primary-600" />;
+      return <CheckCircle className="w-4 h-4 text-primary-600" />;
     case 'processing':
-      return <Clock className="w-3 h-3 text-secondary-400 animate-pulse" />;
+      return <Clock className="w-4 h-4 text-secondary-400 animate-pulse" />;
     case MESSAGE_STATUS.FAILED:
-      return <XCircle className="w-3 h-3 text-accent-400" />;
+      return <XCircle className="w-4 h-4 text-accent-400" />;
     default:
       return null;
   }
@@ -186,9 +187,9 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
       <div className={`max-w-[85%] ${isUser ? 'order-2' : 'order-1'}`}>
         <div
           className={`
-            relative px-4 py-3 rounded-none shadow-lg backdrop-blur-sm font-inter
-            ${isUser 
-              ? 'bg-white border border-white text-black hover:bg-gray-100' 
+            relative px-5 py-4 rounded-none shadow-lg backdrop-blur-sm font-inter
+            ${isUser
+              ? 'bg-white border border-white text-black hover:bg-gray-100'
               : 'bg-black border border-white/50 text-gray-100 hover:bg-black/30'
             }
             ${message.status === MESSAGE_STATUS.SENDING ? 'opacity-70' : ''}
@@ -200,10 +201,10 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
             {/* ✅ UNIFIED BUBBLE: Show loading animation or content */}
             {showLoading ? (
               <div className="flex items-center gap-2 flex-1">
-                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
                 </svg>
-                <span className="text-sm text-gray-300">
+                <span className="text-base text-gray-300">
                   AI is responding
                   <span className="inline-flex ml-0.5">
                     <span
@@ -222,7 +223,7 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
                 </span>
               </div>
             ) : (
-              <p className="text-sm leading-relaxed break-words font-mono tracking-wide flex-1">{message.content}</p>
+              <p className="text-base leading-relaxed break-words font-mono tracking-wide flex-1">{message.content}</p>
             )}
             
             {/* Status icon inline with last line */}
@@ -541,8 +542,8 @@ const ChatInput = ({
   };
   
   return (
-    <div className="border-t border-white/10 bg-black/60 backdrop-blur-sm p-4">
-      <div className="flex items-stretch space-x-2">
+    <div className="border-t border-white/10 bg-black/60 backdrop-blur-sm p-5">
+      <div className="flex items-stretch space-x-3">
         <div className="flex-1 relative">
           <textarea
             ref={inputRef}
@@ -556,13 +557,13 @@ const ChatInput = ({
             rows={1}
             style={{
               lineHeight: 'normal',
-              paddingTop: '12px',
-              paddingBottom: '12px',
+              paddingTop: '14px',
+              paddingBottom: '14px',
               overflow: 'hidden'
             }}
             className={`
               chat-input-textarea
-              w-full px-4 pr-16 text-sm resize-none font-inter h-12
+              w-full px-5 pr-18 text-base resize-none font-inter h-14
               text-white placeholder-gray-400
               disabled:opacity-50 disabled:cursor-not-allowed
               ${isOverLimit ? '!border-red-400' : ''}
@@ -582,7 +583,7 @@ const ChatInput = ({
           onClick={handleSubmit}
           disabled={!inputValue.trim() || isDisabled || isOverLimit}
           className={`
-            p-3 rounded-none transition-all duration-300 border font-inter h-12 flex items-center justify-center
+            p-4 rounded-none transition-all duration-300 border font-inter h-14 flex items-center justify-center
             ${(!inputValue.trim() || isDisabled || isOverLimit)
               ? 'bg-transparent border-white/20 text-gray-500 cursor-not-allowed'
               : 'bg-transparent border-white/50 hover:border-white text-white hover:bg-white hover:text-black shadow-sm hover:shadow-md'
@@ -590,7 +591,7 @@ const ChatInput = ({
           `}
           aria-label="Send message"
         >
-          <Send className="w-4 h-4" />
+          <Send className="w-5 h-5" />
         </button>
       </div>
     </div>
@@ -600,9 +601,9 @@ const ChatInput = ({
 /**
  * Main ChatWidget component
  */
-const ChatWidget = ({ 
+const ChatWidget = ({
   position = 'bottom-right',
-  size = 'medium',
+  size = 'xl',
   theme = 'auto',
   primaryColor = '#2563eb',
   title = 'MIP AI Assistant',
@@ -921,12 +922,31 @@ const ChatWidget = ({
   // Handle entrance animation
   useEffect(() => {
     if (isOpen && !prefersReducedMotion && chatRef.current) {
-      gsap.fromTo(chatRef.current, 
+      gsap.fromTo(chatRef.current,
         { opacity: 0, scale: 0.8, y: 20 },
         { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.7)' }
       );
     }
   }, [isOpen, prefersReducedMotion]);
+
+  // ✅ SCROLL FIX: Capture wheel events on entire chat widget and route to messages area
+  const handleWheelEvent = useCallback((e) => {
+    // If hovering over chat widget, prevent page scroll and route to messages
+    if (messagesRef.current && chatRef.current?.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+      messagesRef.current.scrollTop += e.deltaY;
+    }
+  }, []);
+
+  // Set up scroll event capture
+  useEffect(() => {
+    const chatElement = chatRef.current;
+    if (chatElement && isOpen) {
+      chatElement.addEventListener('wheel', handleWheelEvent, { passive: false });
+      return () => chatElement.removeEventListener('wheel', handleWheelEvent);
+    }
+  }, [handleWheelEvent, isOpen]);
   
   // State for lazy connection management
   const [isConnectionTriggered, setIsConnectionTriggered] = useState(false);
@@ -1061,15 +1081,15 @@ const ChatWidget = ({
           `}
         >
           {/* Header */}
-          <div className="bg-transparent backdrop-blur-md border-t border-white/50 text-white p-4 flex items-center justify-between relative">
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/Mip-Logo.png" 
-                alt="MipTech Logo" 
-                className="w-8 h-8 object-contain"
+          <div className="bg-transparent backdrop-blur-md border-t border-white/50 text-white p-5 flex items-center justify-between relative">
+            <div className="flex items-center space-x-4">
+              <img
+                src="/Mip-Logo.png"
+                alt="MipTech Logo"
+                className="w-10 h-10 object-contain"
               />
               <div>
-                <h3 className="font-bold text-sm font-inter">{title}</h3>
+                <h3 className="font-bold text-base font-inter">{title}</h3>
                 <ConnectionStatus 
                   connectionState={connectionState} 
                   isConnected={isConnected} 
@@ -1077,25 +1097,25 @@ const ChatWidget = ({
               </div>
             </div>
             
-            <div className="flex items-center space-x-1">
-              
+            <div className="flex items-center space-x-1.5">
+
               <button
                 onClick={handleMinimize}
-                className="p-1 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
+                className="p-1.5 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
                 aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
               >
-                {isMinimized ? 
-                  <Maximize2 className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" /> : 
-                  <Minimize2 className="w-4 h-4 transition-transform duration-300 group-hover:scale-90" />
+                {isMinimized ?
+                  <Maximize2 className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" /> :
+                  <Minimize2 className="w-5 h-5 transition-transform duration-300 group-hover:scale-90" />
                 }
               </button>
-              
+
               <button
                 onClick={handleToggle}
-                className="p-1 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
+                className="p-1.5 hover:bg-white/10 rounded-none transition-all border border-white/30 group"
                 aria-label="Close chat"
               >
-                <X className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" />
+                <X className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
               </button>
             </div>
           </div>
@@ -1105,7 +1125,7 @@ const ChatWidget = ({
               {/* Messages */}
               <div
                 ref={messagesRef}
-                className="flex-1 p-4 overflow-y-auto bg-transparent backdrop-blur-sm chat-scrollbar"
+                className="flex-1 p-5 overflow-y-auto bg-transparent backdrop-blur-sm chat-scrollbar"
               >
                 {/* Error display */}
                 <ErrorDisplay
