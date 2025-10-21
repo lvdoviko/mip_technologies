@@ -1109,9 +1109,9 @@ export const useChat = (config = {}) => {
         logger.debug('DEBUG: Entering try block - extracting data');
         
         // Extract message data from the response
-        const messageId = data.messageId || data.data?.message_id;
-        // Use buffered content if available, otherwise use content from the message
-        const finalContent = data.data?.content || data.data?.message || chunkBufferRef.current?.[messageId] || '';
+        const messageId = data.messageId || data.message_id || data.data?.message?.id || data.data?.message_id;
+        // ✅ CRITICAL: Use aggregated content from websocketManager per external review
+        const finalContent = data.content || data.data?.message?.content || data.data?.content || data.data?.message || chunkBufferRef.current?.[messageId] || '';
         
         logger.debug('DEBUG: Extracted data:', {
           messageId,
@@ -1531,8 +1531,11 @@ export const useChat = (config = {}) => {
     logger.debug('Chat: Registering chat_created handler');
     wsManager.on('chat_created', handleChatCreated);
 
-    logger.debug('Chat: Registering response_complete handler');
+    logger.debug('Chat: Registering response_complete handlers');
     wsManager.on('response_complete', handleResponseComplete);
+    wsManager.on('responseComplete', handleResponseComplete); // Camel case alias
+    wsManager.on('aiResponseComplete', handleResponseComplete); // AI-specific alias
+    wsManager.on('ai_response_complete', handleResponseComplete); // Backend alias
     
     logger.debug('Chat: Registering message_received handler');
     wsManager.on('message_received', handleMessageReceived);
@@ -1551,9 +1554,19 @@ export const useChat = (config = {}) => {
     
     logger.debug('Chat: Registering streaming handlers');
     wsManager.on('response_start', handleResponseStart);
+    wsManager.on('responseStart', handleResponseStart); // alias
     wsManager.on('response_chunk', handleResponseChunk);
+    wsManager.on('responseChunk', handleResponseChunk); // alias
     // response_complete is already registered above
-    
+
+    logger.debug('Chat: Registering chat_joined handler');
+    wsManager.on('chat_joined', handleChatCreated); // Same logic as chat_created
+    wsManager.on('chatJoined', handleChatCreated); // alias
+
+    logger.debug('Chat: Registering no-op pong/heartbeat handlers (per external review)');
+    wsManager.on('pong', () => { /* no-op to eliminate warnings */ });
+    wsManager.on('heartbeat', () => { /* no-op to eliminate warnings */ });
+
     logger.debug('Chat: All essential handlers registered successfully');
 
     // ✅ CRITICAL FIX: Signal that handlers are ready for connections
@@ -1571,6 +1584,9 @@ export const useChat = (config = {}) => {
         wsManager.off('initializationProgress', handleInitializationProgress);
         wsManager.off('chat_created', handleChatCreated);
         wsManager.off('response_complete', handleResponseComplete);
+        wsManager.off('responseComplete', handleResponseComplete);
+        wsManager.off('aiResponseComplete', handleResponseComplete);
+        wsManager.off('ai_response_complete', handleResponseComplete);
         wsManager.off('message_received', handleMessageReceived);
         wsManager.off('messageReceived', handleMessageReceived);
         wsManager.off('processing', handleProcessing);
@@ -1581,7 +1597,12 @@ export const useChat = (config = {}) => {
         wsManager.off('reconnection_stopped', handleReconnectionStopped);
         wsManager.off('disconnected', handleDisconnected);
         wsManager.off('response_start', handleResponseStart);
+        wsManager.off('responseStart', handleResponseStart);
         wsManager.off('response_chunk', handleResponseChunk);
+        wsManager.off('responseChunk', handleResponseChunk);
+        wsManager.off('chat_joined', handleChatCreated);
+        wsManager.off('chatJoined', handleChatCreated);
+        // No need to off pong/heartbeat - they're anonymous functions
         
         // Clear all streaming buffers and timers
         Object.keys(bufferExpiryRef.current || {}).forEach(messageId => {

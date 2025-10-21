@@ -48,6 +48,9 @@ class MIPTechWebSocketManager {
     // ✅ Heartbeat configuration for production reliability
     this.heartbeatInterval = null;
     this.heartbeatIntervalMs = 30000; // 30 seconds as specified in requirements
+
+    // ✅ CRITICAL: Streaming response aggregation (per external review)
+    this.activeResponses = new Map(); // message_id -> { text: "" }
   }
 
   /**
@@ -317,6 +320,13 @@ class MIPTechWebSocketManager {
       }
       
       logger.debug('📥 [WebSocket] Received:', data.type, data);
+
+      // ✅ ENHANCED LOGGING: Per external review for debugging
+      logger.debug('[WS<-] %s | chat_id=%s | mid=%s',
+        rawData.type || 'unknown',
+        rawData.chat_id || '',
+        rawData.message_id || ''
+      );
       
       // Log normalization for debugging
       if (this.enableVerboseLogging && data.__normalized) {
@@ -401,6 +411,13 @@ class MIPTechWebSocketManager {
           this.emit('ping', data);
           break;
 
+        case 'pong':
+          // ✅ CRITICAL: Handle pong response per external review
+          logger.debug('🏓 [WebSocket] Pong received');
+          this.emit('pong', data);
+          this.emit('heartbeat', data); // alias per external review
+          break;
+
         case 'chat_created':
           // ✅ CRITICAL: Capture chat_id using raw data for most reliable access
           const chatId = rawData.chat_id || data.chat_id || data.chatId;
@@ -444,6 +461,19 @@ class MIPTechWebSocketManager {
             timestamp: data.data?.timestamp || Date.now()
           });
 
+          // ✅ ENHANCED DEBUG: Log exact data structure for chat_id extraction
+          logger.debug('🔍 [WebSocket] message_received data structure debug:', {
+            rawData_chat_id: rawData.chat_id,
+            data_chat_id: data.chat_id,
+            data_chatId: data.chatId,
+            data_data_chat_id: data.data?.chat_id,
+            rawDataKeys: Object.keys(rawData),
+            dataKeys: Object.keys(data),
+            dataDataKeys: data.data ? Object.keys(data.data) : null,
+            currentChatId: this.currentChatId,
+            timestamp: Date.now()
+          });
+
           // ✅ CRITICAL FIX: Capture chat_id from message_received (primary source per backend protocol)
           // Use raw data for most reliable capture (pre-normalization)
           const messageReceivedChatId = rawData.chat_id || data.chat_id || data.chatId || data.data?.chat_id;
@@ -469,8 +499,32 @@ class MIPTechWebSocketManager {
             source: 'backend_integration'
           };
 
-          this.emit('messageReceived', receivedData);
+          this.emit('messageReceived', receivedData); // alias
           this.emit('message_received', receivedData);
+          break;
+
+        case 'chat_joined':
+          logger.debug('🚪 [WebSocket] Chat joined confirmation');
+
+          // ✅ CRITICAL: Capture chat_id from chat_joined per external review
+          const chatJoinedChatId = rawData.chat_id || data.chat_id || data.chatId;
+          if (chatJoinedChatId && !this.currentChatId) {
+            logger.debug('✅ [WebSocket] chat_id captured from chat_joined', { chatId: chatJoinedChatId });
+            this.currentChatId = chatJoinedChatId;
+
+            // Clear watchdog since we now have chat_id
+            if (this.chatCreatedWatchdog) {
+              clearTimeout(this.chatCreatedWatchdog);
+              this.chatCreatedWatchdog = null;
+              logger.debug('✅ [WebSocket] Cleared watchdog - chat_id captured from chat_joined');
+            }
+
+            // Process queued messages now that we have chat_id
+            this.processMessageQueue();
+          }
+
+          this.emit('chat_joined', { ...data, chat_id: chatJoinedChatId });
+          this.emit('chatJoined', { ...data, chat_id: chatJoinedChatId }); // alias
           break;
 
         case 'processing':
@@ -492,34 +546,79 @@ class MIPTechWebSocketManager {
           this.emit('ai_processing_started', processingData); // Backend event name
           break;
 
+        case 'response_start':
+          logger.debug('📡 [WebSocket] AI response streaming started');
+
+          // ✅ CRITICAL: Initialize streaming buffer per external review
+          const startMessageId = rawData.message_id || data.message_id || data.messageId;
+          if (startMessageId) {
+            this.activeResponses.set(startMessageId, { text: '' });
+            logger.debug('🔥 [WebSocket] Initialized streaming buffer for:', startMessageId);
+          }
+
+          // ✅ CRITICAL: Emit both snake_case and camelCase aliases per external review
+          this.emit('response_start', data);
+          this.emit('responseStart', data); // alias
+          break;
+
+        case 'response_chunk':
+          logger.debug('📡 [WebSocket] AI response chunk received');
+
+          // ✅ CRITICAL: Aggregate chunks per external review
+          const chunkMessageId = rawData.message_id || data.message_id || data.messageId;
+          const chunk = data.content ?? data.delta ?? '';
+          const buffer = this.activeResponses.get(chunkMessageId);
+          if (buffer && chunk) {
+            buffer.text += chunk;
+            logger.debug('📦 [WebSocket] Aggregated chunk, total length:', buffer.text.length);
+          }
+
+          // ✅ CRITICAL: Emit both snake_case and camelCase aliases per external review
+          this.emit('response_chunk', data);
+          this.emit('responseChunk', data); // alias
+          break;
+
         case 'response_complete':
+          // ✅ CRITICAL: Finalize streaming response per external review
+          const completeMessageId = rawData.message_id || data.message_id || data.messageId;
+          const responseBuffer = this.activeResponses.get(completeMessageId);
+          const aggregatedText = responseBuffer?.text ?? '';
+
           logger.debug('🎉 [WebSocket] AI response completed', {
-            messageId: data.data?.message?.id,
-            chatId: data.data?.chat_id,
+            messageId: completeMessageId,
+            chatId: data.data?.chat_id || rawData.chat_id,
             responseTime: data.data?.message?.response_time_ms,
             tokens: data.data?.message?.completion_tokens,
+            aggregatedLength: aggregatedText.length,
+            hadBuffer: !!responseBuffer,
             timestamp: data.data?.timestamp || Date.now()
           });
-          
-          // Enhanced data with completion context
+
+          // ✅ CRITICAL: Create UI-friendly event with aggregated content per external review
           const completionData = {
             ...data,
+            message_id: completeMessageId,
+            content: aggregatedText, // Use aggregated text from chunks
             completionTime: Date.now(),
             source: 'backend_integration'
           };
-          
-          logger.debug('🔥 [WebSocket] About to emit response_complete events with data:', {
+
+          logger.debug('🔥 [WebSocket] About to emit response_complete with aggregated content:', {
             type: completionData.type,
-            hasMessage: !!completionData.data?.message,
-            messageId: completionData.data?.message?.id,
-            content: completionData.data?.message?.content?.substring(0, 50) + '...',
+            messageId: completeMessageId,
+            contentLength: aggregatedText.length,
+            hasAggregatedContent: !!aggregatedText,
             eventsToEmit: ['responseComplete', 'response_complete', 'aiResponseComplete', 'ai_response_complete']
           });
-          
-          this.emit('responseComplete', completionData);
+
+          // ✅ CRITICAL: Emit all aliases with normalized content per external review
           this.emit('response_complete', completionData);
-          this.emit('aiResponseComplete', completionData); // Additional alias for clarity
-          this.emit('ai_response_complete', completionData); // Backend event name
+          this.emit('responseComplete', completionData); // alias
+          this.emit('ai_response_complete', completionData); // backend name
+          this.emit('aiResponseComplete', completionData); // alias
+
+          // ✅ CRITICAL: Clean up buffer per external review
+          this.activeResponses.delete(completeMessageId);
           
           logger.debug('✅ [WebSocket] All response_complete events emitted');
           break;
@@ -1422,16 +1521,31 @@ class MIPTechWebSocketManager {
 
     this.joinSent = true;
 
-    // Add watchdog timer - if no chat_id within 1s, send fallback new_chat (reduced since chat_id comes via message_received)
+    // Add watchdog timer - if no chat_id within 2s, send fallback new_chat (per external review)
     this.chatCreatedWatchdog = setTimeout(() => {
       if (!this.currentChatId && this.isConnected) {
-        logger.warn('🕒 [WebSocket] No chat_id received within 1s, sending new_chat fallback');
-        this.sendMessage('new_chat', {
-          title: 'Website Chat',
-          channel: 'website'
+        logger.warn('🕒 [WebSocket] No chat_id received within 2s, sending new_chat fallback');
+        logger.debug('🔍 [WebSocket] Watchdog state check:', {
+          currentChatId: this.currentChatId,
+          isConnected: this.isConnected,
+          isReady: this.isReady,
+          joinSent: this.joinSent,
+          messageQueueLength: this.messageQueue.length,
+          hasQueuedUserMessages: this.messageQueue.some(msg => msg.type === 'chat_message')
         });
+
+        // ✅ TAME WATCHDOG: Only send new_chat if we have queued messages (per external review)
+        if (this.messageQueue.length > 0) {
+          logger.debug('📦 [WebSocket] Sending new_chat because we have queued messages');
+          this.sendMessage('new_chat', {
+            title: 'Website Chat',
+            channel: 'website'
+          });
+        } else {
+          logger.debug('📦 [WebSocket] Skipping new_chat - no queued messages');
+        }
       }
-    }, 1000);
+    }, 2000);
   }
 
   // ✅ CRITICAL FIX: Add missing sendJoinChat method (called from connection_ready and joinChat)
