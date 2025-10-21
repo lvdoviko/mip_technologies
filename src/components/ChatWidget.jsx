@@ -1105,7 +1105,7 @@ const ChatWidget = ({
                 )}
                 
                 {/* Messages */}
-                {messages.length > 0 && process.env.NODE_ENV === 'development' && 
+                {messages.length > 0 && process.env.NODE_ENV === 'development' &&
                   logger.debug('ChatWidget: Rendering messages:', {
                     totalMessages: messages.length,
                     messageIds: messages.map(m => m.id),
@@ -1113,15 +1113,24 @@ const ChatWidget = ({
                     messageStatuses: messages.map(m => m.status)
                   })
                 }
-                {messages.map((message) => (
-                  <Message
-                    key={message.id}
-                    message={message}
-                    onRetry={handleRetryMessage}
-                    prefersReducedMotion={prefersReducedMotion}
-                    showPerformanceInfo={showPerformanceIndicator}
-                  />
-                ))}
+                {messages
+                  .filter(message => {
+                    // ✅ FINAL FIX: Hide streaming messages until they have content
+                    // This eliminates the empty bubble during wait time
+                    if (message.status === MESSAGE_STATUS.STREAMING && !message.content?.trim()) {
+                      return false;
+                    }
+                    return true;
+                  })
+                  .map((message) => (
+                    <Message
+                      key={message.id}
+                      message={message}
+                      onRetry={handleRetryMessage}
+                      prefersReducedMotion={prefersReducedMotion}
+                      showPerformanceInfo={showPerformanceIndicator}
+                    />
+                  ))}
                 
                 {/* Typing indicator */}
                 <TypingIndicator
