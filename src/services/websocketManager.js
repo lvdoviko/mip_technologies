@@ -290,9 +290,19 @@ class MIPTechWebSocketManager {
   handleMessage(event) {
     try {
       const rawData = JSON.parse(event.data);
-      
+
+      // ✅ CRITICAL: Preserve top-level chat_id before normalization
+      const topLevelChatId = rawData.chat_id;
+
       // ✅ FE-01: Normalize incoming event with central event normalizer
       const data = eventNormalizer.normalizeIncomingEvent(rawData);
+
+      // ✅ CRITICAL: Restore top-level chat_id after normalization if it was lost
+      if (topLevelChatId && !data.chat_id && !data.chatId) {
+        data.chat_id = topLevelChatId;
+        data.chatId = topLevelChatId; // Both formats for compatibility
+        logger.debug('🔧 [WebSocket] Restored chat_id after normalization:', topLevelChatId);
+      }
       
       // ✅ FE-02: Check for duplicate events
       if (this.isDuplicateEvent(data)) {
@@ -326,6 +336,7 @@ class MIPTechWebSocketManager {
           this.serverClientId = data.data.client_id; // Store platform-assigned client ID
           // TODO: P1 - Use this.serverClientId for analytics events
           this.emit('connection_established', data); // ✅ CRITICAL: Emit event for useChat hook
+          this.emit('connected', data); // ✅ CRITICAL: Compatibility alias for legacy consumers
           break;
 
         case 'connection_ready':
@@ -391,8 +402,8 @@ class MIPTechWebSocketManager {
           break;
 
         case 'chat_created':
-          // ✅ CRITICAL: Capture chat_id from top-level (not data)
-          const chatId = data.chat_id; // Top-level chat_id
+          // ✅ CRITICAL: Capture chat_id using raw data for most reliable access
+          const chatId = rawData.chat_id || data.chat_id || data.chatId;
           if (chatId) {
             // ✅ CRITICAL: Log the exact moment chat_created is received for debugging
             logger.debug('✅ [WebSocket] chat_created received', { chatId });
@@ -432,14 +443,32 @@ class MIPTechWebSocketManager {
             chatId: data.data?.chat_id,
             timestamp: data.data?.timestamp || Date.now()
           });
-          
+
+          // ✅ CRITICAL FIX: Capture chat_id from message_received (primary source per backend protocol)
+          // Use raw data for most reliable capture (pre-normalization)
+          const messageReceivedChatId = rawData.chat_id || data.chat_id || data.chatId || data.data?.chat_id;
+          if (messageReceivedChatId && !this.currentChatId) {
+            logger.debug('✅ [WebSocket] chat_id captured from message_received', { chatId: messageReceivedChatId });
+            this.currentChatId = messageReceivedChatId;
+
+            // Clear watchdog since we now have chat_id
+            if (this.chatCreatedWatchdog) {
+              clearTimeout(this.chatCreatedWatchdog);
+              this.chatCreatedWatchdog = null;
+              logger.debug('✅ [WebSocket] Cleared watchdog - chat_id captured from message_received');
+            }
+
+            // Process queued messages now that we have chat_id
+            this.processMessageQueue();
+          }
+
           // Enhanced data with confirmation context
           const receivedData = {
             ...data,
             receivedTime: Date.now(),
             source: 'backend_integration'
           };
-          
+
           this.emit('messageReceived', receivedData);
           this.emit('message_received', receivedData);
           break;
@@ -1393,16 +1422,16 @@ class MIPTechWebSocketManager {
 
     this.joinSent = true;
 
-    // Add watchdog timer - if no chat_created within 2s, send fallback new_chat
+    // Add watchdog timer - if no chat_id within 1s, send fallback new_chat (reduced since chat_id comes via message_received)
     this.chatCreatedWatchdog = setTimeout(() => {
-      if (!this.currentChatId) {
-        logger.warn('🕒 [WebSocket] No chat_created received within 2s, sending new_chat fallback');
+      if (!this.currentChatId && this.isConnected) {
+        logger.warn('🕒 [WebSocket] No chat_id received within 1s, sending new_chat fallback');
         this.sendMessage('new_chat', {
           title: 'Website Chat',
           channel: 'website'
         });
       }
-    }, 2000);
+    }, 1000);
   }
 
   // ✅ CRITICAL FIX: Add missing sendJoinChat method (called from connection_ready and joinChat)

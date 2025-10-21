@@ -1227,11 +1227,19 @@ export const useChat = (config = {}) => {
       
       try {
         const serverMessageId = data.messageId;
-        
+
+        // ✅ CRITICAL FIX: Capture chat_id from message_received if currentChat doesn't have one
+        const chatIdFromMessage = data.chat_id || data.chatId;
+        if (chatIdFromMessage && currentChat && !currentChat.id) {
+          logger.debug('✅ [Chat] Capturing chat_id from message_received', { chatId: chatIdFromMessage });
+          setCurrentChat(prev => ({ ...prev, id: chatIdFromMessage }));
+        }
+
         logger.debug('DEBUG: Looking for user message to update:', {
           serverMessageId,
           searchingForStatus: 'SENDING',
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          capturedChatId: chatIdFromMessage || 'none'
         });
         
         // Update the user message from SENDING to RECEIVED
