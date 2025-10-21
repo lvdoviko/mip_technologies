@@ -394,6 +394,8 @@ class MIPTechWebSocketManager {
           // ✅ CRITICAL: Capture chat_id from top-level (not data)
           const chatId = data.chat_id; // Top-level chat_id
           if (chatId) {
+            // ✅ CRITICAL: Log the exact moment chat_created is received for debugging
+            logger.debug('✅ [WebSocket] chat_created received', { chatId });
             logger.debug('🎯 [WebSocket] Chat created with ID:', chatId);
             this.currentChatId = chatId;
 
@@ -1379,6 +1381,8 @@ class MIPTechWebSocketManager {
     if (this.joinSent) return;
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 
+    // ✅ CRITICAL: Log the exact moment join_chat is sent for debugging
+    logger.debug('➡️ [WebSocket] Sending join_chat (create=true)');
     logger.debug('🚀 [WebSocket] Sending join_chat on connection open (MIPTech Realtime v1)');
 
     // Send explicit join_chat as required by the protocol

@@ -68,6 +68,9 @@ export const useChat = (config = {}) => {
   // Core state with debug logging
   const [connectionState, setConnectionState] = useState(CHAT_STATES.DISCONNECTED);
   const [isConnectionReady, setIsConnectionReady] = useState(false);
+
+  // ✅ CRITICAL FIX: Handler registration readiness flag
+  const [handlersRegistered, setHandlersRegistered] = useState(false);
   
   // ✅ DEBUG: Track state changes for troubleshooting
   const debugSetConnectionState = useCallback((newState) => {
@@ -942,16 +945,18 @@ export const useChat = (config = {}) => {
    * WebSocket event handlers
    */
   
-  // ✅ CRITICAL: Register essential WebSocket handlers 
+  // ✅ CRITICAL: Register essential WebSocket handlers
   useEffect(() => {
-    
+    // ✅ CRITICAL FIX: Register ALL handlers BEFORE any connection attempt
+    logger.debug('🎯 [Chat] Registering WebSocket handlers BEFORE connect()');
+
     const wsManager = websocketRef.current;
-    
+
     if (!wsManager) {
       logger.error('Chat: WebSocket manager is null/undefined, cannot register handlers');
       return;
     }
-    
+
     logger.debug('Chat: WebSocket manager exists, registering critical handlers');
     
     // ✅ CRITICAL: connected handler - sets isConnected correctly  
@@ -1542,7 +1547,11 @@ export const useChat = (config = {}) => {
     // response_complete is already registered above
     
     logger.debug('Chat: All essential handlers registered successfully');
-    
+
+    // ✅ CRITICAL FIX: Signal that handlers are ready for connections
+    setHandlersRegistered(true);
+    logger.debug('🎯 [Chat] Handler registration complete - ready for connections');
+
     // Cleanup function
     return () => {
       logger.debug('Chat: Cleaning up essential WebSocket handlers');
@@ -1625,11 +1634,17 @@ export const useChat = (config = {}) => {
    * Auto-initialize chat if enabled
    */
   useEffect(() => {
+    // ✅ CRITICAL FIX: Wait for handlers to be registered before any connection attempt
+    if (!handlersRegistered) {
+      logger.debug('🎯 [Chat] Waiting for handlers to be registered before auto-init');
+      return;
+    }
+
     if (chatConfig.autoConnect && !currentChat && connectionState === CHAT_STATES.DISCONNECTED) {
-      logger.debug('Chat: Auto-initializing chat connection');
+      logger.debug('🚀 [Chat] Handlers ready, starting auto-initialization');
       initializeChat().catch(console.error);
     }
-  }, [chatConfig.autoConnect, currentChat, connectionState, initializeChat]);
+  }, [handlersRegistered, chatConfig.autoConnect, currentChat, connectionState, initializeChat]);
   
   /**
    * Cleanup on unmount - Enhanced for React Strict Mode
