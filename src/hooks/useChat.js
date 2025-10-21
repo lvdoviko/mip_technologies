@@ -1344,28 +1344,11 @@ export const useChat = (config = {}) => {
         return;
       }
 
-      logger.debug('Chat: AI processing started - adding typing indicator');
+      logger.debug('Chat: AI processing started - tracking processing event');
 
-      // Add a temporary AI message to show loading state with real message ID
-      const tempMessageId = mid;
-      setMessages(currentMessages => {
-        // Don't add if we already have a temporary AI message
-        const hasLoadingMessage = currentMessages.some(msg =>
-          msg.role === 'assistant' && msg.status === MESSAGE_STATUS.SENDING
-        );
-
-        if (!hasLoadingMessage) {
-          return [...currentMessages, {
-            id: tempMessageId,
-            content: '',
-            role: 'assistant',
-            status: MESSAGE_STATUS.SENDING,
-            timestamp: new Date().toISOString(),
-            metadata: { temp: true }
-          }];
-        }
-        return currentMessages;
-      });
+      // ✅ SURGICAL FIX: Only track processing, do NOT create UI bubble
+      // handleResponseStart will be the single source for assistant bubbles
+      // This eliminates the first empty bubble (Bubble #1)
     };
 
     // ✅ NEW: Reconnection event handlers
@@ -1512,7 +1495,20 @@ export const useChat = (config = {}) => {
         metadata: { streaming: true }
       };
 
-      setMessages(prev => [...prev, tempMessage]);
+      // ✅ SURGICAL FIX: Check for existing streaming message in the state callback
+      // This prevents creating duplicate Bubble #2
+      setMessages(prev => {
+        const existingMessage = prev.find(msg =>
+          msg.id === messageId || (msg.role === 'assistant' && msg.status === MESSAGE_STATUS.STREAMING)
+        );
+
+        if (existingMessage) {
+          logger.debug('[Chat] response_start - streaming message already exists, skipping duplicate', { messageId });
+          return prev; // Return unchanged state
+        }
+
+        return [...prev, tempMessage];
+      });
     };
     
     const handleResponseChunk = (data) => {
