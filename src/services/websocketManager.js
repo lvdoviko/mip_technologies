@@ -596,6 +596,13 @@ class MIPTechWebSocketManager {
             logger.debug('🔥 [WebSocket] Initialized streaming buffer for:', startMessageId);
           }
 
+          // ✅ CRITICAL: Also initialize chat-level buffer for backends that don't send response_start
+          const chatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
+          if (chatId) {
+            this.activeResponses.set(`chat_${chatId}`, { text: '', startedAt: Date.now() });
+            logger.debug('🔥 [WebSocket] Initialized chat-level streaming buffer for chat:', chatId);
+          }
+
           // ✅ CRITICAL: Emit both snake_case and camelCase aliases per external review
           this.emit('response_start', data);
           this.emit('responseStart', data); // alias
@@ -607,19 +614,46 @@ class MIPTechWebSocketManager {
           // ✅ CRITICAL: Use robust extraction helpers (per external review)
           const chunkMessageId = this.getMsgId(rawData) || this.getMsgId(data);
           const chunk = this.extractChunk(data.data ?? data);
-          const buffer = this.activeResponses.get(chunkMessageId);
+
+          // ✅ CRITICAL FIX: Try multiple buffer strategies for backend compatibility
+          let buffer = this.activeResponses.get(chunkMessageId);
+          let bufferKey = chunkMessageId;
+
+          // Strategy 1: Try message-specific buffer
+          if (!buffer && chunkMessageId) {
+            // Strategy 2: Try chat-level buffer
+            const chatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
+            if (chatId) {
+              bufferKey = `chat_${chatId}`;
+              buffer = this.activeResponses.get(bufferKey);
+
+              // Strategy 3: Auto-create chat-level buffer if none exists
+              if (!buffer) {
+                buffer = { text: '', startedAt: Date.now() };
+                this.activeResponses.set(bufferKey, buffer);
+                logger.debug('🔄 [WebSocket] Auto-created chat-level buffer for:', chatId);
+              }
+            }
+          }
+
+          // Strategy 4: Create message-specific buffer as last resort
+          if (!buffer && chunkMessageId) {
+            buffer = { text: '', startedAt: Date.now() };
+            this.activeResponses.set(chunkMessageId, buffer);
+            bufferKey = chunkMessageId;
+            logger.debug('🔄 [WebSocket] Auto-created message buffer for:', chunkMessageId);
+          }
 
           if (buffer && chunk) {
             buffer.text += chunk;
             buffer.lastChunkAt = Date.now();
             logger.debug('📦 [WebSocket] Aggregated chunk:', {
               messageId: chunkMessageId,
+              bufferKey: bufferKey,
               chunkLength: chunk.length,
               totalLength: buffer.text.length,
               chunk: chunk.substring(0, 50) + (chunk.length > 50 ? '...' : '')
             });
-          } else if (!buffer) {
-            logger.warn('⚠️ [WebSocket] No buffer for chunk, messageId:', chunkMessageId);
           } else if (!chunk) {
             logger.warn('⚠️ [WebSocket] Empty chunk received for messageId:', chunkMessageId);
           }
@@ -632,10 +666,38 @@ class MIPTechWebSocketManager {
         case 'response_complete':
           // ✅ CRITICAL: Finalize streaming response using robust helpers (per external review)
           const completeMessageId = this.getMsgId(rawData) || this.getMsgId(data);
-          const responseBuffer = this.activeResponses.get(completeMessageId);
-          const aggregatedText = responseBuffer?.text ?? '';
 
-          // ✅ CRITICAL: Try to get final content from complete frame if no chunks (per external review)
+          // ✅ CRITICAL FIX: Try multiple buffer strategies to find aggregated content
+          let responseBuffer = this.activeResponses.get(completeMessageId);
+          let aggregatedText = responseBuffer?.text ?? '';
+          let bufferSource = 'message-specific';
+
+          // Strategy 1: Try message-specific buffer
+          if (!aggregatedText) {
+            // Strategy 2: Try chat-level buffer
+            const chatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
+            if (chatId) {
+              const chatBuffer = this.activeResponses.get(`chat_${chatId}`);
+              if (chatBuffer?.text) {
+                aggregatedText = chatBuffer.text;
+                responseBuffer = chatBuffer;
+                bufferSource = 'chat-level';
+              }
+            }
+          }
+
+          // Strategy 3: Collect all chunks from any buffer (emergency fallback)
+          if (!aggregatedText) {
+            const allTexts = Array.from(this.activeResponses.values())
+              .map(buf => buf.text)
+              .filter(text => text.length > 0);
+            if (allTexts.length > 0) {
+              aggregatedText = allTexts.join('');
+              bufferSource = 'all-buffers';
+            }
+          }
+
+          // ✅ CRITICAL: Try to get final content from complete frame if still no chunks (per external review)
           const finalContent = aggregatedText || this.extractChunk(data.data ?? data) || '';
 
           logger.debug('🎉 [WebSocket] AI response completed', {
@@ -645,8 +707,10 @@ class MIPTechWebSocketManager {
             tokens: data.data?.message?.completion_tokens,
             aggregatedLength: aggregatedText.length,
             finalContentLength: finalContent.length,
+            bufferSource: bufferSource,
             hadBuffer: !!responseBuffer,
             usedFallback: !aggregatedText && !!finalContent,
+            activeBuffers: this.activeResponses.size,
             timestamp: data.data?.timestamp || Date.now()
           });
 
@@ -673,9 +737,22 @@ class MIPTechWebSocketManager {
           this.emit('ai_response_complete', completionData); // backend name
           this.emit('aiResponseComplete', completionData); // alias
 
-          // ✅ CRITICAL: Clean up buffer (per external review)
-          if (completeMessageId) {
+          // ✅ CRITICAL: Clean up buffers based on strategy used (per external review)
+          if (bufferSource === 'chat-level') {
+            // Keep chat-level buffer for potential future responses, but mark as used
+            const chatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
+            if (chatId) {
+              this.activeResponses.delete(`chat_${chatId}`);
+              logger.debug('🧹 [WebSocket] Cleaned up chat-level buffer for:', chatId);
+            }
+          } else if (bufferSource === 'all-buffers') {
+            // Clear all buffers since they were all used
+            this.activeResponses.clear();
+            logger.debug('🧹 [WebSocket] Cleaned up all buffers');
+          } else if (completeMessageId) {
+            // Clean up specific message buffer
             this.activeResponses.delete(completeMessageId);
+            logger.debug('🧹 [WebSocket] Cleaned up message buffer:', completeMessageId);
           }
 
           logger.debug('✅ [WebSocket] All response_complete events emitted with content length:', finalContent.length);

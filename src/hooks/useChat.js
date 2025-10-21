@@ -180,7 +180,7 @@ export const useChat = (config = {}) => {
   const mountCountRef = useRef(0);  // Track mount count for StrictMode detection
   
   // Streaming buffer management refs
-  const chunkBufferRef = useRef({});
+  // ✅ CRITICAL FIX: Removed chunkBufferRef - websocketManager handles all buffering
   const chunkTimeoutRef = useRef({});
   const bufferExpiryRef = useRef({});
   
@@ -1110,15 +1110,15 @@ export const useChat = (config = {}) => {
         
         // Extract message data from the response
         const messageId = data.messageId || data.message_id || data.data?.message?.id || data.data?.message_id;
-        // ✅ CRITICAL: Prioritize direct content from enhanced websocketManager payload (per external review)
-        const finalContent = data.content || data.data?.message?.content || data.data?.content || data.data?.message || chunkBufferRef.current?.[messageId] || '';
+        // ✅ CRITICAL: Use direct content from enhanced websocketManager payload (per backend analysis)
+        const finalContent = data.content || data.data?.message?.content || data.data?.content || data.data?.message || '';
         
-        logger.debug('DEBUG: Extracted data:', {
+        logger.debug('DEBUG: Extracted data from websocketManager:', {
           messageId,
           content: finalContent.substring(0, 50) + '...',
           hasMessageId: !!messageId,
           hasContent: !!finalContent,
-          hadBufferedContent: !!chunkBufferRef.current?.[messageId],
+          contentSource: data.content ? 'websocketManager' : 'fallback',
           dataStructure: Object.keys(data),
           dataDataStructure: data.data ? Object.keys(data.data) : null
         });
@@ -1132,10 +1132,9 @@ export const useChat = (config = {}) => {
           return;
         }
         
-        // Clear all timers and buffers for this message
+        // Clear all timers for this message (websocketManager handles buffer cleanup)
         clearTimeout(bufferExpiryRef.current?.[messageId]);
         clearTimeout(chunkTimeoutRef.current?.[messageId]);
-        delete chunkBufferRef.current?.[messageId];
         delete chunkTimeoutRef.current?.[messageId];
         delete bufferExpiryRef.current?.[messageId];
         
@@ -1441,35 +1440,38 @@ export const useChat = (config = {}) => {
         logger.warn('Chat: Skipping response_start due to component unmount (production only)');
         return;
       }
-      
+
       if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
         logger.debug('Chat: Processing response_start despite unmount (StrictMode/Development)');
       }
-      
-      const messageId = data.data?.message_id || `streaming_${Date.now()}`;
-      
+
+      // ✅ CRITICAL FIX: Use robust message ID extraction like websocketManager
+      const messageId = data.message_id || data.messageId || data.data?.message_id || data.data?.messageId || `streaming_${Date.now()}`;
+
       logger.debug('Chat: Response streaming started:', messageId);
-      
-      // Clear any existing buffer for this message
-      delete chunkBufferRef.current[messageId];
-      clearTimeout(chunkTimeoutRef.current[messageId]);
-      clearTimeout(bufferExpiryRef.current[messageId]);
-      
-      // Set buffer expiry timeout (20 seconds)
+
+      // ✅ CRITICAL FIX: Remove duplicate buffer system - websocketManager handles all buffering
+      // Clear any legacy timeouts for this message (in case they exist)
+      clearTimeout(chunkTimeoutRef.current?.[messageId]);
+      clearTimeout(bufferExpiryRef.current?.[messageId]);
+
+      // Set timeout for complete response (websocketManager will handle aggregation)
+      bufferExpiryRef.current = bufferExpiryRef.current || {};
       bufferExpiryRef.current[messageId] = setTimeout(() => {
         logger.warn(`[Chat] Response timeout for message ${messageId}`);
-        delete chunkBufferRef.current[messageId];
-        delete chunkTimeoutRef.current[messageId];
-        delete bufferExpiryRef.current[messageId];
-        
+
+        // Clean up timeouts
+        delete chunkTimeoutRef.current?.[messageId];
+        delete bufferExpiryRef.current?.[messageId];
+
         // Mark message as failed
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId 
+        setMessages(prev => prev.map(msg =>
+          msg.id === messageId
             ? { ...msg, status: MESSAGE_STATUS.FAILED, error: 'Response timeout' }
             : msg
         ));
-      }, 20000);
-      
+      }, 30000); // Increased to 30 seconds for streaming
+
       const tempMessage = {
         id: messageId,
         content: '',
@@ -1478,7 +1480,7 @@ export const useChat = (config = {}) => {
         timestamp: new Date().toISOString(),
         metadata: { streaming: true }
       };
-      
+
       setMessages(prev => [...prev, tempMessage]);
     };
     
@@ -1486,28 +1488,20 @@ export const useChat = (config = {}) => {
       if (isUnmountedRef.current && !isStrictModeRef.current && process.env.NODE_ENV !== 'development') {
         return;
       }
-      
-      const messageId = data.data?.message_id;
-      const chunk = data.data?.chunk || '';
-      
-      if (!messageId) return;
-      
-      // Initialize buffer if needed
-      if (!chunkBufferRef.current[messageId]) {
-        chunkBufferRef.current[messageId] = '';
+
+      // ✅ CRITICAL FIX: Use robust message ID extraction like websocketManager
+      const messageId = data.message_id || data.messageId || data.data?.message_id || data.data?.messageId;
+
+      if (!messageId) {
+        logger.warn('Chat: No message ID found in response_chunk, skipping');
+        return;
       }
-      chunkBufferRef.current[messageId] += chunk;
-      
-      // Debounce updates (30ms)
-      clearTimeout(chunkTimeoutRef.current[messageId]);
-      chunkTimeoutRef.current[messageId] = setTimeout(() => {
-        const bufferedContent = chunkBufferRef.current[messageId];
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, content: bufferedContent }
-            : msg
-        ));
-      }, 30);
+
+      logger.debug('Chat: Response chunk received for:', messageId);
+
+      // ✅ CRITICAL FIX: websocketManager handles all chunk aggregation
+      // Just log that chunk was received - no need for duplicate buffering
+      // The response_complete handler will get the final aggregated content
     };
     
     // Note: handleResponseComplete is already defined above, we'll just enhance it
@@ -1633,12 +1627,13 @@ export const useChat = (config = {}) => {
       logger.debug('Chat: Switching from chat', prevChatId, 'to', newChatId);
       wsManager.leaveChat(prevChatId);
       
-      // Clear streaming buffers when switching chats
-      Object.keys(chunkBufferRef.current).forEach(messageId => {
+      // Clear streaming timeouts when switching chats (websocketManager handles buffer cleanup)
+      Object.keys(chunkTimeoutRef.current).forEach(messageId => {
         clearTimeout(chunkTimeoutRef.current[messageId]);
-        clearTimeout(bufferExpiryRef.current[messageId]);
-        delete chunkBufferRef.current[messageId];
         delete chunkTimeoutRef.current[messageId];
+      });
+      Object.keys(bufferExpiryRef.current).forEach(messageId => {
+        clearTimeout(bufferExpiryRef.current[messageId]);
         delete bufferExpiryRef.current[messageId];
       });
     }
