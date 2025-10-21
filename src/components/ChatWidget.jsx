@@ -199,11 +199,15 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
           <div className="flex items-end gap-2">
             {/* ✅ UNIFIED BUBBLE: Show loading animation or content */}
             {showLoading ? (
-              <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-3 flex-1">
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
                 </svg>
-                <span className="text-sm text-gray-300">AI is responding…</span>
+                <div className="flex space-x-1">
+                  <div className={`w-2 h-2 bg-gray-300 rounded-full ${prefersReducedMotion ? '' : 'animate-bounce'}`} style={{ animationDelay: '0ms' }}></div>
+                  <div className={`w-2 h-2 bg-gray-300 rounded-full ${prefersReducedMotion ? '' : 'animate-bounce'}`} style={{ animationDelay: '150ms' }}></div>
+                  <div className={`w-2 h-2 bg-gray-300 rounded-full ${prefersReducedMotion ? '' : 'animate-bounce'}`} style={{ animationDelay: '300ms' }}></div>
+                </div>
               </div>
             ) : (
               <p className="text-sm leading-relaxed break-words font-mono tracking-wide flex-1">{message.content}</p>
