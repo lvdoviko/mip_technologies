@@ -158,6 +158,9 @@ const AiProcessingIndicator = ({ isVisible, startTime, prefersReducedMotion }) =
 const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo = false }) => {
   const messageRef = useRef(null);
   const isUser = message.role === 'user';
+
+  // ✅ UNIFIED BUBBLE: Check if this is a streaming message waiting for content
+  const showLoading = message.status === MESSAGE_STATUS.STREAMING && !message.content?.trim();
   
   // Animate message entrance
   useEffect(() => {
@@ -194,7 +197,17 @@ const Message = ({ message, onRetry, prefersReducedMotion, showPerformanceInfo =
           `}
         >
           <div className="flex items-end gap-2">
-            <p className="text-sm leading-relaxed break-words font-mono tracking-wide flex-1">{message.content}</p>
+            {/* ✅ UNIFIED BUBBLE: Show loading animation or content */}
+            {showLoading ? (
+              <div className="flex items-center gap-2 flex-1">
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                </svg>
+                <span className="text-sm text-gray-300">AI is responding…</span>
+              </div>
+            ) : (
+              <p className="text-sm leading-relaxed break-words font-mono tracking-wide flex-1">{message.content}</p>
+            )}
             
             {/* Status icon inline with last line */}
             <div className="flex items-center space-x-1 flex-shrink-0" style={{ marginBottom: '4px' }}>
@@ -625,9 +638,7 @@ const ChatWidget = ({
     aiProcessingState,
     isAiProcessing,
     errorState,
-    hasProcessingError,
-    // ✅ Assistant loading state for independent loading bubble
-    assistantLoading
+    hasProcessingError
   } = useChat({
     autoConnect: false,
     enablePerformanceTracking: showPerformanceIndicator,
@@ -1115,16 +1126,7 @@ const ChatWidget = ({
                     messageStatuses: messages.map(m => m.status)
                   })
                 }
-                {messages
-                  .filter(message => {
-                    // ✅ FINAL FIX: Hide streaming messages until they have content
-                    // This eliminates the empty bubble during wait time
-                    if (message.status === MESSAGE_STATUS.STREAMING && !message.content?.trim()) {
-                      return false;
-                    }
-                    return true;
-                  })
-                  .map((message) => (
+                {messages.map((message) => (
                     <Message
                       key={message.id}
                       message={message}
@@ -1133,20 +1135,6 @@ const ChatWidget = ({
                       showPerformanceInfo={showPerformanceIndicator}
                     />
                   ))}
-
-                {/* Assistant Loading Bubble - Independent from message objects */}
-                {assistantLoading && (
-                  <div className="flex justify-start mb-3">
-                    <div className="bg-black/80 border border-white/20 px-4 py-3 rounded-xl max-w-[85%]">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
-                        </svg>
-                        <span className="text-sm text-gray-300">AI is responding…</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Typing indicator */}
                 <TypingIndicator
