@@ -761,8 +761,17 @@ class MIPTechWebSocketManager {
         case 'assistant_message':
           // ✅ CRITICAL: Non-streaming fallback delivery (per external review)
           const assistantContent = this.extractChunk(data.data ?? data) || '';
+          const assistantMessageId = this.getMsgId(rawData) || this.getMsgId(data);
+
+          // ✅ SURGICAL FIX: Only process if we have valid message ID from backend
+          // This prevents orphaned messages with synthetic IDs
+          if (!assistantMessageId) {
+            logger.debug('[WebSocket] Skipping assistant_message - no valid message ID from backend');
+            break;
+          }
+
           const assistantPayload = {
-            message_id: this.getMsgId(rawData) || this.getMsgId(data) || `assistant_${Date.now()}`,
+            message_id: assistantMessageId,
             chat_id: this.getChatId(rawData) || this.getChatId(data) || this.currentChatId,
             content: assistantContent,
             completionTime: Date.now(),
@@ -1691,10 +1700,11 @@ class MIPTechWebSocketManager {
 
     this.joinSent = true;
 
-    // Add watchdog timer - if no chat_id within 2s, send fallback new_chat (per external review)
+    // ✅ SURGICAL FIX: Increased watchdog timer from 2s to 6s to reduce noise
+    // Gives message_received more time to provide chat_id before fallback
     this.chatCreatedWatchdog = setTimeout(() => {
       if (!this.currentChatId && this.isConnected) {
-        logger.warn('🕒 [WebSocket] No chat_id received within 2s, sending new_chat fallback');
+        logger.warn('🕒 [WebSocket] No chat_id received within 6s, sending new_chat fallback');
         logger.debug('🔍 [WebSocket] Watchdog state check:', {
           currentChatId: this.currentChatId,
           isConnected: this.isConnected,
@@ -1715,7 +1725,7 @@ class MIPTechWebSocketManager {
           logger.debug('📦 [WebSocket] Skipping new_chat - no queued messages');
         }
       }
-    }, 2000);
+    }, 6000);
   }
 
   // ✅ CRITICAL FIX: Add missing sendJoinChat method (called from connection_ready and joinChat)

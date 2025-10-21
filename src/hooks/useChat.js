@@ -908,10 +908,19 @@ export const useChat = (config = {}) => {
     if (!message || message.status !== MESSAGE_STATUS.FAILED) {
       return;
     }
-    
+
+    // ✅ SURGICAL FIX: Validate message has content before attempting retry
+    // This prevents "Message content is required" errors when retrying empty messages
+    if (!message.content?.trim()) {
+      logger.warn('[Chat] Skipping retry - message has no content:', messageId);
+      // Remove the empty failed message since it can't be retried
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      return;
+    }
+
     // Remove the failed message and resend
     setMessages(prev => prev.filter(msg => msg.id !== messageId));
-    
+
     try {
       await sendMessage(message.content, message.metadata);
     } catch (error) {
@@ -1312,26 +1321,34 @@ export const useChat = (config = {}) => {
         logger.warn('Chat: Skipping processing due to component unmount (production only)');
         return;
       }
-      
+
       // Allow processing in development and StrictMode scenarios
       if (isUnmountedRef.current && (isStrictModeRef.current || process.env.NODE_ENV === 'development')) {
         logger.debug('Chat: Processing processing despite unmount (StrictMode/Development)');
       }
+
+      // ✅ SURGICAL FIX: Only create temp message if we have valid processing data
+      // This prevents orphaned empty bubbles from spurious processing events
+      if (!data || (!data.message_id && !data.messageId && !data.data?.message_id && !data.data?.messageId)) {
+        logger.debug('Chat: Skipping processing temp message - no valid message ID correlation');
+        return;
+      }
+
       logger.debug('Chat: AI processing started - adding typing indicator');
-      
-      // Add a temporary AI message to show loading state
-      const tempMessageId = `ai_temp_${Date.now()}`;
+
+      // Add a temporary AI message to show loading state with real message ID
+      const tempMessageId = data.message_id || data.messageId || data.data?.message_id || data.data?.messageId;
       setMessages(currentMessages => {
         // Don't add if we already have a temporary AI message
-        const hasLoadingMessage = currentMessages.some(msg => 
+        const hasLoadingMessage = currentMessages.some(msg =>
           msg.role === 'assistant' && msg.status === MESSAGE_STATUS.SENDING
         );
-        
+
         if (!hasLoadingMessage) {
           return [...currentMessages, {
             id: tempMessageId,
             content: '',
-            role: 'assistant', 
+            role: 'assistant',
             status: MESSAGE_STATUS.SENDING,
             timestamp: new Date().toISOString(),
             metadata: { temp: true }
@@ -1445,8 +1462,14 @@ export const useChat = (config = {}) => {
         logger.debug('Chat: Processing response_start despite unmount (StrictMode/Development)');
       }
 
-      // ✅ CRITICAL FIX: Use robust message ID extraction like websocketManager
-      const messageId = data.message_id || data.messageId || data.data?.message_id || data.data?.messageId || `streaming_${Date.now()}`;
+      // ✅ SURGICAL FIX: Only proceed if we have real message ID from backend
+      // This prevents orphaned empty bubbles from synthetic fallback IDs
+      const messageId = data.message_id || data.messageId || data.data?.message_id || data.data?.messageId;
+
+      if (!messageId) {
+        logger.debug('Chat: Skipping response_start - no valid message ID from backend');
+        return;
+      }
 
       logger.debug('Chat: Response streaming started:', messageId);
 
