@@ -41,6 +41,15 @@ export const CHAT_STATES = {
   FAILED: 'failed'
 };
 
+// --- Helpers: robust field extraction ---
+function _getMsgId(evt) {
+  return evt?.message_id || evt?.messageId || evt?.data?.message_id || evt?.data?.messageId;
+}
+
+function _hasNonEmptyText(msg) {
+  return typeof msg === 'string' && msg.trim().length > 0;
+}
+
 /**
  * Chat hook configuration
  */
@@ -911,8 +920,8 @@ export const useChat = (config = {}) => {
 
     // ✅ SURGICAL FIX: Validate message has content before attempting retry
     // This prevents "Message content is required" errors when retrying empty messages
-    if (!message.content?.trim()) {
-      logger.warn('[Chat] Skipping retry - message has no content:', messageId);
+    if (!_hasNonEmptyText(message.content)) {
+      logger.debug('[Chat] skip retry — message has no content', { messageId });
       // Remove the empty failed message since it can't be retried
       setMessages(prev => prev.filter(msg => msg.id !== messageId));
       return;
@@ -1117,10 +1126,10 @@ export const useChat = (config = {}) => {
       try {
         logger.debug('DEBUG: Entering try block - extracting data');
         
-        // Extract message data from the response
-        const messageId = data.messageId || data.message_id || data.data?.message?.id || data.data?.message_id;
-        // ✅ CRITICAL: Use direct content from enhanced websocketManager payload (per backend analysis)
-        const finalContent = data.content || data.data?.message?.content || data.data?.content || data.data?.message || '';
+        // ✅ Unified id extraction (must match chunk/start)
+        const messageId = _getMsgId(data);
+        // ✅ websocketManager emits aggregated content as `data.content`
+        const finalContent = data.content ?? data?.data?.content ?? '';
         
         logger.debug('DEBUG: Extracted data from websocketManager:', {
           messageId,
@@ -1132,12 +1141,13 @@ export const useChat = (config = {}) => {
           dataDataStructure: data.data ? Object.keys(data.data) : null
         });
         
-        if (!messageId || !finalContent) {
-          logger.warn('Chat: Missing messageId or content in response_complete:', {
-            messageId, 
-            hasContent: !!finalContent,
-            data: data.data
-          });
+        if (!messageId) {
+          logger.debug('[Chat] response_complete without message_id — cannot finalize');
+          return;
+        }
+        if (!finalContent || !finalContent.trim()) {
+          logger.debug('[Chat] response_complete has no aggregated content yet', { messageId });
+          // no UI bubble creation here — we only finalize an existing placeholder
           return;
         }
         
@@ -1327,17 +1337,17 @@ export const useChat = (config = {}) => {
         logger.debug('Chat: Processing processing despite unmount (StrictMode/Development)');
       }
 
-      // ✅ SURGICAL FIX: Only create temp message if we have valid processing data
-      // This prevents orphaned empty bubbles from spurious processing events
-      if (!data || (!data.message_id && !data.messageId && !data.data?.message_id && !data.data?.messageId)) {
-        logger.debug('Chat: Skipping processing temp message - no valid message ID correlation');
+      // ✅ SURGICAL FIX: Only create temp bubble when we have a real stream id we can later correlate
+      const mid = _getMsgId(data);
+      if (!mid) {
+        logger.debug('[Chat] processing received without message_id — skipping temp bubble');
         return;
       }
 
       logger.debug('Chat: AI processing started - adding typing indicator');
 
       // Add a temporary AI message to show loading state with real message ID
-      const tempMessageId = data.message_id || data.messageId || data.data?.message_id || data.data?.messageId;
+      const tempMessageId = mid;
       setMessages(currentMessages => {
         // Don't add if we already have a temporary AI message
         const hasLoadingMessage = currentMessages.some(msg =>
@@ -1462,12 +1472,10 @@ export const useChat = (config = {}) => {
         logger.debug('Chat: Processing response_start despite unmount (StrictMode/Development)');
       }
 
-      // ✅ SURGICAL FIX: Only proceed if we have real message ID from backend
-      // This prevents orphaned empty bubbles from synthetic fallback IDs
-      const messageId = data.message_id || data.messageId || data.data?.message_id || data.data?.messageId;
-
+      // ✅ SURGICAL FIX: Only proceed when a real backend id is present
+      const messageId = _getMsgId(data);
       if (!messageId) {
-        logger.debug('Chat: Skipping response_start - no valid message ID from backend');
+        logger.debug('[Chat] response_start without message_id — skip placeholder');
         return;
       }
 
@@ -1512,11 +1520,10 @@ export const useChat = (config = {}) => {
         return;
       }
 
-      // ✅ CRITICAL FIX: Use robust message ID extraction like websocketManager
-      const messageId = data.message_id || data.messageId || data.data?.message_id || data.data?.messageId;
-
+      // ✅ Unified id extraction
+      const messageId = _getMsgId(data);
       if (!messageId) {
-        logger.warn('Chat: No message ID found in response_chunk, skipping');
+        logger.debug('[Chat] response_chunk without message_id — ignoring chunk');
         return;
       }
 

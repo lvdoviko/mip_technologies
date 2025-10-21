@@ -88,6 +88,16 @@ class MIPTechWebSocketManager {
     );
   }
 
+  // Small helpers used for watchdog improvements
+  _hasQueuedChatMessages() {
+    try {
+      return Array.isArray(this.messageQueue)
+        && this.messageQueue.some(m => m && (m.type === 'chat_message' || m?.data?.type === 'chat_message'));
+    } catch {
+      return false;
+    }
+  }
+
   /**
    * Build WebSocket URL for MIPTech Realtime v1 protocol (no token required for native site)
    * Uses exact format: wss://api.miptechnologies.tech/api/v1/ws/chat?tenant_id=miptech-company
@@ -1700,32 +1710,20 @@ class MIPTechWebSocketManager {
 
     this.joinSent = true;
 
-    // ✅ SURGICAL FIX: Increased watchdog timer from 2s to 6s to reduce noise
-    // Gives message_received more time to provide chat_id before fallback
+    // ✅ Tamed watchdog: wait longer and only fire if a real chat_message is stuck in the queue
+    if (this.chatCreatedWatchdog) {
+      clearTimeout(this.chatCreatedWatchdog);
+      this.chatCreatedWatchdog = null;
+    }
     this.chatCreatedWatchdog = setTimeout(() => {
-      if (!this.currentChatId && this.isConnected) {
-        logger.warn('🕒 [WebSocket] No chat_id received within 6s, sending new_chat fallback');
-        logger.debug('🔍 [WebSocket] Watchdog state check:', {
-          currentChatId: this.currentChatId,
-          isConnected: this.isConnected,
-          isReady: this.isReady,
-          joinSent: this.joinSent,
-          messageQueueLength: this.messageQueue.length,
-          hasQueuedUserMessages: this.messageQueue.some(msg => msg.type === 'chat_message')
-        });
-
-        // ✅ TAME WATCHDOG: Only send new_chat if we have queued messages (per external review)
-        if (this.messageQueue.length > 0) {
-          logger.debug('📦 [WebSocket] Sending new_chat because we have queued messages');
-          this.sendMessage('new_chat', {
-            title: 'Website Chat',
-            channel: 'website'
-          });
-        } else {
-          logger.debug('📦 [WebSocket] Skipping new_chat - no queued messages');
-        }
+      const hasQueued = this._hasQueuedChatMessages();
+      if (!this.currentChatId && hasQueued) {
+        logger.warn('🕒 [WebSocket] No chat_id yet AND queued chat messages present → sending new_chat fallback');
+        this.sendMessage('new_chat', { title: 'Website Chat', channel: 'website' });
+      } else {
+        logger.debug('[WebSocket] Watchdog skipped (chat_id present or no queued chat messages)');
       }
-    }, 6000);
+    }, 5000); // give the first message_received ack time to return with chat_id
   }
 
   // ✅ CRITICAL FIX: Add missing sendJoinChat method (called from connection_ready and joinChat)
