@@ -1163,7 +1163,8 @@ export const useChat = (config = {}) => {
         setMessages(currentMessages => {
           const updatedMessages = currentMessages.map(msg => {
             // Find the temporary message and replace it with the AI response
-            if (msg.role === 'assistant' && (msg.id === messageId || msg.status === MESSAGE_STATUS.SENDING)) {
+            // ✅ FINAL FIX: Include STREAMING status to properly find existing bubble
+            if (msg.role === 'assistant' && (msg.id === messageId || msg.status === MESSAGE_STATUS.SENDING || msg.status === MESSAGE_STATUS.STREAMING)) {
               return {
                 ...msg,
                 id: messageId,
