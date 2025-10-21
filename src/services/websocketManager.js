@@ -597,10 +597,10 @@ class MIPTechWebSocketManager {
           }
 
           // ✅ CRITICAL: Also initialize chat-level buffer for backends that don't send response_start
-          const chatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
-          if (chatId) {
-            this.activeResponses.set(`chat_${chatId}`, { text: '', startedAt: Date.now() });
-            logger.debug('🔥 [WebSocket] Initialized chat-level streaming buffer for chat:', chatId);
+          const startChatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
+          if (startChatId) {
+            this.activeResponses.set(`chat_${startChatId}`, { text: '', startedAt: Date.now() });
+            logger.debug('🔥 [WebSocket] Initialized chat-level streaming buffer for chat:', startChatId);
           }
 
           // ✅ CRITICAL: Emit both snake_case and camelCase aliases per external review
@@ -622,16 +622,16 @@ class MIPTechWebSocketManager {
           // Strategy 1: Try message-specific buffer
           if (!buffer && chunkMessageId) {
             // Strategy 2: Try chat-level buffer
-            const chatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
-            if (chatId) {
-              bufferKey = `chat_${chatId}`;
+            const chunkChatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
+            if (chunkChatId) {
+              bufferKey = `chat_${chunkChatId}`;
               buffer = this.activeResponses.get(bufferKey);
 
               // Strategy 3: Auto-create chat-level buffer if none exists
               if (!buffer) {
                 buffer = { text: '', startedAt: Date.now() };
                 this.activeResponses.set(bufferKey, buffer);
-                logger.debug('🔄 [WebSocket] Auto-created chat-level buffer for:', chatId);
+                logger.debug('🔄 [WebSocket] Auto-created chat-level buffer for:', chunkChatId);
               }
             }
           }
@@ -675,9 +675,9 @@ class MIPTechWebSocketManager {
           // Strategy 1: Try message-specific buffer
           if (!aggregatedText) {
             // Strategy 2: Try chat-level buffer
-            const chatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
-            if (chatId) {
-              const chatBuffer = this.activeResponses.get(`chat_${chatId}`);
+            const completeChatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
+            if (completeChatId) {
+              const chatBuffer = this.activeResponses.get(`chat_${completeChatId}`);
               if (chatBuffer?.text) {
                 aggregatedText = chatBuffer.text;
                 responseBuffer = chatBuffer;
@@ -740,10 +740,10 @@ class MIPTechWebSocketManager {
           // ✅ CRITICAL: Clean up buffers based on strategy used (per external review)
           if (bufferSource === 'chat-level') {
             // Keep chat-level buffer for potential future responses, but mark as used
-            const chatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
-            if (chatId) {
-              this.activeResponses.delete(`chat_${chatId}`);
-              logger.debug('🧹 [WebSocket] Cleaned up chat-level buffer for:', chatId);
+            const cleanupChatId = this.getChatId(rawData) || this.getChatId(data) || this.currentChatId;
+            if (cleanupChatId) {
+              this.activeResponses.delete(`chat_${cleanupChatId}`);
+              logger.debug('🧹 [WebSocket] Cleaned up chat-level buffer for:', cleanupChatId);
             }
           } else if (bufferSource === 'all-buffers') {
             // Clear all buffers since they were all used
