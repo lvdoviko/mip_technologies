@@ -12,6 +12,7 @@ import About from './sections/About';
 import Contact from './sections/Contact';
 import AnimatedBackground from './components/ui/AnimatedBackground';
 import ChatWidget from './components/ChatWidget';
+import ChatInvitation from './components/ChatInvitation';
 import ChatErrorBoundary from './components/ChatErrorBoundary';
 import ConnectionDebugger from './components/ConnectionDebugger';
 import useReducedMotion from './hooks/useReducedMotion'; // Importa il nuovo hook
@@ -23,6 +24,7 @@ gsap.registerPlugin(ScrollTrigger);
 const MainApp = () => {
   const [scrollY, setScrollY] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [shouldOpenChat, setShouldOpenChat] = useState(false);
   const prefersReducedMotion = useReducedMotion(); // Usa il nuovo hook
 
   useEffect(() => {
@@ -38,6 +40,14 @@ const MainApp = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // Function to open chat widget from invitation
+  const handleOpenChatFromInvitation = () => {
+    console.log('[MainApp] Opening chat from invitation');
+    setShouldOpenChat(true);
+    // Reset the flag after a short delay to allow for future openings
+    setTimeout(() => setShouldOpenChat(false), 1000);
+  };
 
   return (
     <div className="min-h-screen relative bg-black text-white">
@@ -116,7 +126,15 @@ const MainApp = () => {
       
       {/* Enterprise Connection Debugger (Development Mode Only) */}
       {process.env.NODE_ENV === 'development' && <ConnectionDebugger />}
-      
+
+      {/* Chat Invitation */}
+      <ChatInvitation
+        onChatOpen={handleOpenChatFromInvitation}
+        delay={3000}
+        autoHideDuration={8000}
+        position="bottom-left"
+      />
+
       {/* MIPTech AI Chat Widget */}
       <ChatErrorBoundary
         title="MIPTech AI Chat Unavailable"
@@ -125,7 +143,7 @@ const MainApp = () => {
           console.error('[MainApp] Chat widget error:', error, errorInfo);
         }}
       >
-        <ChatWidget 
+        <ChatWidget
           position="bottom-right"
           size="medium"
           theme="auto"
@@ -136,6 +154,7 @@ const MainApp = () => {
           enableNotifications={false}
           maxMessageLength={4000}
           showPerformanceIndicator={process.env.NODE_ENV === 'development'}
+          openChat={shouldOpenChat}
           onChatOpen={() => {
             console.log('[MainApp] Chat opened');
           }}

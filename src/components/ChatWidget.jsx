@@ -612,6 +612,7 @@ const ChatWidget = ({
   enableNotifications = false,
   maxMessageLength = 4000,
   showPerformanceIndicator = false,
+  openChat = false, // New prop to programmatically open chat
   onChatOpen,
   onChatClose,
   onMessageSent,
@@ -622,8 +623,16 @@ const ChatWidget = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
+
   const prefersReducedMotion = useReducedMotion();
+
+  // Handle programmatic chat opening
+  useEffect(() => {
+    if (openChat && !isOpen) {
+      setIsOpen(true);
+      setIsMinimized(false);
+    }
+  }, [openChat, isOpen]);
   
   // Widget refs
   const widgetRef = useRef(null);
