@@ -1110,7 +1110,7 @@ export const useChat = (config = {}) => {
         
         // Extract message data from the response
         const messageId = data.messageId || data.message_id || data.data?.message?.id || data.data?.message_id;
-        // ✅ CRITICAL: Use aggregated content from websocketManager per external review
+        // ✅ CRITICAL: Prioritize direct content from enhanced websocketManager payload (per external review)
         const finalContent = data.content || data.data?.message?.content || data.data?.content || data.data?.message || chunkBufferRef.current?.[messageId] || '';
         
         logger.debug('DEBUG: Extracted data:', {

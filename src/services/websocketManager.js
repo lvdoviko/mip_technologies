@@ -54,6 +54,41 @@ class MIPTechWebSocketManager {
   }
 
   /**
+   * ✅ CRITICAL: Helper functions for robust field extraction (per external review)
+   */
+  getMsgId(evt) {
+    return (
+      evt.message_id ||
+      evt.messageId ||
+      evt?.data?.message_id ||
+      evt?.data?.messageId
+    );
+  }
+
+  getChatId(evt) {
+    return (
+      evt.chat_id ||
+      evt.chatId ||
+      evt?.data?.chat_id ||
+      evt?.data?.chatId
+    );
+  }
+
+  extractChunk(data) {
+    if (!data) return "";
+    return (
+      data.chunk ??                     // { chunk: "..." }
+      data.text ??                      // { text: "..." }
+      data.content ??                   // { content: "..." }
+      data.delta?.content ??            // { delta: { content: "..." } }
+      data.delta?.text ??               // { delta: { text: "..." } }
+      data.choices?.[0]?.delta?.content ?? // OpenAI-like streaming
+      data.choices?.[0]?.delta?.text ??
+      ""
+    );
+  }
+
+  /**
    * Build WebSocket URL for MIPTech Realtime v1 protocol (no token required for native site)
    * Uses exact format: wss://api.miptechnologies.tech/api/v1/ws/chat?tenant_id=miptech-company
    */
@@ -294,14 +329,20 @@ class MIPTechWebSocketManager {
     try {
       const rawData = JSON.parse(event.data);
 
-      // ✅ CRITICAL: Preserve top-level chat_id before normalization
-      const topLevelChatId = rawData.chat_id;
+      // ✅ CRITICAL: Preserve top-level IDs before normalization (per external review)
+      const topLevelMessageId = this.getMsgId(rawData);
+      const topLevelChatId = this.getChatId(rawData);
 
       // ✅ FE-01: Normalize incoming event with central event normalizer
       const data = eventNormalizer.normalizeIncomingEvent(rawData);
 
-      // ✅ CRITICAL: Restore top-level chat_id after normalization if it was lost
-      if (topLevelChatId && !data.chat_id && !data.chatId) {
+      // ✅ CRITICAL: Restore top-level IDs after normalization if lost (per external review)
+      if (topLevelMessageId && !this.getMsgId(data)) {
+        data.message_id = topLevelMessageId;
+        data.messageId = topLevelMessageId; // Both formats for compatibility
+        logger.debug('🔧 [WebSocket] Restored message_id after normalization:', topLevelMessageId);
+      }
+      if (topLevelChatId && !this.getChatId(data)) {
         data.chat_id = topLevelChatId;
         data.chatId = topLevelChatId; // Both formats for compatibility
         logger.debug('🔧 [WebSocket] Restored chat_id after normalization:', topLevelChatId);
@@ -474,9 +515,8 @@ class MIPTechWebSocketManager {
             timestamp: Date.now()
           });
 
-          // ✅ CRITICAL FIX: Capture chat_id from message_received (primary source per backend protocol)
-          // Use raw data for most reliable capture (pre-normalization)
-          const messageReceivedChatId = rawData.chat_id || data.chat_id || data.chatId || data.data?.chat_id;
+          // ✅ CRITICAL FIX: Capture chat_id using robust helper (per external review)
+          const messageReceivedChatId = this.getChatId(rawData) || this.getChatId(data);
           if (messageReceivedChatId && !this.currentChatId) {
             logger.debug('✅ [WebSocket] chat_id captured from message_received', { chatId: messageReceivedChatId });
             this.currentChatId = messageReceivedChatId;
@@ -549,10 +589,10 @@ class MIPTechWebSocketManager {
         case 'response_start':
           logger.debug('📡 [WebSocket] AI response streaming started');
 
-          // ✅ CRITICAL: Initialize streaming buffer per external review
-          const startMessageId = rawData.message_id || data.message_id || data.messageId;
+          // ✅ CRITICAL: Initialize streaming buffer using robust helper (per external review)
+          const startMessageId = this.getMsgId(rawData) || this.getMsgId(data);
           if (startMessageId) {
-            this.activeResponses.set(startMessageId, { text: '' });
+            this.activeResponses.set(startMessageId, { text: '', startedAt: Date.now() });
             logger.debug('🔥 [WebSocket] Initialized streaming buffer for:', startMessageId);
           }
 
@@ -564,13 +604,24 @@ class MIPTechWebSocketManager {
         case 'response_chunk':
           logger.debug('📡 [WebSocket] AI response chunk received');
 
-          // ✅ CRITICAL: Aggregate chunks per external review
-          const chunkMessageId = rawData.message_id || data.message_id || data.messageId;
-          const chunk = data.content ?? data.delta ?? '';
+          // ✅ CRITICAL: Use robust extraction helpers (per external review)
+          const chunkMessageId = this.getMsgId(rawData) || this.getMsgId(data);
+          const chunk = this.extractChunk(data.data ?? data);
           const buffer = this.activeResponses.get(chunkMessageId);
+
           if (buffer && chunk) {
             buffer.text += chunk;
-            logger.debug('📦 [WebSocket] Aggregated chunk, total length:', buffer.text.length);
+            buffer.lastChunkAt = Date.now();
+            logger.debug('📦 [WebSocket] Aggregated chunk:', {
+              messageId: chunkMessageId,
+              chunkLength: chunk.length,
+              totalLength: buffer.text.length,
+              chunk: chunk.substring(0, 50) + (chunk.length > 50 ? '...' : '')
+            });
+          } else if (!buffer) {
+            logger.warn('⚠️ [WebSocket] No buffer for chunk, messageId:', chunkMessageId);
+          } else if (!chunk) {
+            logger.warn('⚠️ [WebSocket] Empty chunk received for messageId:', chunkMessageId);
           }
 
           // ✅ CRITICAL: Emit both snake_case and camelCase aliases per external review
@@ -579,48 +630,79 @@ class MIPTechWebSocketManager {
           break;
 
         case 'response_complete':
-          // ✅ CRITICAL: Finalize streaming response per external review
-          const completeMessageId = rawData.message_id || data.message_id || data.messageId;
+          // ✅ CRITICAL: Finalize streaming response using robust helpers (per external review)
+          const completeMessageId = this.getMsgId(rawData) || this.getMsgId(data);
           const responseBuffer = this.activeResponses.get(completeMessageId);
           const aggregatedText = responseBuffer?.text ?? '';
 
+          // ✅ CRITICAL: Try to get final content from complete frame if no chunks (per external review)
+          const finalContent = aggregatedText || this.extractChunk(data.data ?? data) || '';
+
           logger.debug('🎉 [WebSocket] AI response completed', {
             messageId: completeMessageId,
-            chatId: data.data?.chat_id || rawData.chat_id,
+            chatId: this.getChatId(rawData) || this.getChatId(data) || this.currentChatId,
             responseTime: data.data?.message?.response_time_ms,
             tokens: data.data?.message?.completion_tokens,
             aggregatedLength: aggregatedText.length,
+            finalContentLength: finalContent.length,
             hadBuffer: !!responseBuffer,
+            usedFallback: !aggregatedText && !!finalContent,
             timestamp: data.data?.timestamp || Date.now()
           });
 
-          // ✅ CRITICAL: Create UI-friendly event with aggregated content per external review
+          // ✅ CRITICAL: Create UI-friendly payload with direct content access (per external review)
           const completionData = {
-            ...data,
             message_id: completeMessageId,
-            content: aggregatedText, // Use aggregated text from chunks
+            chat_id: this.getChatId(rawData) || this.getChatId(data) || this.currentChatId,
+            content: finalContent, // ✅ Direct access for useChat
             completionTime: Date.now(),
-            source: 'backend_integration'
+            source: 'backend_integration',
+            raw: data // Include original data for debugging
           };
 
-          logger.debug('🔥 [WebSocket] About to emit response_complete with aggregated content:', {
-            type: completionData.type,
+          logger.debug('🔥 [WebSocket] About to emit response_complete with enhanced payload:', {
             messageId: completeMessageId,
-            contentLength: aggregatedText.length,
-            hasAggregatedContent: !!aggregatedText,
-            eventsToEmit: ['responseComplete', 'response_complete', 'aiResponseComplete', 'ai_response_complete']
+            contentLength: finalContent.length,
+            hasContent: !!finalContent,
+            eventsToEmit: ['response_complete', 'responseComplete', 'ai_response_complete', 'aiResponseComplete']
           });
 
-          // ✅ CRITICAL: Emit all aliases with normalized content per external review
+          // ✅ CRITICAL: Emit all aliases with enhanced payload (per external review)
           this.emit('response_complete', completionData);
           this.emit('responseComplete', completionData); // alias
           this.emit('ai_response_complete', completionData); // backend name
           this.emit('aiResponseComplete', completionData); // alias
 
-          // ✅ CRITICAL: Clean up buffer per external review
-          this.activeResponses.delete(completeMessageId);
-          
-          logger.debug('✅ [WebSocket] All response_complete events emitted');
+          // ✅ CRITICAL: Clean up buffer (per external review)
+          if (completeMessageId) {
+            this.activeResponses.delete(completeMessageId);
+          }
+
+          logger.debug('✅ [WebSocket] All response_complete events emitted with content length:', finalContent.length);
+          break;
+
+        case 'assistant_message':
+          // ✅ CRITICAL: Non-streaming fallback delivery (per external review)
+          const assistantContent = this.extractChunk(data.data ?? data) || '';
+          const assistantPayload = {
+            message_id: this.getMsgId(rawData) || this.getMsgId(data) || `assistant_${Date.now()}`,
+            chat_id: this.getChatId(rawData) || this.getChatId(data) || this.currentChatId,
+            content: assistantContent,
+            completionTime: Date.now(),
+            source: 'assistant_message',
+            raw: data
+          };
+
+          logger.debug('📬 [WebSocket] Non-streaming assistant message:', {
+            messageId: assistantPayload.message_id,
+            contentLength: assistantContent.length
+          });
+
+          // Emit as response_complete for unified handling
+          this.emit('response_complete', assistantPayload);
+          this.emit('responseComplete', assistantPayload);
+          this.emit('ai_response_complete', assistantPayload);
+          this.emit('aiResponseComplete', assistantPayload);
           break;
 
         case 'typing_indicator':
