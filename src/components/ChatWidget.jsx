@@ -1092,7 +1092,7 @@ const ChatWidget = ({
           <div className="bg-transparent backdrop-blur-md border-t border-white/50 text-white p-4 flex items-center justify-between relative">
             <div className="flex items-center space-x-3">
               <img
-                src="/Mip-Logo.png"
+                src="/BlockMIP.png"
                 alt="MipTech Logo"
                 className="w-8 h-8 object-contain"
               />
